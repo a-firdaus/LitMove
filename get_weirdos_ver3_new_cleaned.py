@@ -3411,25 +3411,30 @@ def create_file_name(direc_perfect_poscar, ref_positions_array, var_optitype):
     return os.path.join(direc_perfect_poscar, f"Li6PS5Cl_{'_'.join(formatted_positions_str)}_{var_optitype}.cif")
 
 
-def modif_dx_dz_cif_alllitype_shorterfilename(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, var_optitype):
+def modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype):
     file_path_new = create_file_name(direc_perfect_poscar, ref_positions_array_filename, var_optitype)
-    change_dx_dz_alllitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array)
+    if modif_all_litype == True:
+        change_dx_dz_alllitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
+    elif modif_all_litype == False:
+        change_dx_dz_specificlitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
+    elif modif_all_litype == None:
+        pass
 
     return file_path_new
 
 
-def modif_dx_dz_cif_alllitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype, litype):
-    file_path_new = create_file_name(direc_perfect_poscar, ref_positions_array, var_optitype)
-    change_dx_dz_alllitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
+# def modif_dx_dz_cif_alllitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, litype, var_optitype):
+#     file_path_new = create_file_name(direc_perfect_poscar, ref_positions_array, var_optitype)
+#     change_dx_dz_alllitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
 
-    return file_path_new
+#     return file_path_new
 
 
-def modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype, litype):
-    file_path_new = create_file_name(direc_perfect_poscar, ref_positions_array, var_optitype)
-    change_dx_dz_specificlitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
+# def modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, litype, var_optitype):
+#     file_path_new = create_file_name(direc_perfect_poscar, ref_positions_array, var_optitype)
+#     change_dx_dz_specificlitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
 
-    return file_path_new
+#     return file_path_new
 
 
 def change_dx_dz_alllitype(file_path, file_path_new, ref_positions_array, litype):
