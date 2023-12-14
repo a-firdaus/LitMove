@@ -4862,3 +4862,52 @@ def create_file_loc(direc_init_system, data_toten, file_new_system):
         print("check the compatibility of column geometry and path between data_toten file and file_loc")
 
     return file_loc
+
+
+def create_file_loc_compact_demo(direc_init_system, data_toten, file_new_system):
+
+    geometry = np.array([])
+    path = np.array([])
+    subdir_col = np.array([])
+    for subdir, dirs, files in os.walk(direc,topdown=False):
+        # source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
+        for file in files:
+            filepath = subdir + os.sep
+            # get directory of CONTCAR
+            if os.path.basename(file) == file_new_system:
+                geometry_nr = splitall(subdir)[-2]
+                path_nr = splitall(subdir)[-1]
+                geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
+                geometry_ori = geometry
+                geometry.dropna(axis=1)
+                path = pd.DataFrame(np.append(path, int(path_nr)), columns=["path"])#
+                path.dropna(axis=1)
+                path_sorted = path.sort_values(by="path",ascending=False)
+                subdir_file = os.path.join(subdir,file_new_system)
+                # # create directory of POSCAR of init system
+                subdir_init_system = direc_init_system + os.sep + geometry_nr + os.sep + path_nr
+                subdir_col = pd.DataFrame(np.append(subdir_col, subdir_file), columns=["subdir_new_system"])
+                file_loc = geometry.join(path)
+                file_loc["subdir_new_system"] = subdir_col#
+                path_ori = path
+
+    file_loc_ori_notsorted = file_loc.copy()
+    file_loc = file_loc.sort_values(by=["geometry","path"],ignore_index=True,ascending=False) # sort descendingly based on path
+
+    file_loc["g+p"] = (file_loc["geometry"] + file_loc["path"]).fillna(0) # replace NaN with 0
+    file_loc["g+p+1"] = file_loc["g+p"].shift(1)
+    file_loc["g+p+1"][0] = 0 # replace 1st element with 0
+    file_loc["g+p-1"] = file_loc["g+p"].shift(-1)
+    file_loc["g+p-1"][(file_loc["g+p-1"]).size - 1] = 0.0 # replace last element with 0
+    file_loc["perfect_system"] = file_loc["g+p"][(file_loc["g+p+1"] > file_loc["g+p"]) & (file_loc["g+p-1"] > file_loc["g+p"])]
+    file_loc["perfect_system"][file_loc["geometry"].size-1] = 0.0 # hardcode the path 0/0
+    file_loc["p_s_mask"] = [0 if np.isnan(item) else 1 for item in file_loc["perfect_system"]]
+
+
+
+    if data_toten[col_excel_geo].all() == file_loc["geometry"].all() & data_toten[col_excel_path].all() == file_loc["path"].all():
+        file_loc[col_excel_toten] = data_toten[col_excel_toten]
+    else:
+        print("check the compatibility of column geometry and path between data_toten file and file_loc")
+
+    return file_loc
