@@ -4241,11 +4241,11 @@ def change_dx_dz_specificlitype(file_path, file_path_new, ref_positions_array, l
 #     return sum_weirdos_Li
 
 
-def get_sum_weirdos_Li_var_litype(dx1_48h_type, dx2_48h_type, dz_48h_type, max_mapping_radius, max_mapping_radius_48htype2, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype):
+def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype):
+    
+    formatted_positions = [format_float(pos) for pos in ref_positions_array]
+    new_dx1_type, new_dx2_type, new_dz_type = formatted_positions
 
-    formatted_dx1_48h_type = format_float(dx1_48h_type)
-    formatted_dx2_48h_type = format_float(dx2_48h_type)
-    formatted_dz_48h_type = format_float(dz_48h_type)
     direc = os.getcwd() # get current working directory
 
     # # user input
@@ -4265,9 +4265,9 @@ def get_sum_weirdos_Li_var_litype(dx1_48h_type, dx2_48h_type, dz_48h_type, max_m
     col_excel_path = "path"
 
     if activate_radius == 2:
-        folder_name_destination_restructure = f"/restructure_{formatted_dx1_48h_type}_{formatted_dx2_48h_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}_optimizer/"
+        folder_name_destination_restructure = f"/restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}_optimizer/"
     elif activate_radius == 1:
-        folder_name_destination_restructure = f"/restructure_{formatted_dx1_48h_type}_{formatted_dx2_48h_type}_{max_mapping_radius}_optimizer/"
+        folder_name_destination_restructure = f"/restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_optimizer/"
 
     folder_name_perfect_poscar = "/perfect_poscar/cif_matrix/Li1/"
     cif_line_nr_start = 26  # index from 0
@@ -4340,7 +4340,7 @@ def get_sum_weirdos_Li_var_litype(dx1_48h_type, dx2_48h_type, dz_48h_type, max_m
     check_folder_existance(direc_restructure_destination)
 
     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-    path_perfect_poscar_48n24 = modif_dx_dz_cif_allvariables_litype(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
+    path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype, litype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
 
     # just copy file
     # copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
@@ -4415,7 +4415,7 @@ def get_sum_weirdos_Li_var_litype(dx1_48h_type, dx2_48h_type, dz_48h_type, max_m
         
         sum_weirdos_Li = float(file_loc_important_cols_sorted_toten["#weirdos_Li"].sum())
             
-        var_excel_file = f"{int(sum_weirdos_Li)}_{formatted_dx1_48h_type}_{formatted_dx2_48h_type}_{formatted_dz_48h_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+        var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
 
     elif activate_radius == 1:
         if litype == 0:
@@ -4439,7 +4439,7 @@ def get_sum_weirdos_Li_var_litype(dx1_48h_type, dx2_48h_type, dz_48h_type, max_m
 
         sum_weirdos_Li = float(file_loc_important_cols_sorted_toten["#weirdos_Li"].sum())
 
-        var_excel_file = f"{int(sum_weirdos_Li)}_{formatted_dx1_48h_type}_{formatted_dx2_48h_type}_{formatted_dz_48h_type}_{max_mapping_radius}"
+        var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}"
 
     path_excel_file = os.path.join(direc_perfect_poscar, f'04_outputs_{var_excel_file}_{var_optitype}.xlsx')
     file_loc_important_cols_sorted_toten.to_excel(path_excel_file, index=False)
