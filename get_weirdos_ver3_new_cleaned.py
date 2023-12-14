@@ -3667,7 +3667,7 @@ def change_dx_dz_specificlitype(file_path, file_path_new, ref_positions_array, l
 
 
 # # not yet changed from 3665 - 4444
-def get_sum_weirdos_Li_var(dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, max_mapping_radius, max_mapping_radius_48htype2, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype):
+def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype):
 
     formatted_dx1_48h_type1 = format_float(dx1_48h_type1)
     formatted_dx2_48h_type1 = format_float(dx2_48h_type1)
@@ -3678,6 +3678,66 @@ def get_sum_weirdos_Li_var(dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_t
     formatted_dx_24g = format_float(dx_24g)
     formatted_dz1_24g = format_float(dz1_24g)
     formatted_dz2_24g = format_float(dz2_24g)
+
+    ref_positions_array_all = np.array(get_dx_dz_init(file_path_ori_ref_48n24, litype))
+
+    if litype == 0:
+        dx_24g_init, dz1_24g_init, dz2_24g_init = ref_positions_array_all
+
+        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+        
+        ref_positions_array = ref_positions_array_all[0:3]
+
+    elif litype == 1:
+        dx_24g_init, dz1_24g_init, dz2_24g_init, dx1_48h_type1_init, dx2_48h_type1_init, dz_48h_type1_init = ref_positions_array_all
+
+        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+
+        ref_positions_array = ref_positions_array_all[3:6]
+
+    elif litype == 2:
+        dx_24g_init, dz1_24g_init, dz2_24g_init, dx1_48h_type1_init, dx2_48h_type1_init, dz_48h_type1_init, dx1_48h_type2_init, dx2_48h_type2_init, dz_48h_type2_init = ref_positions_array_all
+
+        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+        dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+
+        ref_positions_array = ref_positions_array_all[6:9]
+
+    elif litype == 3:
+        dx_24g_init, dz1_24g_init, dz2_24g_init, dx1_48h_type1_init, dx2_48h_type1_init, dz_48h_type1_init, dx1_48h_type2_init, dx2_48h_type2_init, dz_48h_type2_init, dx1_48h_type3_init, dx2_48h_type3_init, dz_48h_type3_init = ref_positions_array_all
+
+        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+        dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+        dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+
+        ref_positions_array = ref_positions_array_all[9:12]
+
+    elif litype == 4:
+        dx_24g_init, dz1_24g_init, dz2_24g_init, dx1_48h_type1_init, dx2_48h_type1_init, dz_48h_type1_init, dx1_48h_type2_init, dx2_48h_type2_init, dz_48h_type2_init, dx1_48h_type3_init, dx2_48h_type3_init, dz_48h_type3_init, dx1_48h_type4_init, dx2_48h_type4_init, dz_48h_type4_init = ref_positions_array_all
+
+        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+        dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+        dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+        dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
+
+        ref_positions_array = ref_positions_array_all[12:15]
+
+    elif litype == 5:
+        dx_24g_init, dz1_24g_init, dz2_24g_init, dx1_48h_type1_init, dx2_48h_type1_init, dz_48h_type1_init, dx1_48h_type2_init, dx2_48h_type2_init, dz_48h_type2_init, dx1_48h_type3_init, dx2_48h_type3_init, dz_48h_type3_init, dx1_48h_type4_init, dx2_48h_type4_init, dz_48h_type4_init, dx1_48h_type5_init, dx2_48h_type5_init, dz_48h_type5_init = ref_positions_array_all
+
+        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+        dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+        dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+        dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
+        dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
+
+        ref_positions_array = ref_positions_array_all[15:18]
+
     direc = os.getcwd() # get current working directory
 
     # # user input
@@ -4741,3 +4801,64 @@ def create_POSCAR_weirdos_centroids_appended(coor_weirdos, coor_centroids, desti
             f.write(" ".join(formatted_coor_centroid) + "\n")
 
     # print("POSCAR file created successfully.")
+            
+
+def create_file_loc(direc_init_system, data_toten, file_new_system):
+
+    geometry = np.array([])
+    path = np.array([])
+    subdir_col = np.array([])
+    subdir_col_init_system = np.array([])
+    subdir_col_perfect_poscar = np.array([])
+    for subdir, dirs, files in os.walk(direc,topdown=False):
+        # source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
+        for file in files:
+            filepath = subdir + os.sep
+            # get directory of CONTCAR
+            if os.patha.basename(file) == file_new_system:
+                geometry_nr = splitall(subdir)[-2]
+                path_nr = splitall(subdir)[-1]
+                geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
+                geometry_ori = geometry
+                # geometry = geometry.applymap(func=Replace)
+                geometry.dropna(axis=1)
+                path = pd.DataFrame(np.append(path, int(path_nr)), columns=["path"])
+                # path = path.applymap(func=Replace)
+                path.dropna(axis=1)
+                path_sorted = path.sort_values(by="path",ascending=False)
+                subdir_file = os.path.join(subdir,file_new_system)
+                # # create directory of POSCAR of init system
+                subdir_init_system = direc_init_system + os.sep + geometry_nr + os.sep + path_nr
+                # # subdir_file_init_system = os.path.join(subdir_init_system,file_init_system)
+                # subdir_file_perfect_poscar = os.path.join()
+                subdir_col = pd.DataFrame(np.append(subdir_col, subdir_file), columns=["subdir_new_system"])
+                # # subdir_col_init_system = pd.DataFrame(np.append(subdir_col_init_system, subdir_file_init_system), columns=["subdir_init_system"])
+                # # subdir_col_perfect_poscar = pd.DataFrame(np.append(subdir_col_perfect_poscar, direc_perfect_system), columns=["subdir_perfect_poscar"])
+                file_loc = geometry.join(path)
+                file_loc["subdir_new_system"] = subdir_col
+                # # file_loc["subdir_init_system"] = subdir_col_init_system
+                # # file_loc["subdir_perfect_poscar"] = subdir_col_perfect_poscar
+                path_ori = path
+
+    file_loc_ori_notsorted = file_loc.copy()
+    # file_loc_ori_notsorted = file_loc
+    file_loc = file_loc.sort_values(by=["geometry","path"],ignore_index=True,ascending=False) # sort descendingly based on path
+
+    file_loc["g+p"] = (file_loc["geometry"] + file_loc["path"]).fillna(0) # replace NaN with 0
+    # file_loc["g+p"] = file_loc["geometry"] + file_loc["path"]
+    file_loc["g+p+1"] = file_loc["g+p"].shift(1)
+    file_loc["g+p+1"][0] = 0 # replace 1st element with 0
+    file_loc["g+p-1"] = file_loc["g+p"].shift(-1)
+    file_loc["g+p-1"][(file_loc["g+p-1"]).size - 1] = 0.0 # replace last element with 0
+    file_loc["perfect_system"] = file_loc["g+p"][(file_loc["g+p+1"] > file_loc["g+p"]) & (file_loc["g+p-1"] > file_loc["g+p"])]
+    file_loc["perfect_system"][file_loc["geometry"].size-1] = 0.0 # hardcode the path 0/0
+    file_loc["p_s_mask"] = [0 if np.isnan(item) else 1 for item in file_loc["perfect_system"]]
+    # # subdir_filtered = file_loc["subdir"] * file_loc["p_s_mask"]
+
+
+    if data_toten[col_excel_geo].all() == file_loc["geometry"].all() & data_toten[col_excel_path].all() == file_loc["path"].all():
+        file_loc[col_excel_toten] = data_toten[col_excel_toten]
+    else:
+        print("check the compatibility of column geometry and path between data_toten file and file_loc")
+
+    return file_loc
