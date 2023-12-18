@@ -4273,7 +4273,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 #     return sum_weirdos_Li
 
 
-def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, df_wo_weirdos_selectedcol, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype):
+def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, df_wo_weirdos_selectedcol, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype, iter_type):
 
     file_loc_important_cols = df_wo_weirdos_selectedcol
 
@@ -4286,8 +4286,10 @@ def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_rad
     # max_mapping_radius = 0.043
     # max_mapping_radius_48htype2 = 0.076
     # activate_radius = 2
+    results_folder = "_results"
+    reference_folder = "_reference_cif"
 
-    file_path_ori_ref_48n24 = f"./perfect_poscar/cif_matrix/ori/{file_ori_ref_48n24}"
+    file_path_ori_ref_48n24 = f"./{reference_folder}/{file_ori_ref_48n24}"
     # max_mapping_radius_48htype1_48htype2 = (max_mapping_radius + max_mapping_radius_48htype2) / 2
     # file_ori_ref_48n24 = "Li6PS5Cl_type2.cif"
     # file_perfect_poscar_24 = "Li6PS5Cl_24_mod_2p27291.cif" # copy this manually to folder_name_perfect_poscar  
@@ -4298,12 +4300,19 @@ def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_rad
     col_excel_geo = "geometry"
     col_excel_path = "path"
 
-    if activate_radius == 2:
-        folder_name_destination_restructure = f"/restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}_optimizer/"
-    elif activate_radius == 1:
-        folder_name_destination_restructure = f"/restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_optimizer/"
+    folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_ori_ref_48n24}/"
+    path_folder_name_iter_type = direc+str(folder_name_iter_type)
+    check_folder_existance(path_folder_name_iter_type, empty_folder=False)
 
-    folder_name_perfect_poscar = "/perfect_poscar/cif_matrix/Li1/"
+    # copy ref.cif inside _results/../.. 
+    copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_ori_ref_48n24, prefix=None)
+
+    if activate_radius == 2:
+        folder_name_destination_restructure = f"{path_folder_name_iter_type}restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}_optimizer/"
+    elif activate_radius == 1:
+        folder_name_destination_restructure = f"{path_folder_name_iter_type}restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_optimizer/"
+
+    folder_name_perfect_poscar = folder_name_iter_type
     cif_line_nr_start = 26  # index from 0
     poscar_line_nr_start = 8
     poscar_line_nr_end = 60
