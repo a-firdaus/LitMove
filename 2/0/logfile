@@ -1,0 +1,64 @@
+ running  128 mpi-ranks, with    1 threads/rank, on    1 nodes
+ distrk:  each k-point on  128 cores,    1 groups
+ distr:  one band on   32 cores,    4 groups
+ vasp.6.4.1 05Apr23 (build Jun 07 2023 15:38:11) complex                        
+  
+ POSCAR found type information on POSCAR LiP S Cl
+ POSCAR found :  4 types and      52 ions
+ Reading from existing POTCAR
+ -----------------------------------------------------------------------------
+|                                                                             |
+|           W    W    AA    RRRRR   N    N  II  N    N   GGGG   !!!           |
+|           W    W   A  A   R    R  NN   N  II  NN   N  G    G  !!!           |
+|           W    W  A    A  R    R  N N  N  II  N N  N  G       !!!           |
+|           W WW W  AAAAAA  RRRRR   N  N N  II  N  N N  G  GGG   !            |
+|           WW  WW  A    A  R   R   N   NN  II  N   NN  G    G                |
+|           W    W  A    A  R    R  N    N  II  N    N   GGGG   !!!           |
+|                                                                             |
+|     You use a magnetic or noncollinear calculation, but did not specify     |
+|     the initial magnetic moment with the MAGMOM tag. Note that a            |
+|     default of 1 will be used for all atoms. This ferromagnetic setup       |
+|     may break the symmetry of the crystal, in particular it may rule        |
+|     out finding an antiferromagnetic solution. Thence, we recommend         |
+|     setting the initial magnetic moment manually or verifying carefully     |
+|     that this magnetic setup is desired.                                    |
+|                                                                             |
+ -----------------------------------------------------------------------------
+
+ scaLAPACK will be used
+ Reading from existing POTCAR
+ LDA part: xc-table for Pade appr. of Perdew
+ POSCAR found type information on POSCAR LiP S Cl
+ POSCAR found :  4 types and      52 ions
+ POSCAR, INCAR and KPOINTS ok, starting setup
+ FFT: planning ... GRIDC
+ FFT: planning ... GRID_SOFT
+ FFT: planning ... GRID
+ WAVECAR not read
+ entering main loop
+       N       E                     dE             d eps       ncg     rms          rms(c)
+RMM:   1     0.238263662262E+04    0.23826E+04   -0.88222E+04   704   0.107E+03
+RMM:   2     0.236863465133E+03   -0.21458E+04   -0.26524E+04   704   0.296E+02
+RMM:   3     0.120409599225E+03   -0.11645E+03   -0.61712E+03   704   0.227E+02
+RMM:   4    -0.848420245315E+02   -0.20525E+03   -0.17433E+03   704   0.177E+02
+RMM:   5    -0.164240261339E+03   -0.79398E+02   -0.73161E+02   704   0.106E+02
+RMM:   6    -0.200789222129E+03   -0.36549E+02   -0.34878E+02   704   0.721E+01
+RMM:   7    -0.219075184958E+03   -0.18286E+02   -0.17562E+02   704   0.499E+01
+RMM:   8    -0.237784431351E+03   -0.18709E+02   -0.18401E+02  1798   0.354E+01
+RMM:   9    -0.239995921636E+03   -0.22115E+01   -0.23228E+01  1982   0.788E+00
+RMM:  10    -0.240240924181E+03   -0.24500E+00   -0.21396E+00  2245   0.342E+00    0.655E+01
+RMM:  11    -0.222811711193E+03    0.17429E+02   -0.72989E+01  1778   0.216E+01    0.330E+01
+RMM:  12    -0.253830786280E+03   -0.31019E+02   -0.41389E+01  1713   0.144E+01    0.225E+01
+RMM:  13    -0.255790836793E+03   -0.19601E+01   -0.62751E+00  1482   0.537E+00    0.967E+00
+RMM:  14    -0.256106753308E+03   -0.31592E+00   -0.23990E+00  1701   0.321E+00    0.321E+00
+RMM:  15    -0.256107847951E+03   -0.10946E-02   -0.45785E-01  1703   0.158E+00    0.714E-01
+RMM:  16    -0.256130979835E+03   -0.23132E-01   -0.12556E-01  1657   0.831E-01    0.273E-01
+RMM:  17    -0.256137571296E+03   -0.65915E-02   -0.32476E-02  1905   0.444E-01    0.168E-01
+RMM:  18    -0.256139274001E+03   -0.17027E-02   -0.96369E-03  1846   0.235E-01    0.776E-02
+RMM:  19    -0.256139821037E+03   -0.54704E-03   -0.30124E-03  2026   0.125E-01    0.369E-02
+RMM:  20    -0.256139944287E+03   -0.12325E-03   -0.88210E-04  2081   0.657E-02    0.200E-02
+RMM:  21    -0.256139970490E+03   -0.26203E-04   -0.23404E-04  1958   0.325E-02    0.108E-02
+RMM:  22    -0.256139976768E+03   -0.62788E-05   -0.69697E-05  1228   0.214E-02
+   1 F= -.26823143E+03 E0= -.26823143E+03  d E =-.268231E+03  mag=    -0.0005
+ BRION: g(F)=  0.433E-04 g(S)=  0.000E+00
+ reached required accuracy - stopping structural energy minimisation

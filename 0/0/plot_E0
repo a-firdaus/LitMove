@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#This script uses gnuplot to create a graph of trial vs E0 on your slurm or OSZICAR file
+#Input: [1] : slurm/OSZICAR file
+
+file=$1
+output=${file}_extract
+
+awk '{ if ($4 == "E0=") print $1,$5  }' $file  > $output
+
+gnuplot -p <<-EOF
+    set terminal svg enhanced
+    set output "${file}.svg"
+    set title "E0 vs trial no. ${file} " font ",14"
+    set xlabel "Trial no"
+    set ylabel "E0"
+    set pointsize 2
+    plot "${output}" using 1:2 with linespoints
+EOF

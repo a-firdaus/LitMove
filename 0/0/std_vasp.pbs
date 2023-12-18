@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Job name
+#PBS -N new_lattice_coeff
+
+# Email about job evets such as start and finish
+#PBS -m abe
+
+# Email address
+#PBS -M azka.firdaus@rwth-aachen.de
+
+# Time your job needs to execute, e. g. 50 min
+#PBS -l walltime=12:00:00
+
+# Use more than one node for parallel jobs on distributed-memory systems, e. g. 2
+# Number of CPUS per task (for distributed-memory parallelisation, use all)
+# TO CHANGE: in this case, we want to run with 48 processors
+#PBS -l nodes=1:ppn=128
+
+# Output and error file
+#PBS -o out.log
+#PBS -e err.log
+
+# go to working directory, compile and run program with MPI
+cd $PBS_O_WORKDIR/
+
+# Load required modules
+module load intel/2022a
+module load imkl/2022.1.0
+module load HDF5/1.12.2-iimpi-2022a
+module swap cluster/dodrio/cpu_rome
+
+# Execute the program with MPI
+mpirun -machinefile $PBS_NODEFILE /user/gent/461/vsc46177/Software/VASP/vasp.6.4.1/bin/vasp_std > logfile
