@@ -66,42 +66,72 @@ def copy_rename_single_file(destination_directory, source_directory, filename, p
     # print(f"File copied and renamed: {filename} -> {new_filename}")
 
 
-def copy_rename_files(file_loc, destination_directory, filename, prefix):
+# def copy_rename_files(file_loc, destination_directory, filename, prefix):
+#     for index in range(file_loc["geometry"].size):
+#         # Generate the new filename
+#         if prefix == None:
+#             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}"
+#         else:
+#             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
+        
+#         # Get the source file path and destination file path
+#         destination_path = os.path.join(destination_directory, new_filename)
+        
+#         # Copy the file to the destination directory with the new name
+#         shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
+#         # print(f"File copied and renamed: {filename} -> {new_filename}")
+
+
+# def copy_rename_files_savedir(file_loc, destination_directory, filename, prefix):
+#     col_subdir_copiedrenamed_files = f"subdir_{filename}"
+
+#     file_loc[col_subdir_copiedrenamed_files] = None
+
+#     for index in range(file_loc["geometry"].size):
+#         # Generate the new filename
+#         if prefix == None:
+#             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}"
+#         else:
+#             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
+        
+#         # Get the source file path and destination file path
+#         destination_path = os.path.join(destination_directory, new_filename)
+
+#         # Copy the file to the destination directory with the new name
+#         shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
+#         # print(f"File copied and renamed: {filename} -> {new_filename}")
+
+#         file_loc.at[int(index), col_subdir_copiedrenamed_files] = destination_path
+
+
+def copy_rename_files(file_loc, destination_directory, filename, prefix, savedir):
+    if savedir == True:
+        col_subdir_copiedrenamed_files = f"subdir_{filename}"
+
+        file_loc[col_subdir_copiedrenamed_files] = None
+
+    elif savedir == False:
+        pass
+
     for index in range(file_loc["geometry"].size):
         # Generate the new filename
         if prefix == None:
             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}"
         else:
             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
-        
+
+
         # Get the source file path and destination file path
         destination_path = os.path.join(destination_directory, new_filename)
         
         # Copy the file to the destination directory with the new name
         shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
         # print(f"File copied and renamed: {filename} -> {new_filename}")
-
-
-def copy_rename_files_savedir(file_loc, destination_directory, filename, prefix):
-    col_subdir_copiedrenamed_files = f"subdir_{filename}"
-
-    file_loc[col_subdir_copiedrenamed_files] = None
-
-    for index in range(file_loc["geometry"].size):
-        # Generate the new filename
-        if prefix == None:
-            new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}"
-        else:
-            new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
-        
-        # Get the source file path and destination file path
-        destination_path = os.path.join(destination_directory, new_filename)
-
-        # Copy the file to the destination directory with the new name
-        shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
-        # print(f"File copied and renamed: {filename} -> {new_filename}")
-
-        file_loc.at[int(index), col_subdir_copiedrenamed_files] = destination_path
+    
+        if savedir == True:
+            file_loc.at[int(index), col_subdir_copiedrenamed_files] = destination_path
+        elif savedir == False:
+            pass
 
 
 # def copy_rename_single_file_and_delete_elements(destination_directory, source_directory, filename, prefix, line_ranges, line_numbers_edit, new_contents):
@@ -3393,7 +3423,7 @@ def get_orientation(file_loc, direc_restructure_destination, file_restructure, p
         # # just refreshing folder
         # check_folder_existance(direc_restructure_destination)
 
-        copy_rename_files_savedir(file_loc_mask_1, direc_restructure_destination, file_restructure, prefix=None)
+        copy_rename_files(file_loc_mask_1, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
         file_loc_mask_1['verify_w_lib'] = None
         file_loc_mask_1['verify_w_linalg'] = None
@@ -4509,7 +4539,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 
     file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-    copy_rename_files_savedir(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None)
+    copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None,  savedir = True)
 
 
     # # var_c = "trf_w_linalg_orientated"
@@ -4764,7 +4794,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 
 #     # file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-#     copy_rename_files_savedir(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None)
+#     copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
 #     # # var_c = "trf_w_linalg_orientated"
@@ -4952,7 +4982,7 @@ def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_rad
 
     # file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-    copy_rename_files_savedir(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None)
+    copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
     # # var_c = "trf_w_linalg_orientated"
@@ -5146,7 +5176,7 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
 
     file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-    copy_rename_files_savedir(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None)
+    copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
     # # var_c = "trf_w_linalg_orientated"
@@ -5655,3 +5685,25 @@ def create_file_loc_compact_demo(direc_init_system, data_toten, file_new_system)
 ##############################################################################################################################################################
 ##############################################################################################################################################################
 ##############################################################################################################################################################
+
+
+def get_idx_coor_Li_dict(file_path):
+    with open(file_path, 'r') as f:
+        content = f.read()
+
+    # Initialize a dictionary to store the data
+    Li_idx_coor_dict = {}
+
+    # Use regular expressions to extract Li indices and coordinates
+    li_pattern = re.compile(r'Li\s+Li(\d+)\s+1\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)')
+    matches = li_pattern.findall(content)
+
+    # Iterate through the matches and populate the dictionary
+    for match in matches:
+        index = int(match[0])
+        x = float(match[1])
+        y = float(match[2])
+        z = float(match[3])
+        Li_idx_coor_dict[index] = (x, y, z)
+
+    return Li_idx_coor_dict
