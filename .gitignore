@@ -2,5 +2,5 @@ results/
 perfect_poscar/
 _results/
 _reference_cif/
-__pycache__
+__pycache__/
 home/
