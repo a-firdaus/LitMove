@@ -66,42 +66,72 @@ def copy_rename_single_file(destination_directory, source_directory, filename, p
     # print(f"File copied and renamed: {filename} -> {new_filename}")
 
 
-def copy_rename_files(file_loc, destination_directory, filename, prefix):
+# def copy_rename_files(file_loc, destination_directory, filename, prefix):
+#     for index in range(file_loc["geometry"].size):
+#         # Generate the new filename
+#         if prefix == None:
+#             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}"
+#         else:
+#             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
+        
+#         # Get the source file path and destination file path
+#         destination_path = os.path.join(destination_directory, new_filename)
+        
+#         # Copy the file to the destination directory with the new name
+#         shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
+#         # print(f"File copied and renamed: {filename} -> {new_filename}")
+
+
+# def copy_rename_files_savedir(file_loc, destination_directory, filename, prefix):
+#     col_subdir_copiedrenamed_files = f"subdir_{filename}"
+
+#     file_loc[col_subdir_copiedrenamed_files] = None
+
+#     for index in range(file_loc["geometry"].size):
+#         # Generate the new filename
+#         if prefix == None:
+#             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}"
+#         else:
+#             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
+        
+#         # Get the source file path and destination file path
+#         destination_path = os.path.join(destination_directory, new_filename)
+
+#         # Copy the file to the destination directory with the new name
+#         shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
+#         # print(f"File copied and renamed: {filename} -> {new_filename}")
+
+#         file_loc.at[int(index), col_subdir_copiedrenamed_files] = destination_path
+
+
+def copy_rename_files(file_loc, destination_directory, filename, prefix, savedir):
+    if savedir == True:
+        col_subdir_copiedrenamed_files = f"subdir_{filename}"
+
+        file_loc[col_subdir_copiedrenamed_files] = None
+
+    elif savedir == False:
+        pass
+
     for index in range(file_loc["geometry"].size):
         # Generate the new filename
         if prefix == None:
             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}"
         else:
             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
-        
+
+
         # Get the source file path and destination file path
         destination_path = os.path.join(destination_directory, new_filename)
         
         # Copy the file to the destination directory with the new name
         shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
         # print(f"File copied and renamed: {filename} -> {new_filename}")
-
-
-def copy_rename_files_savedir(file_loc, destination_directory, filename, prefix):
-    col_subdir_copiedrenamed_files = f"subdir_{filename}"
-
-    file_loc[col_subdir_copiedrenamed_files] = None
-
-    for index in range(file_loc["geometry"].size):
-        # Generate the new filename
-        if prefix == None:
-            new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}"
-        else:
-            new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
-        
-        # Get the source file path and destination file path
-        destination_path = os.path.join(destination_directory, new_filename)
-
-        # Copy the file to the destination directory with the new name
-        shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
-        # print(f"File copied and renamed: {filename} -> {new_filename}")
-
-        file_loc.at[int(index), col_subdir_copiedrenamed_files] = destination_path
+    
+        if savedir == True:
+            file_loc.at[int(index), col_subdir_copiedrenamed_files] = destination_path
+        elif savedir == False:
+            pass
 
 
 # def copy_rename_single_file_and_delete_elements(destination_directory, source_directory, filename, prefix, line_ranges, line_numbers_edit, new_contents):
@@ -737,9 +767,9 @@ def get_coor_structure24_dict_iterated(dataframe, mapping):
 ##############################################################################################################################################################
 
 
-def eucledian_distance(coor1, coor2):
-    distance = math.sqrt(sum((x1 - x2)**2 for x1, x2 in zip(coor1, coor2)))
-    return distance
+# def eucledian_distance(coor1, coor2):
+#     distance = math.sqrt(sum((x1 - x2)**2 for x1, x2 in zip(coor1, coor2)))
+#     return distance
 
 
 def apply_pbc(value):
@@ -3393,7 +3423,7 @@ def get_orientation(file_loc, direc_restructure_destination, file_restructure, p
         # # just refreshing folder
         # check_folder_existance(direc_restructure_destination)
 
-        copy_rename_files_savedir(file_loc_mask_1, direc_restructure_destination, file_restructure, prefix=None)
+        copy_rename_files(file_loc_mask_1, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
         file_loc_mask_1['verify_w_lib'] = None
         file_loc_mask_1['verify_w_linalg'] = None
@@ -4238,10 +4268,11 @@ def change_dx_dz_specificlitype(file_path, file_path_new, ref_positions_array, l
 
 
 # # not yet changed from 3665 - 4444
-def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, activate_radius, file_perfect_poscar_24_wo_cif, file_perfect_poscar_48n24_wo_cif, litype, var_optitype, iter_type, foldermapping_namestyle_all, cif_namestyle_all, modif_all_litype):
+def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, activate_radius, file_perfect_poscar_24_wo_cif, file_perfect_poscar_48n24_wo_cif, litype, var_optitype, iter_type, foldermapping_namestyle_all, cif_namestyle_all, modif_all_litype, full_calculation):
     """
         iter_type: varying_dx_dz, varying_radius, none
         cif_namestyle_all: True, False, None
+        full_calculation: True, False
     """
     
     direc = os.getcwd() # get current working directory
@@ -4250,6 +4281,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     # max_mapping_radius = 0.043
     # max_mapping_radius_48htype2 = 0.076
     # activate_radius = 2
+    lattice_constant = 10.2794980000
 
     folder_name_init_system = "/Init_System"
     file_new_system = "CONTCAR"
@@ -4460,6 +4492,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     col_excel_toten = "toten [eV]" 
     amount_P = 4 
     amount_S = 20 
+    amount_Cl = 4
     file_restructure = "CONTCAR" 
     cif_columns = ['species', 'idx_species', 'unkownvar_1', 'coord_x', 'coord_y', 'coord_z', 'unkownvar_2'] 
 
@@ -4474,7 +4507,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     data_toten_ori = data_toten
     data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
 
-    file_loc = create_file_loc_compact_demo(direc_init_system, data_toten, file_new_system)
+    file_loc = create_file_loc(direc_init_system, data_toten, file_new_system)
 
     # just refreshing folder
     check_folder_existance(direc_restructure_destination, empty_folder=True)
@@ -4482,6 +4515,11 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     # copy ref.cif inside _results/../.. 
     copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_perfect_poscar_48n24, prefix=None)
 
+    copy_rename_files(file_loc, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
+    get_positive_lessthan1_poscarcontcar(file_loc, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+
+    file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
+    
     if modif_all_litype == True:
         ref_positions_array = ref_positions_array_all
     elif modif_all_litype == False:
@@ -4507,10 +4545,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     # copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_48n24, prefix=None)
     copy_rename_single_file(direc_restructure_destination, path_folder_name_iter_type, file_perfect_poscar_48n24, prefix=None)
 
-    file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
-
-    copy_rename_files_savedir(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None)
-
+    # copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None,  savedir = True)
 
     # # var_c = "trf_w_linalg_orientated"
     # # get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
@@ -4526,9 +4561,14 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     # max_mapping_radius = 0.055
     # max_mapping_radius = 0.04197083906
     ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
+    cif_structure = Structure(ref_structure_48n24.lattice, ref_structure_48n24.species, ref_structure_48n24.frac_coords)
+    cif = CifWriter(cif_structure)
+    cif.write_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif")
 
     coor_structure_init_dict = get_coor_dict_structure(ref_structure_48n24)
-    get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    coor_structure_init_dict_expanded = get_coor_dict_structure(Structure.from_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif"))
+
+    # get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
     get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
 
     # if activate_radius == 3:
@@ -4567,6 +4607,34 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 
     #     var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type1}_{dx2_48h_type1}_{formatted_dz_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{formatted_dz_48h_type2}_{dx_24g}_{dz1_24g}_{formatted_dz2_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}_{max_mapping_radius_48htype1_48htype2}"
     
+    if full_calculation == False:
+        pass
+    elif full_calculation == True:
+        create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, activate_radius, var_savefilename = "mapLi")
+        rewrite_cif_w_correct_Li_idx(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed")
+        format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed", var_savefilename_new = "mapLi_reindexed")
+        # # # # delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed.cif")
+
+        rewrite_cif_w_correct_Li_idx_weirdos_appended(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, activate_radius,var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
+        format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
+        # # # delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed_weirdos_appended.cif")
+
+        create_cif_pymatgen(file_loc_important_cols, direc_restructure_destination, file_restructure = "CONTCAR_positive", var_name = "CONTCAR_positive_pymatgen")
+
+        # # # ascending_Li(file_loc_important_cols, direc_restructure_destination, var_filename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
+        # # # format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended_reordered", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
+
+        get_idx_coor_limapped_weirdos_dict_litype(file_loc_important_cols, coor_structure_init_dict, activate_radius, litype, el="Li")
+
+        get_latticeconstant_structure_dict_iterated(file_loc_important_cols, direc_restructure_destination, var_filename = "CONTCAR")
+        # plot_energy_vs_latticeconstant(file_loc_important_cols, var_filename = "CONTCAR")
+        plot_weirdos_directcoor(file_loc_important_cols, activate_radius)
+
+        coor_weirdos_Li = get_coor_weirdos_array(file_loc_important_cols, activate_radius)
+        create_POSCAR_weirdos(coor_weirdos_Li, direc_restructure_destination, lattice_constant, filename = "POSCAR_weirdos")
+
+        get_label_mapping(file_loc_important_cols, coor_structure_init_dict, "Li", activate_radius, litype)
+
     if litype == 0:
         file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
         file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]]
@@ -4689,6 +4757,13 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     path_excel_file = os.path.join(path_folder_name_iter_type, f'04_outputs_{var_excel_file}_{var_optitype}.xlsx')
     file_loc_important_cols_sorted_toten.to_excel(path_excel_file, index=False)
 
+    if activate_radius == 1:
+        file_loc_important_cols.to_pickle(f'{path_folder_name_iter_type}file_loc_important_cols_{max_mapping_radius}_{file_perfect_poscar_48n24_wo_cif}.pkl') 
+    elif activate_radius == 2:
+        file_loc_important_cols.to_pickle(f'{path_folder_name_iter_type}file_loc_important_cols_{max_mapping_radius}_{max_mapping_radius_48htype2}_{file_perfect_poscar_48n24_wo_cif}.pkl')
+    # elif activate_radius == 3:
+    #     file_loc_important_cols.to_pickle(f'{path_folder_name_iter_type}file_loc_important_cols_{max_mapping_radius}_{max_mapping_radius_48htype2}_{max_mapping_radius_48htype1_48htype2}_{file_perfect_poscar_48n24_wo_cif}.pkl')
+
     return sum_weirdos_Li
 
 
@@ -4764,7 +4839,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 
 #     # file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-#     copy_rename_files_savedir(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None)
+#     copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
 #     # # var_c = "trf_w_linalg_orientated"
@@ -4952,7 +5027,7 @@ def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_rad
 
     # file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-    copy_rename_files_savedir(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None)
+    copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
     # # var_c = "trf_w_linalg_orientated"
@@ -5146,7 +5221,7 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
 
     file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-    copy_rename_files_savedir(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None)
+    copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
     # # var_c = "trf_w_linalg_orientated"
@@ -5647,3 +5722,1168 @@ def create_file_loc_compact_demo(direc_init_system, data_toten, file_new_system)
         print("check the compatibility of column geometry and path between data_toten file and file_loc")
 
     return file_loc
+
+
+
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+
+
+def get_triads_movement(destination_directory, geo, var_filename, filename_ref_72):
+    # df_coor = pd.DataFrame()
+    df_triad = pd.DataFrame()
+    df_ratio = pd.DataFrame()
+    df_dist = pd.DataFrame()
+
+    df_dist["dist"] = None
+    # coor_Li_ref = []
+
+    # col_xyz_coor = "xyz_coor"
+
+    # df_coor[col_xyz_coor] = None
+
+    if geo == 0:
+        path_geo = path_geo_0
+    elif geo == 1:
+        path_geo = path_geo_1
+    elif geo == 2:
+        path_geo = path_geo_2
+    elif geo == 3:
+        path_geo = path_geo_3
+    elif geo == 4:
+        path_geo = path_geo_4
+    elif geo == 5:
+        path_geo = path_geo_5
+    elif geo == 6:
+        path_geo = path_geo_6
+    elif geo == 7:
+        path_geo = path_geo_7
+    elif geo == 8:
+        path_geo = path_geo_8
+
+    file_ref_24 = f"{geo}_0_{var_filename}.cif"
+    file_path_ref_24 = os.path.join(destination_directory, file_ref_24)
+
+    file_ref_72 = f"{filename_ref_72}.cif"
+    file_path_ref_72 = os.path.join(destination_directory, file_ref_72)
+
+
+    idx_coor_Li_dict_ref_24 = get_idx_coor_Li_dict(file_path_ref_24)    # key is the pointer to 24
+    idx_coor_Li_dict_ref_72 = get_idx_coor_Li_dict(file_path_ref_72)    # key is the pointer to 24
+
+    idx_coor_Li_dict_ref_triad = get_idx_coor_Li_dict_ref_triad(idx_coor_Li_dict_ref_24, idx_coor_Li_dict_ref_72)
+    # idxs_Li_ref_24 = list(idx_coor_Li_dict_ref_24.keys())
+    # idxs_Li_ref_72 = list(idx_coor_Li_dict_ref_72.keys())
+
+    for i in path_geo:
+        # coor_Li = []
+        file = f"{geo}_{i}_{var_filename}.cif"
+        file_path = os.path.join(destination_directory, file)
+
+        idx_coor_Li_dict = get_idx_coor_Li_dict(file_path)
+        # idxs_Li = list(idx_coor_Li_dict.keys())
+
+        # # idx_coor_Li_triad_belonging_initial = defaultdict(list)
+        # # idx_coor_Li_triad_belonging_initial_centroid = defaultdict(list)
+
+        ### does the numeration of Li is important?
+        ### 1) check which triad it does belong to initially
+
+        idx_coor_Li_idx_centroid_triad_ref = get_idx_coor_Li_idx_centroid_triad(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_ref_24)
+        idx_coor_Li_idx_centroid_triad = get_idx_coor_Li_idx_centroid_triad(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict)
+        idxs_Li_dict = [i for i in range(24) if i in idx_coor_Li_idx_centroid_triad.keys()]
+
+        ## get ratio of 24:48
+        counter_48 = 0
+        for Li_idx, val in idx_coor_Li_idx_centroid_triad.items():
+            # print(mic_eucledian_distance(val['coor'], val['centroid_triad']))
+            if val['structure'] == 48:
+                counter_48 = counter_48 + 1
+        # print(f"path {i} has ratio of 48 of: {counter_48/len(idx_coor_Li_idx_centroid_triad)}")
+        df_ratio.at[i, "ratio of 48"] = counter_48/len(idx_coor_Li_idx_centroid_triad)
+
+        ## get li-to-li-distance 
+        dist_ascending, sorted_coors_Li_dist_structures = get_dist_ascending(idx_coor_Li_idx_centroid_triad)
+        # print(dist_ascending)
+        df_dist.at[i, "dist"] = dist_ascending[1:6]
+
+        for j in idxs_Li_dict:
+            # df_triad.at[i, f"{j}"] = None  
+
+            triad = idx_coor_Li_idx_centroid_triad[j]["idx_triad"]
+
+            df_triad.at[i, f"{j}"] = triad
+
+            if triad == df_triad.at[0, f"{j}"] and i != 0:
+                print(f"path: {i}, Li: {j}, triad: {triad}")
+
+    return df_triad, df_ratio, df_dist, sorted_coors_Li_dist_structures
+
+
+
+def get_triads_fullness(destination_directory, geo, var_filename, filename_ref_72):
+    # df_idx_triad_counts = pd.DataFrame #(np.zeros((24, 1)))
+    # df_idx_triad_counts["idx_triad_counts"] = None
+
+    idx_coor_Li_idx_centroid_triad_weirdos_appended_dict = defaultdict(list)
+
+    if geo == 0:
+        path_geo = path_geo_0
+    elif geo == 1:
+        path_geo = path_geo_1
+    elif geo == 2:
+        path_geo = path_geo_2
+    elif geo == 3:
+        path_geo = path_geo_3
+    elif geo == 4:
+        path_geo = path_geo_4
+    elif geo == 5:
+        path_geo = path_geo_5
+    elif geo == 6:
+        path_geo = path_geo_6
+    elif geo == 7:
+        path_geo = path_geo_7
+    elif geo == 8:
+        path_geo = path_geo_8
+
+    df_idx_triad_counts = pd.DataFrame(np.zeros((24, len(path_geo))))
+
+    file_ref_24 = f"{geo}_0_{var_filename}.cif"
+    file_path_ref_24 = os.path.join(destination_directory, file_ref_24)
+
+    file_ref_72 = f"{filename_ref_72}.cif"
+    file_path_ref_72 = os.path.join(destination_directory, file_ref_72)
+
+    idx_coor_Li_dict_ref_24 = get_idx_coor_Li_dict(file_path_ref_24)    # key is the pointer to 24
+    idx_coor_Li_dict_ref_72 = get_idx_coor_Li_dict(file_path_ref_72)    # key is the pointer to 24
+
+    idx_coor_Li_dict_ref_triad = get_idx_coor_Li_dict_ref_triad(idx_coor_Li_dict_ref_24, idx_coor_Li_dict_ref_72)
+    # idxs_Li_ref_24 = list(idx_coor_Li_dict_ref_24.keys())
+    # idxs_Li_ref_72 = list(idx_coor_Li_dict_ref_72.keys())
+
+    for i in path_geo:
+        # coor_Li = []
+        file = f"{geo}_{i}_{var_filename}.cif"
+        file_path = os.path.join(destination_directory, file)
+
+        idx_coor_Li_dict = get_idx_coor_Li_dict(file_path)
+
+        file_weirdos_appended = f"{geo}_{i}_{var_filename}_weirdos_appended.cif"
+        file_path_weirdos_appended = os.path.join(destination_directory, file_weirdos_appended)
+
+        idx_coor_Li_dict_weirdos_appended = get_idx_coor_Li_dict(file_path_weirdos_appended)
+        # idx_coor_Li_dict_ref_triad_weirdos_appended = get_idx_coor_Li_dict_ref_triad(idx_coor_Li_dict_weirdos_appended, idx_coor_Li_dict_ref_72)
+
+        idxs_Li = list(idx_coor_Li_dict.keys())
+        idxs_Li_not = sorted(i for i in range(24) if i not in idxs_Li)
+        # idxs_Li = list(idx_coor_Li_dict.keys())
+
+        # # idx_coor_Li_triad_belonging_initial = defaultdict(list)
+        # # idx_coor_Li_triad_belonging_initial_centroid = defaultdict(list)
+
+        ### does the numeration of Li is important?
+        ### 1) check which triad it does belong to initially
+
+        idx_coor_Li_idx_centroid_triad_ref = get_idx_coor_Li_idx_centroid_triad(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_ref_24)
+        idx_coor_Li_idx_centroid_triad = get_idx_coor_Li_idx_centroid_triad_w_closest_dist(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict)
+        idx_coor_Li_idx_centroid_triad_weirdos_appended = get_idx_coor_Li_idx_centroid_triad_w_closest_dist_weirdos_appended(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_weirdos_appended, idxs_Li_not)
+        # idx_coor_Li_idx_centroid_triad_weirdos_appended = get_idx_coor_Li_idx_centroid_triad_w_closest_dist(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_weirdos_appended)
+        idxs_Li_dict = [i for i in range(24) if i in idx_coor_Li_idx_centroid_triad.keys()]
+        
+        idx_triad_array = sorted([val['idx_triad'] for val in idx_coor_Li_idx_centroid_triad.values()])
+        idx_triad_array_not = sorted(i for i in range(24) if i not in idx_triad_array)
+        # idxs_Li_triad_dict = [i for i in range(24) if i in idx_coor_Li_idx_centroid_triad()]
+
+        # idx_triad_series = pd.Series(idx_triad_array)
+        # df_idx_triad_counts[i] = idx_triad_series.value_counts()
+
+        idx_triad_counts = defaultdict(int)
+        # Count the occurrences of each idx_triad
+        # idx_triad_counts = pd.DataFrame(np.zeros((24, 1)))
+        for key, val in idx_coor_Li_idx_centroid_triad.items():
+            idx_triad = val['idx_triad']
+            idx_triad_counts[idx_triad] += 1
+        for j in idx_triad_array_not:
+            idx_triad_counts[j] = 0
+
+        # df_idx_triad_counts.at[i, "idx_triad_counts"] = dict(idx_triad_counts)
+        # df_idx_triad_counts = pd.DataFrame(np.zeros((24, 1)))
+        df_idx_triad_counts[i] = dict(idx_triad_counts)
+        # df_idx_triad_counts[i].fillna(0)
+
+        idx_coor_Li_idx_centroid_triad_weirdos_appended_dict[i] = dict(idx_coor_Li_idx_centroid_triad_weirdos_appended)
+
+    return df_idx_triad_counts, idx_coor_Li_idx_centroid_triad_weirdos_appended_dict
+
+
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+
+
+def plot_mapped_label_vs_dist_and_histogram(dataframe, litype, category_data, el):
+    """
+        category_data: mapping, weirdo
+        TO DO: correct the map for histogram
+    """
+    dist_weirdos_el_appendend = []
+    label_weirdos_el_appended = []
+    idx_appended = []
+
+    if category_data == "mapping":
+        col_dist_label_el = f"atom_mapping_{el}_w_dist_label"
+    elif category_data == "weirdo":
+        col_dist_label_el = f'top1_sorted_idxweirdo_dist_label_{el}'
+        col_top1_sorted_idxweirdo_coor_el = f"top1_sorted_idxweirdo_coor_{el}"
+        coor_weirdos_el_appended = []    
+
+    for idx in range(dataframe["geometry"].size):
+        atom_mapping_el_w_dist_label = dataframe.at[idx, col_dist_label_el]
+        if category_data == "weirdo":
+            coor_weirdos_el = dataframe.at[idx, col_top1_sorted_idxweirdo_coor_el].values()
+
+        for i in atom_mapping_el_w_dist_label.values():
+            if category_data == "mapping":
+                dist = i['dist']
+                label = i['label']
+            elif category_data == "weirdo":
+                dist = i[0]['dist']
+                label = i[0]['label']
+
+            dist_weirdos_el_appendend.append(dist)
+            label_weirdos_el_appended.append(label)
+            idx_appended.append(idx)
+
+        if category_data == "weirdo":
+            for single_coor in coor_weirdos_el:
+                coor_weirdos_el_appended.append(single_coor[0])
+
+    if category_data == "mapping":
+        df = pd.DataFrame({'dist': dist_weirdos_el_appendend, 'label': label_weirdos_el_appended, 'idx_nr': idx_appended})
+    elif category_data == "weirdo":
+        df = pd.DataFrame({'dist': dist_weirdos_el_appendend, 'label': label_weirdos_el_appended, 'idx_nr': idx_appended, 'coor': coor_weirdos_el_appended})
+
+    fig = px.scatter(df, 
+                    x = 'label', 
+                    y = 'dist',
+                    title = 'Mapped atom type vs its distance'
+                    )
+
+    fig.show(config={'scrollZoom': True})
+
+    # if litype == 0:
+    #     df_24g = df.loc[df['label'] == '24g']
+    #     plt.hist(df_24g['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 24g')
+    # elif litype == 1:
+    #     df_24g = df.loc[df['label'] == '24g']
+    #     plt.hist(df_24g['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 24g')
+            
+    #     df_48htype1 = df.loc[df['label'] == '48htype1']
+    #     plt.hist(df_48htype1['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype1')
+    # elif litype == 2:
+    #     df_24g = df.loc[df['label'] == '24g']
+    #     plt.hist(df_24g['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 24g')
+            
+    #     df_48htype1 = df.loc[df['label'] == '48htype1']
+    #     plt.hist(df_48htype1['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype1')
+
+    #     df_48htype2 = df.loc[df['label'] == '48htype2']
+    #     plt.hist(df_48htype2['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype2')
+    # elif litype == 3:
+    #     df_24g = df.loc[df['label'] == '24g']
+    #     plt.hist(df_24g['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 24g')
+            
+    #     df_48htype1 = df.loc[df['label'] == '48htype1']
+    #     plt.hist(df_48htype1['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype1')
+
+    #     df_48htype2 = df.loc[df['label'] == '48htype2']
+    #     plt.hist(df_48htype2['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype2')
+
+    #     df_48htype3 = df.loc[df['label'] == '48htype3']
+    #     plt.hist(df_48htype3['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype3')
+    # elif litype == 4:
+    #     df_24g = df.loc[df['label'] == '24g']
+    #     plt.hist(df_24g['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 24g')
+            
+    #     df_48htype1 = df.loc[df['label'] == '48htype1']
+    #     plt.hist(df_48htype1['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype1')
+
+    #     df_48htype2 = df.loc[df['label'] == '48htype2']
+    #     plt.hist(df_48htype2['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype2')
+
+    #     df_48htype3 = df.loc[df['label'] == '48htype3']
+    #     plt.hist(df_48htype3['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype3')
+
+    #     df_48htype4 = df.loc[df['label'] == '48htype4']
+    #     plt.hist(df_48htype4['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype4')
+    # elif litype == 5:
+    #     df_24g = df.loc[df['label'] == '24g']
+    #     plt.hist(df_24g['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 24g')
+            
+    #     df_48htype1 = df.loc[df['label'] == '48htype1']
+    #     plt.hist(df_48htype1['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype1')
+
+    #     df_48htype2 = df.loc[df['label'] == '48htype2']
+    #     plt.hist(df_48htype2['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype2')
+
+    #     df_48htype3 = df.loc[df['label'] == '48htype3']
+    #     plt.hist(df_48htype3['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype3')
+
+    #     df_48htype4 = df.loc[df['label'] == '48htype4']
+    #     plt.hist(df_48htype4['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype4')
+
+    #     df_48htype5 = df.loc[df['label'] == '48htype5']
+    #     plt.hist(df_48htype5['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype5')
+    # elif litype == 6:
+    #     df_24g = df.loc[df['label'] == '24g']
+    #     plt.hist(df_24g['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 24g')
+            
+    #     df_48htype1 = df.loc[df['label'] == '48htype1']
+    #     plt.hist(df_48htype1['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype1')
+
+    #     df_48htype2 = df.loc[df['label'] == '48htype2']
+    #     plt.hist(df_48htype2['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype2')
+
+    #     df_48htype3 = df.loc[df['label'] == '48htype3']
+    #     plt.hist(df_48htype3['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype3')
+
+    #     df_48htype4 = df.loc[df['label'] == '48htype4']
+    #     plt.hist(df_48htype4['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype4')
+
+    #     df_48htype5 = df.loc[df['label'] == '48htype5']
+    #     plt.hist(df_48htype5['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype5')
+
+    #     df_48htype6 = df.loc[df['label'] == '48htype6']
+    #     plt.hist(df_48htype6['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype6')
+    # elif litype == 7:
+    #     df_24g = df.loc[df['label'] == '24g']
+    #     plt.hist(df_24g['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 24g')
+            
+    #     df_48htype1 = df.loc[df['label'] == '48htype1']
+    #     plt.hist(df_48htype1['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype1')
+
+    #     df_48htype2 = df.loc[df['label'] == '48htype2']
+    #     plt.hist(df_48htype2['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype2')
+
+    #     df_48htype3 = df.loc[df['label'] == '48htype3']
+    #     plt.hist(df_48htype3['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype3')
+
+    #     df_48htype4 = df.loc[df['label'] == '48htype4']
+    #     plt.hist(df_48htype4['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype4')
+
+    #     df_48htype5 = df.loc[df['label'] == '48htype5']
+    #     plt.hist(df_48htype5['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype5')
+
+    #     df_48htype6 = df.loc[df['label'] == '48htype6']
+    #     plt.hist(df_48htype6['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype6')
+
+    #     df_48htype7 = df.loc[df['label'] == '48htype7']
+    #     plt.hist(df_48htype7['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype7')
+    # elif litype == 8:
+    #     df_24g = df.loc[df['label'] == '24g']
+    #     plt.hist(df_24g['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 24g')
+            
+    #     df_48htype1 = df.loc[df['label'] == '48htype1']
+    #     plt.hist(df_48htype1['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype1')
+
+    #     df_48htype2 = df.loc[df['label'] == '48htype2']
+    #     plt.hist(df_48htype2['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype2')
+
+    #     df_48htype3 = df.loc[df['label'] == '48htype3']
+    #     plt.hist(df_48htype3['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype3')
+
+    #     df_48htype4 = df.loc[df['label'] == '48htype4']
+    #     plt.hist(df_48htype4['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype4')
+
+    #     df_48htype5 = df.loc[df['label'] == '48htype5']
+    #     plt.hist(df_48htype5['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype5')
+
+    #     df_48htype6 = df.loc[df['label'] == '48htype6']
+    #     plt.hist(df_48htype6['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype6')
+
+    #     df_48htype7 = df.loc[df['label'] == '48htype7']
+    #     plt.hist(df_48htype7['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype7')
+
+    #     df_48htype8 = df.loc[df['label'] == '48htype8']
+    #     plt.hist(df_48htype8['dist'], color='lightgreen', ec='black', bins=15)
+    #     plt.title('Distribution of Distances for 48htype8')
+
+    return df
+
+
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+
+
+def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
+    coor_structure_init_dict_expanded_el = coor_structure_init_dict_expanded[el]
+    
+    if litype == 1:
+        n = 3
+    else:
+        n = ((litype * 2) - 1)
+
+    tuple_metainfo = {}
+
+    coor_li24g_ref      = coor_structure_init_dict_expanded_el[0:24]
+    if litype == 1:
+        coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
+    elif litype == 2:
+        coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
+        coor_li48htype2_ref = coor_structure_init_dict_expanded_el[72:120]
+    elif litype == 3:
+        coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
+        coor_li48htype2_ref = coor_structure_init_dict_expanded_el[72:120]
+        coor_li48htype3_ref = coor_structure_init_dict_expanded_el[120:168]
+    elif litype == 4:
+        coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
+        coor_li48htype2_ref = coor_structure_init_dict_expanded_el[72:120]
+        coor_li48htype3_ref = coor_structure_init_dict_expanded_el[120:168]
+        coor_li48htype4_ref = coor_structure_init_dict_expanded_el[168:216]
+    elif litype == 5:
+        coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
+        coor_li48htype2_ref = coor_structure_init_dict_expanded_el[72:120]
+        coor_li48htype3_ref = coor_structure_init_dict_expanded_el[120:168]
+        coor_li48htype4_ref = coor_structure_init_dict_expanded_el[168:216]
+        coor_li48htype5_ref = coor_structure_init_dict_expanded_el[216:264]
+    elif litype == 6:
+        coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
+        coor_li48htype2_ref = coor_structure_init_dict_expanded_el[72:120]
+        coor_li48htype3_ref = coor_structure_init_dict_expanded_el[120:168]
+        coor_li48htype4_ref = coor_structure_init_dict_expanded_el[168:216]
+        coor_li48htype5_ref = coor_structure_init_dict_expanded_el[216:264]
+        coor_li48htype6_ref = coor_structure_init_dict_expanded_el[264:312]
+    elif litype == 7:
+        coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
+        coor_li48htype2_ref = coor_structure_init_dict_expanded_el[72:120]
+        coor_li48htype3_ref = coor_structure_init_dict_expanded_el[120:168]
+        coor_li48htype4_ref = coor_structure_init_dict_expanded_el[168:216]
+        coor_li48htype5_ref = coor_structure_init_dict_expanded_el[216:264]
+        coor_li48htype6_ref = coor_structure_init_dict_expanded_el[264:312]
+        coor_li48htype7_ref = coor_structure_init_dict_expanded_el[312:360]
+    elif litype == 8:
+        coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
+        coor_li48htype2_ref = coor_structure_init_dict_expanded_el[72:120]
+        coor_li48htype3_ref = coor_structure_init_dict_expanded_el[120:168]
+        coor_li48htype4_ref = coor_structure_init_dict_expanded_el[168:216]
+        coor_li48htype5_ref = coor_structure_init_dict_expanded_el[216:264]
+        coor_li48htype6_ref = coor_structure_init_dict_expanded_el[264:312]
+        coor_li48htype7_ref = coor_structure_init_dict_expanded_el[312:360]
+        coor_li48htype8_ref = coor_structure_init_dict_expanded_el[360:408]
+
+    tuple_metainfo_all = defaultdict(list)
+
+    for idx_i, i in enumerate(coor_li24g_ref):
+
+        tuple_metainfo_24g_dict =  {'coor': i, 'dist': 0.0, 'type': '24g'}
+
+        tuple_metainfo_all[idx_i].append(tuple_metainfo_24g_dict)
+
+        if litype == 1:
+            for j in coor_li48htype1_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+        
+        elif litype == 2:
+            for j in coor_li48htype1_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype2_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+        elif litype == 3:
+            for j in coor_li48htype1_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+                
+            for j in coor_li48htype2_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype3_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+        elif litype == 4:
+            for j in coor_li48htype1_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+                
+            for j in coor_li48htype2_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype3_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype4_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+        elif litype == 5:
+            for j in coor_li48htype1_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+                
+            for j in coor_li48htype2_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype3_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype4_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype5_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+        elif litype == 6:
+            for j in coor_li48htype1_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+                
+            for j in coor_li48htype2_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype3_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype4_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype5_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype6_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype6'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+        elif litype == 7:
+            for j in coor_li48htype1_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+                
+            for j in coor_li48htype2_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype3_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype4_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype5_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype6_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype6'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype7_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype7'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+                
+        elif litype == 7:
+            for j in coor_li48htype1_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+                
+            for j in coor_li48htype2_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype3_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype4_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype5_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype6_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype6'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype7_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype7'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+            for j in coor_li48htype8_ref:
+                distance = mic_eucledian_distance(i, j)
+
+                tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype8'}
+
+                tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
+
+
+    sorted_tuple_metainfo_all = {key: sorted(value, key=lambda x: x['dist']) for key, value in tuple_metainfo_all.items()}
+    top_n_tuple_metainfo = {k: v[0:n] for k, v in sorted_tuple_metainfo_all.items()}
+
+    for key, values_list in top_n_tuple_metainfo.items():
+        selected_values = [{'coor': entry['coor'], "type": entry["type"]} for entry in values_list]
+        tuple_metainfo[key] = selected_values
+                        
+    return tuple_metainfo   
+
+
+def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, destination_directory, var_filename, el):
+    col_occupancy = "occupancy"
+
+    dataframe[col_occupancy] = [{} for _ in range(len(dataframe.index))]
+
+    coor_structure_init_dict_expanded_el = coor_structure_init_dict_expanded[el]
+    coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
+
+    coor24li_tuple_belongin = defaultdict(list)
+
+    for idx in range(dataframe["geometry"].size):
+        file_24Li = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_filename}.cif"
+        file_path_24Li = os.path.join(destination_directory, file_24Li)
+
+        coor_structure_24Li_dict_el = get_coor_dict_structure(Structure.from_file(file_path_24Li))[el]
+        
+        # Convert lists of arrays to sets for efficient comparison
+        set_coor_structure = set(map(tuple, coor_structure_24Li_dict_el))
+        set_coor_li48htype1_ref = set(map(tuple, coor_li48htype1_ref))
+
+        # Find the difference between the two sets
+        result_set = set_coor_structure.difference(set_coor_li48htype1_ref)
+
+        # Convert the result back to a list of arrays
+        result_list = list(map(np.array, result_set))
+        # for idx_triad, val in tuple_metainfo.items():
+
+        for idx_triad, values_list in tuple_metainfo.items():
+            coor24li_tuple_belongin[idx_triad] = []
+            
+            for entry in values_list:
+                for i in result_list:
+            
+                    if (i == entry['coor']).all():
+                        # if (tuple(i) == tuple(entry['coor'])).all():
+                        coor24li_tuple_belongin_dict = {'coor': i, 'type':entry['type']}
+                        coor24li_tuple_belongin[idx_triad].append(coor24li_tuple_belongin_dict)
+
+        # idx_coor_weirdos_Li_dict = dataframe['idx_coor_weirdos_Li'][idx]
+
+        # for idx_weirdo, values_list in idx_coor_weirdos_Li_dict.items():
+        #         coorweirdo_tuple_belongin_dict = {'coor': values_list, 'type':'weirdo'}
+        #         coor24li_tuple_belongin['weirdo'].append(coorweirdo_tuple_belongin_dict)
+        
+        # for key, val in coor24li_tuple_belongin.items():
+        #     for i
+
+        len_occupancy = []
+        for key, val in coor24li_tuple_belongin.items():
+            len_occupancy.append(len(val))
+
+
+        amount_48htype1 = (len(coor_structure_24Li_dict_el)-len(result_list))
+        amount_weirdo = dataframe['#weirdos_Li'][idx]
+        occupancy_2 = len_occupancy.count(2)
+        occupancy_1 = len_occupancy.count(1)
+        occupancy_0 = len_occupancy.count(0) - amount_48htype1 - amount_weirdo
+
+        sanity_check_occupancy = occupancy_2 * 2 + occupancy_1
+
+        # if sanity_check_occupancy != 24:
+        #     sys.exit()
+
+        # print(f"idx: {idx}")
+
+        # if sanity_check_occupancy != 24:
+        #     sys.exit()
+
+        occupancy = {'2': occupancy_2, '1': occupancy_1, '0': occupancy_0, '48htype1': amount_48htype1,'weirdo': amount_weirdo}
+
+        dataframe.at[idx, col_occupancy] = occupancy
+
+
+def plot_occupancy(dataframe):
+    col_occupancy = "occupancy"
+
+    df = pd.DataFrame()
+    df['idx_file'] = None
+    df['2'] = None
+    df['1'] = None
+    df['0'] = None
+    df['48htype1'] = None
+    df['weirdo'] = None
+
+    for idx in range(dataframe["geometry"].size):
+
+        occupancy = dataframe.at[idx, col_occupancy]
+
+        # for key, val in occupancy.items():
+        df.at[idx, 'idx_file'] = idx
+        df.at[idx, '2'] = occupancy['2']
+        df.at[idx, '1'] = occupancy['1']
+        df.at[idx, '0'] = occupancy['0']
+        df.at[idx, '48htype1'] = occupancy['48htype1']
+        df.at[idx, 'weirdo'] = occupancy['weirdo']
+
+    wide_df = pd.DataFrame(df)
+
+    # Convert wide format to long format
+    # long_df = pd.melt(wide_df, var_name='Category', value_name='Count')
+    long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
+
+    fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx of file vs Occupancy")
+    fig.show()
+
+    # # # Plotting
+    # fig = px.bar(df, x=df.index, y=['2', '1', '0', '48htype1','weirdo'], title='Stacked Bar Plot')
+    # fig.update_layout(barmode='stack')
+
+    # fig.show()
+
+    # fig, ax = plt.subplots()
+
+    # for i, col in enumerate(df.columns):
+    #     ax.bar(df.index, df[col], label=col, bottom=df.iloc[:, :i].sum(axis=1))
+
+    # ax.legend()
+
+    # plt.xlabel('Index')
+    # plt.ylabel('Count')
+    # plt.title('Stacked Bar Plot from Given Data')
+    # plt.show()
+    return df
+
+
+def get_amount_type(dataframe, litype, el):
+    col_atom_mapping_el_w_dist_label = f"atom_mapping_{el}_w_dist_label"
+    col_amount_weirdos_el = f'#weirdos_{el}'
+
+    col_amount_type = f"amount_type_{el}"
+
+    dataframe[col_amount_type] = [{} for _ in range(len(dataframe.index))]
+
+    for idx in range(dataframe["geometry"].size):
+
+        atom_mapping_el_w_dist_label = dataframe[col_atom_mapping_el_w_dist_label][idx]
+        amount_weirdo = dataframe[col_amount_weirdos_el][idx]
+
+        label_count = {}
+
+        if litype == 0:
+            labels = ["24g", "weirdo"]
+        elif litype == 1: 
+            labels = ["48htype1", "24g", "weirdo"]
+        elif litype == 2:
+            labels = ["48htype1", "48htype2", "24g", "weirdo"]
+        elif litype == 3:
+            labels = ["48htype1", "48htype2", "48htype3", "24g", "weirdo"]
+        elif litype == 4:
+            labels = ["48htype1", "48htype2", "48htype3", "48htype4", "24g", "weirdo"]
+        elif litype == 5:
+            labels = ["48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "24g", "weirdo"]
+        elif litype == 6:
+            labels = ["48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "48htype6", "24g", "weirdo"]
+        elif litype == 7:
+            labels = ["48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "48htype6", "48htype7", "24g", "weirdo"]
+        elif litype == 8:
+            labels = ["48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "48htype6", "48htype7", "48htype8", "24g", "weirdo"]
+
+        for i in labels:
+            label_count[i] = 0
+
+        for key, value in atom_mapping_el_w_dist_label.items():
+            label = value['label']
+            label_count[label] = label_count.get(label, 0) + 1
+        label_count['weirdo'] = amount_weirdo
+
+        dataframe.at[idx, col_amount_type] = label_count
+    
+
+def plot_amount_type(dataframe, litype, el, style):
+    """
+        style: scatter, bar
+    """
+    col_amount_type_el = f"amount_type_{el}"
+
+    df = pd.DataFrame()
+    df['idx_file'] = None
+
+    if litype == 0:
+        df['24g'] = None; df['weirdo'] = None
+    elif litype == 1:
+        df['48htype1'] = None; df['24g'] = None; df['weirdo'] = None
+    elif litype == 2:
+        df['48htype1'] = None; df['48htype2'] = None; df['24g'] = None; df['weirdo'] = None
+    elif litype == 3:
+        df['48htype1'] = None; df['48htype2'] = None; df['48htype3'] = None; df['24g'] = None; df['weirdo'] = None
+    elif litype == 4:
+        df['48htype1'] = None; df['48htype2'] = None; df['48htype3'] = None; df['48htype4'] = None; df['24g'] = None; df['weirdo'] = None
+    elif litype == 5:
+        df['48htype1'] = None; df['48htype2'] = None; df['48htype3'] = None; df['48htype4'] = None; df['48htype5'] = None; df['24g'] = None; df['weirdo'] = None
+    elif litype == 6:
+        df['48htype1'] = None; df['48htype2'] = None; df['48htype3'] = None; df['48htype4'] = None; df['48htype5'] = None; df['48htype6'] = None; df['24g'] = None; df['weirdo'] = None
+    elif litype == 7:
+        df['48htype1'] = None; df['48htype2'] = None; df['48htype3'] = None; df['48htype4'] = None; df['48htype5'] = None; df['48htype6'] = None; df['48htype7'] = None; df['24g'] = None; df['weirdo'] = None
+    elif litype == 8:
+        df['48htype1'] = None; df['48htype2'] = None; df['48htype3'] = None; df['48htype4'] = None; df['48htype5'] = None; df['48htype6'] = None; df['48htype7'] = None; df['48htype8'] = None; df['24g'] = None; df['weirdo'] = None
+
+    for idx in range(dataframe["geometry"].size):
+
+        amount_type = dataframe.at[idx, col_amount_type_el]
+        df.at[idx, 'idx_file'] = idx
+
+        if litype == 0:
+            df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
+        elif litype == 1:
+            df.at[idx, '48htype1'] = amount_type['48htype1']; df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
+        elif litype == 2:
+            df.at[idx, '48htype1'] = amount_type['48htype1']; df.at[idx, '48htype2'] = amount_type['48htype2']; df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
+        elif litype == 3:
+            df.at[idx, '48htype1'] = amount_type['48htype1']; df.at[idx, '48htype2'] = amount_type['48htype2']; df.at[idx, '48htype3'] = amount_type['48htype3']; df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
+        elif litype == 4:
+            df.at[idx, '48htype1'] = amount_type['48htype1']; df.at[idx, '48htype2'] = amount_type['48htype2']; df.at[idx, '48htype3'] = amount_type['48htype3']; df.at[idx, '48htype4'] = amount_type['48htype4']; df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
+        elif litype == 5:
+            df.at[idx, '48htype1'] = amount_type['48htype1']; df.at[idx, '48htype2'] = amount_type['48htype2']; df.at[idx, '48htype3'] = amount_type['48htype3']; df.at[idx, '48htype4'] = amount_type['48htype4']; df.at[idx, '48htype5'] = amount_type['48htype5']; df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
+        elif litype == 6:
+            df.at[idx, '48htype1'] = amount_type['48htype1']; df.at[idx, '48htype2'] = amount_type['48htype2']; df.at[idx, '48htype3'] = amount_type['48htype3']; df.at[idx, '48htype4'] = amount_type['48htype4']; df.at[idx, '48htype5'] = amount_type['48htype5']; df.at[idx, '48htype6'] = amount_type['48htype6']; df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
+        elif litype == 7:
+            df.at[idx, '48htype1'] = amount_type['48htype1']; df.at[idx, '48htype2'] = amount_type['48htype2']; df.at[idx, '48htype3'] = amount_type['48htype3']; df.at[idx, '48htype4'] = amount_type['48htype4']; df.at[idx, '48htype5'] = amount_type['48htype5']; df.at[idx, '48htype6'] = amount_type['48htype6']; df.at[idx, '48htype7'] = amount_type['48htype7']; df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
+        elif litype == 8:
+            df.at[idx, '48htype1'] = amount_type['48htype1']; df.at[idx, '48htype2'] = amount_type['48htype2']; df.at[idx, '48htype3'] = amount_type['48htype3']; df.at[idx, '48htype4'] = amount_type['48htype4']; df.at[idx, '48htype5'] = amount_type['48htype5']; df.at[idx, '48htype6'] = amount_type['48htype6']; df.at[idx, '48htype7'] = amount_type['48htype7']; df.at[idx, '48htype8'] = amount_type['48htype8']; df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
+
+    wide_df = pd.DataFrame(df)
+
+    long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
+
+    if style == "bar":
+        fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx file vs Li type")
+    elif style == "scatter":
+        fig = px.scatter(long_df, x="idx_file", y="count", color="category", title="Idx file vs Li type")
+    fig.show()
+
+    return df
+
+
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+
+
+# def get_idxs_val(df, val):
+#     idxs = [(row, col) for row in range(df.shape[0]) for col in range(df.shape[1]) if df.iloc[row, col] == val]
+#     return idxs
+
+
+# def get_key_Li_idx(dict, path, idx_triad):
+#     idxs_li = [key for key, value in dict[path].items() if value.get('idx_triad') == idx_triad]
+#     return idxs_li
+
+# def get_idx_coor_Li_dict_ref_triad(idx_coor_Li_dict_ref_24, idx_coor_Li_dict_ref_72):
+#     idxs_Li_ref_24 = list(idx_coor_Li_dict_ref_24.keys())
+#     idxs_Li_ref_72 = list(idx_coor_Li_dict_ref_72.keys())
+
+#     idx_coor_Li_dict_ref_triad = defaultdict(list)
+
+#     for key_72, coor_72 in idx_coor_Li_dict_ref_72.items():
+#         for key_24, coor_24 in idx_coor_Li_dict_ref_24.items():
+#             distance = mic_eucledian_distance(coor_72, coor_24)
+#             if distance == 0:
+#                 idx_coor_Li_dict_ref_triad[key_24].append(coor_72)
+
+#     for key_72, coor_72 in idx_coor_Li_dict_ref_72.items():
+#         for key_24, coor_24 in idx_coor_Li_dict_ref_24.items():
+#             distance = mic_eucledian_distance(coor_72, coor_24)
+#             if distance <= 0.086399 and distance != 0:                      # to edit this number
+#                 idx_coor_Li_dict_ref_triad[key_24].append(coor_72)
+#     return idx_coor_Li_dict_ref_triad
+
+
+# def get_idx_coor_Li_idx_centroid_triad_w_closest_dist_weirdos_appended(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_weirdos_appended, idxs_Li_not):
+#     idx_coor_Li_idx_centroid_triad_weirdos_appended = defaultdict(list)
+#     distance_array = []
+#     for key, coor in idx_coor_Li_dict_weirdos_appended.items():
+#         # if key in idxs_Li_not:
+#         #     idx_coor_Li_idx_centroid_triad_dict = {}    
+#         #     for key_triad, coor_triad in idx_coor_Li_dict_ref_triad.items():
+#         #         for coor_triad_component in coor_triad:
+#         #             distance = mic_eucledian_distance(coor_triad_component, coor)
+#         #             distance_array.append(distance)  
+#         #     distance_array_sorted = sorted(set(distance_array))
+#         #     distance_array_sorted_top3 = distance_array_sorted[0:4]
+#         #     idx_coor_Li_idx_centroid_triad_dict['dist_top3'] = distance_array_sorted_top3  
+#         #     if key in idx_coor_Li_idx_centroid_triad_weirdos_appended:
+#         #         idx_coor_Li_idx_centroid_triad_weirdos_appended[key].append(idx_coor_Li_idx_centroid_triad_dict)
+#         #     else:
+#         #         idx_coor_Li_idx_centroid_triad_weirdos_appended[key] = idx_coor_Li_idx_centroid_triad_dict         
+#         # else:
+#         idx_coor_Li_idx_centroid_triad_dict = {}    
+#         for key_triad, coor_triad in idx_coor_Li_dict_ref_triad.items():
+#             for coor_triad_component in coor_triad:
+#                 distance = mic_eucledian_distance(coor_triad_component, coor)
+#                 distance_array.append(distance)
+#                 if distance == 0:
+#                     idx_coor_Li_idx_centroid_triad_dict['coor'] = coor
+#                     idx_coor_Li_idx_centroid_triad_dict['idx_triad'] = key_triad
+#                     idx_coor_Li_idx_centroid_triad_dict['centroid_triad'] = coor_triad[0]
+#                     # check if it's at 24g or 48h
+#                     if coor == coor_triad[0]:
+#                         idx_coor_Li_idx_centroid_triad_dict['structure'] = 24
+#                     else:
+#                         idx_coor_Li_idx_centroid_triad_dict['structure'] = 48           
+#         distance_array_sorted = sorted(set(distance_array))
+#         distance_array_sorted_top3 = distance_array_sorted[0:4]
+#         # idx_coor_Li_idx_centroid_triad_dict['dist_top3'] = distance_array_sorted_top3
+#         if key in idx_coor_Li_idx_centroid_triad_weirdos_appended:
+#             idx_coor_Li_idx_centroid_triad_weirdos_appended[key].append(idx_coor_Li_idx_centroid_triad_dict)
+#         else:
+#             idx_coor_Li_idx_centroid_triad_weirdos_appended[key] = idx_coor_Li_idx_centroid_triad_dict
+#     return idx_coor_Li_idx_centroid_triad_weirdos_appended
+
+
+# def get_idx_coor_Li_idx_centroid_triad_w_closest_dist(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict):
+#     idx_coor_Li_idx_centroid_triad = defaultdict(list)
+#     distance_array = []
+#     for key, coor in idx_coor_Li_dict.items():
+#         idx_coor_Li_idx_centroid_triad_dict = {}    
+#         for key_triad, coor_triad in idx_coor_Li_dict_ref_triad.items():
+#             for coor_triad_component in coor_triad:
+#                 distance = mic_eucledian_distance(coor_triad_component, coor)
+#                 distance_array.append(distance)
+#                 if distance == 0:
+#                     idx_coor_Li_idx_centroid_triad_dict['coor'] = coor
+#                     idx_coor_Li_idx_centroid_triad_dict['idx_triad'] = key_triad
+#                     idx_coor_Li_idx_centroid_triad_dict['centroid_triad'] = coor_triad[0]
+#                     # check if it's at 24g or 48h
+#                     if coor == coor_triad[0]:
+#                         idx_coor_Li_idx_centroid_triad_dict['structure'] = 24
+#                     else:
+#                         idx_coor_Li_idx_centroid_triad_dict['structure'] = 48                    
+#         distance_array_sorted = sorted(distance_array)
+#         distance_array_sorted_top3 = distance_array_sorted[1:4]
+#         idx_coor_Li_idx_centroid_triad_dict['dist_top3'] = distance_array_sorted_top3
+#         # idx_coor_Li_idx_centroid_triad_dict['dist'] = distance_array_sorted
+#         if key in idx_coor_Li_idx_centroid_triad:
+#             idx_coor_Li_idx_centroid_triad[key].append(idx_coor_Li_idx_centroid_triad_dict)
+#         else:
+#             idx_coor_Li_idx_centroid_triad[key] = idx_coor_Li_idx_centroid_triad_dict
+#     return idx_coor_Li_idx_centroid_triad
+
+
+# def get_dist_ascending(idx_coor_Li_idx_centroid_triad):
+#     coors_Li_dist_structures = defaultdict(list)
+
+#     for Li_idx_temp1, val_temp1 in idx_coor_Li_idx_centroid_triad.items():
+#         coors_Li_dist_structures_dict = {}
+#         for Li_idx_temp2, val_temp2 in idx_coor_Li_idx_centroid_triad.items():
+#             distance = mic_eucledian_distance(val_temp1['coor'], val_temp2['coor'])
+#             coors_Li_dist_structures_dict['coors'] = (val_temp1['coor'], val_temp2['coor'])
+#             coors_Li_dist_structures_dict['dist'] = distance
+#             coors_Li_dist_structures_dict['structures'] = (val_temp1['structure'], val_temp2['structure'])
+
+#             key = (Li_idx_temp1, Li_idx_temp2)
+#             if key in coors_Li_dist_structures:
+#                 coors_Li_dist_structures[key].append(coors_Li_dist_structures_dict)
+#             else:
+#                 coors_Li_dist_structures[key] = coors_Li_dist_structures_dict
+
+#     sorted_coors_Li_dist_structures = dict(sorted(coors_Li_dist_structures.items(), key=lambda item: item[1]['dist']))
+#     dist_ascending = list({val['dist'] for idx, val in sorted_coors_Li_dist_structures.items()})
+
+#     return dist_ascending, sorted_coors_Li_dist_structures
+
+
+# # def get_idx_coor_Li_dict(file_path):
+# #     with open(file_path, 'r') as f:
+# #         content = f.read()
+
+# #     # Initialize a dictionary to store the data
+# #     Li_idx_coor_dict = {}
+
+# #     # Use regular expressions to extract Li indices and coordinates
+# #     li_pattern = re.compile(r'Li\s+Li(\d+)\s+1\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)')
+# #     matches = li_pattern.findall(content)
+
+# #     # Iterate through the matches and populate the dictionary
+# #     for match in matches:
+# #         index = int(match[0])
+# #         x = float(match[1])
+# #         y = float(match[2])
+# #         z = float(match[3])
+# #         Li_idx_coor_dict[index] = (x, y, z)
+
+# #     return Li_idx_coor_dict
