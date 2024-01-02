@@ -22,225 +22,316 @@ from pymatgen.io.cif import CifWriter
 from pymatgen.io.vasp.inputs import Poscar
 
 
-# Desc: splitting path into element with name of each sub-/folder
-    # source: https://www.oreilly.com/library/view/python-cookbook/0596001673/ch04s16.html
-def splitall(path):
-    allparts = []
-    while 1:
-        parts = os.path.split(path)
-        if parts[0] == path:  # sentinel for absolute paths
-            allparts.insert(0, parts[0])
-            break
-        elif parts[1] == path: # sentinel for relative paths
-            allparts.insert(0, parts[1])
-            break
-        else:
-            path = parts[0]
-            allparts.insert(0, parts[1])
-    return allparts
+class FileOperations:
+    @staticmethod
+    def splitall(path):
+        """
+        Splitting path into its individual components of each sub-/folder.
+
+        Args:
+            path (str): The input path to be split.
+
+        Returns:
+            list: A list containing the components of the path.
+
+        Source: 
+            https://www.oreilly.com/library/view/python-cookbook/0596001673/ch04s16.html
+        """
+        allparts = []
+        while 1:
+            parts = os.path.split(path)
+            if parts[0] == path:  # sentinel for absolute paths
+                allparts.insert(0, parts[0])
+                break
+            elif parts[1] == path: # sentinel for relative paths
+                allparts.insert(0, parts[1])
+                break
+            else:
+                path = parts[0]
+                allparts.insert(0, parts[1])
+        return allparts
 
 
-# Desc: replace string with nan
-    # source: https://stackoverflow.com/questions/57048617/how-do-i-replace-all-string-values-with-nan-dynamically
-def Replace(i):
-    try:
-        float(i)
-        return float(i)
-    except:
-        return np.nan
-    
+    @staticmethod
+    def replace_with_nan(i):
+        """
+        Replace a string with NaN if it cannot be converted to a float.
 
-def copy_rename_single_file(destination_directory, source_directory, filename, prefix):
-    # Generate the new filename
-    if prefix == None:
-        new_filename = f"{filename}"
-    else:
-        new_filename = f"{filename}_{prefix}"
-    
-    # Get the source file path and destination file path
-    destination_path = os.path.join(destination_directory, new_filename)
-    
-    # Copy the file to the destination directory with the new name
-    source_path = os.path.join(source_directory, filename)
-    shutil.copy2(source_path, destination_path)
-    # print(f"File copied and renamed: {filename} -> {new_filename}")
+        Args:
+            i (str): The input string.
 
+        Returns:
+            float or np.nan: The converted float or NaN.
 
-# def copy_rename_files(file_loc, destination_directory, filename, prefix):
-#     for index in range(file_loc["geometry"].size):
-#         # Generate the new filename
-#         if prefix == None:
-#             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}"
-#         else:
-#             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
+        Source:
+            https://stackoverflow.com/questions/57048617/how-do-i-replace-all-string-values-with-nan-dynamically
+        """
+        try:
+            float(i)
+            return float(i)
+        except:
+            return np.nan
         
-#         # Get the source file path and destination file path
-#         destination_path = os.path.join(destination_directory, new_filename)
-        
-#         # Copy the file to the destination directory with the new name
-#         shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
-#         # print(f"File copied and renamed: {filename} -> {new_filename}")
 
+    @staticmethod
+    def copy_rename_single_file(destination_directory, source_directory, filename, prefix):
+        """
+        Copy a file from the source directory to the destination directory with an optional filename prefix.
 
-# def copy_rename_files_savedir(file_loc, destination_directory, filename, prefix):
-#     col_subdir_copiedrenamed_files = f"subdir_{filename}"
+        Args:
+            destination_directory (str): The directory where the file should be copied.
+            source_directory (str): The directory from which the file should be copied.
+            filename (str): The name of the file to be copied.
+            prefix (str): An optional prefix to be added to the new filename.
 
-#     file_loc[col_subdir_copiedrenamed_files] = None
-
-#     for index in range(file_loc["geometry"].size):
-#         # Generate the new filename
-#         if prefix == None:
-#             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}"
-#         else:
-#             new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
-        
-#         # Get the source file path and destination file path
-#         destination_path = os.path.join(destination_directory, new_filename)
-
-#         # Copy the file to the destination directory with the new name
-#         shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
-#         # print(f"File copied and renamed: {filename} -> {new_filename}")
-
-#         file_loc.at[int(index), col_subdir_copiedrenamed_files] = destination_path
-
-
-def copy_rename_files(file_loc, destination_directory, filename, prefix, savedir):
-    if savedir == True:
-        col_subdir_copiedrenamed_files = f"subdir_{filename}"
-
-        file_loc[col_subdir_copiedrenamed_files] = None
-
-    elif savedir == False:
-        pass
-
-    for index in range(file_loc["geometry"].size):
+        Returns:
+            None
+        """
         # Generate the new filename
         if prefix == None:
-            new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}"
+            new_filename = f"{filename}"
         else:
-            new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
-
-
+            new_filename = f"{filename}_{prefix}"
+        
         # Get the source file path and destination file path
         destination_path = os.path.join(destination_directory, new_filename)
         
         # Copy the file to the destination directory with the new name
-        shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
+        source_path = os.path.join(source_directory, filename)
+        shutil.copy2(source_path, destination_path)
         # print(f"File copied and renamed: {filename} -> {new_filename}")
-    
+
+
+    @staticmethod
+    def copy_rename_files(dataframe, destination_directory, filename, prefix, savedir):
+        """
+        Copy and rename multiple files based on the contents of a DataFrame.
+
+        Args:
+            dataframe (pd.DataFrame): DataFrame containing file information.
+            destination_directory (str): The directory where files should be copied.
+            filename (str): The base name of the files.
+            prefix (str): An optional prefix to be added to the new filenames.
+            savedir (bool): If True, save the new file paths to the DataFrame.
+
+        Returns:
+            None
+        """
         if savedir == True:
-            file_loc.at[int(index), col_subdir_copiedrenamed_files] = destination_path
+            col_subdir_copiedrenamed_files = f"subdir_{filename}"
+
+            dataframe[col_subdir_copiedrenamed_files] = None
+
         elif savedir == False:
             pass
 
-
-# def copy_rename_single_file_and_delete_elements(destination_directory, source_directory, filename, prefix, line_ranges, line_numbers_edit, new_contents):
-#     # Generate the new filename
-#     new_filename = f"{filename}_{prefix}"
-    
-#     # Get the source file path and destination file path
-#     destination_path = os.path.join(destination_directory, new_filename)
-    
-#     # Copy the file to the destination directory with the new name
-#     source_path = os.path.join(source_directory, filename)
-#     shutil.copy2(source_path, destination_path)
-#     print(f"File copied and renamed: {filename} -> {new_filename}")
-
-#     delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
+        for index in range(dataframe["geometry"].size):
+            # Generate the new filename
+            if prefix == None:
+                new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}"
+            else:
+                new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}_{prefix}"
 
 
-# def copy_rename_files_and_delete_elements(file_loc, destination_directory, filename, index, prefix, line_ranges, line_numbers_edit, new_contents):
-#     # Generate the new filename
-#     new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
-    
-#     # Get the source file path and destination file path
-#     destination_path = os.path.join(destination_directory, new_filename)
-    
-#     # Copy the file to the destination directory with the new name
-#     shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
-#     print(f"File copied and renamed: {filename} -> {new_filename}")
-
-#     delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
-
-
-def delete_lines(file_path, line_ranges):
-    # Read the file
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-
-    lines_to_delete = set()
-    for line_range in line_ranges:
-        start, end = line_range
-        if 1 <= start <= len(lines) and start <= end <= len(lines):
-            lines_to_delete.update(range(start - 1, end))
-
-    modified_lines = [line for i, line in enumerate(lines) if i not in lines_to_delete]
-
-    with open(file_path, 'w') as file:
-        file.writelines(modified_lines)
-
-    # # print(f"Lines deleted successfully in file: {file_path}")
-
-
-def delete_elements(file_path, line_ranges, line_numbers_edit, new_contents):
-    delete_lines(file_path, line_ranges)
-    edit_lines(file_path, line_numbers_edit, new_contents)
-
-
-def edit_lines(file_path, line_numbers, new_contents):
-    # Read the file
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-
-    # Modify the line content
-    for line_number, new_content in zip(line_numbers, new_contents):
-        if 1 <= line_number <= len(lines):
-            lines[line_number - 1] = new_content + '\n'
-
-        # Write the modified content back to the file
-        with open(file_path, 'w') as file:
-            file.writelines(lines)
-            # # print(f"Line edited successfully.")
-    # # else:
-    # # #     print(f"Invalid line number: {line_number}")
-
-
-def check_folder_existance(folder_name, empty_folder):
-    # Check if the folder exists
-    if not os.path.exists(folder_name):
-        # Create the folder if it doesn't exist
-        os.makedirs(folder_name)
-        # print(f"Folder '{folder_name}' created.")
-    else:
-        if empty_folder == True:
-            emptying_folder(folder_name)
-            # print(f"Folder '{folder_name}' already exists. Emptying it.")
-        elif empty_folder == False:
-            pass
-
-
-def emptying_folder(folder_name):
-    files_inside_folder = os.listdir(folder_name)
-    for i in files_inside_folder:
-        path_to_files = folder_name + i 
-        os.remove(path_to_files)
-
-
-def delete_files(dataframe, folder_name, file_name_w_format):
-    for idx in range(dataframe["geometry"].size):
-        filename_to_delete = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{file_name_w_format}"
-        filename_to_delete_path = os.path.join(folder_name, filename_to_delete)
+            # Get the source file path and destination file path
+            destination_path = os.path.join(destination_directory, new_filename)
+            
+            # Copy the file to the destination directory with the new name
+            shutil.copy2(dataframe['subdir_new_system'][index], destination_path)
+            # print(f"File copied and renamed: {filename} -> {new_filename}")
         
-        try:
-            # Attempt to delete the file
-            os.remove(filename_to_delete_path)
-            # print(f"{filename_to_delete_path} has been deleted.")
-        except OSError as e:
-            # Handle any errors that occur during file deletion
-            print(f"Error deleting {filename_to_delete_path}: {e}")
+            if savedir == True:
+                dataframe.at[int(index), col_subdir_copiedrenamed_files] = destination_path
+            elif savedir == False:
+                pass
 
 
-def get_structure_with_library(dataframe, destination_directory, filename, structure_reference, var_name, prefix):
+    # @staticmethod
+    # def copy_rename_single_file_and_delete_elements(destination_directory, source_directory, filename, prefix, line_ranges, line_numbers_edit, new_contents):
+    #     # Generate the new filename
+    #     new_filename = f"{filename}_{prefix}"
+        
+    #     # Get the source file path and destination file path
+    #     destination_path = os.path.join(destination_directory, new_filename)
+        
+    #     # Copy the file to the destination directory with the new name
+    #     source_path = os.path.join(source_directory, filename)
+    #     shutil.copy2(source_path, destination_path)
+    #     print(f"File copied and renamed: {filename} -> {new_filename}")
+
+    #     delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
+
+
+    # @staticmethod
+    # def copy_rename_files_and_delete_elements(file_loc, destination_directory, filename, index, prefix, line_ranges, line_numbers_edit, new_contents):
+    #     # Generate the new filename
+    #     new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
+        
+    #     # Get the source file path and destination file path
+    #     destination_path = os.path.join(destination_directory, new_filename)
+        
+    #     # Copy the file to the destination directory with the new name
+    #     shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
+    #     print(f"File copied and renamed: {filename} -> {new_filename}")
+
+    #     delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
+
+
+    @staticmethod
+    def delete_lines(file_path, line_ranges):
+        """
+        Delete specified lines from a file.
+
+        Args:
+            file_path (str): The path to the file to be modified.
+            line_ranges (list): A list of tuples representing the ranges of lines to be deleted.
+
+        Returns:
+            None
+        """
+        # Read the file
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+
+        lines_to_delete = set()
+        for line_range in line_ranges:
+            start, end = line_range
+            if 1 <= start <= len(lines) and start <= end <= len(lines):
+                lines_to_delete.update(range(start - 1, end))
+
+        modified_lines = [line for i, line in enumerate(lines) if i not in lines_to_delete]
+
+        with open(file_path, 'w') as file:
+            file.writelines(modified_lines)
+
+        # print(f"Lines deleted successfully in file: {file_path}")
+
+
+    @staticmethod
+    def delete_elements(file_path, line_ranges, line_numbers_edit, new_contents):
+        """
+        Delete specified lines and edit others in a file.
+
+        Args:
+            file_path (str): The path to the file to be modified.
+            line_ranges (list): A list of tuples representing the ranges of lines to be deleted.
+            line_numbers_edit (list): A list of line numbers to be edited.
+            new_contents (list): A list of new contents for the edited lines.
+
+        Returns:
+            None
+        """
+        FileOperations.delete_lines(file_path, line_ranges)
+        FileOperations.edit_lines(file_path, line_numbers_edit, new_contents)
+
+
+    @staticmethod
+    def edit_lines(file_path, line_numbers, new_contents):
+        """
+        Edit specified lines in a file.
+
+        Args:
+            file_path (str): The path to the file to be modified.
+            line_numbers (list): A list of line numbers to be edited.
+            new_contents (list): A list of new contents for the edited lines.
+
+        Returns:
+            None
+        """
+        # Read the file
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+
+        # Modify the line content
+        for line_number, new_content in zip(line_numbers, new_contents):
+            if 1 <= line_number <= len(lines):
+                lines[line_number - 1] = new_content + '\n'
+
+            # Write the modified content back to the file
+            with open(file_path, 'w') as file:
+                file.writelines(lines)
+                # # print(f"Line edited successfully.")
+        # # else:
+        # # #     print(f"Invalid line number: {line_number}")
+
+
+    @staticmethod
+    def check_folder_existance(folder_name, empty_folder):
+        """
+        Check if a folder exists, create it if not, and optionally empty it.
+
+        Args:
+            folder_name (str): The name of the folder to check or create.
+            empty_folder (bool): If True, empty the folder if it already exists.
+
+        Returns:
+            None
+        """
+        # Check if the folder exists
+        if not os.path.exists(folder_name):
+            # Create the folder if it doesn't exist
+            os.makedirs(folder_name)
+            # print(f"Folder '{folder_name}' created.")
+        else:
+            if empty_folder == True:
+                FileOperations.empty_folder(folder_name)
+                # print(f"Folder '{folder_name}' already exists. Emptying it.")
+            elif empty_folder == False:
+                pass
+
+
+    @staticmethod
+    def empty_folder(folder_name):
+        """
+        Empty the contents of a folder.
+
+        Args:
+            folder_name (str): The name of the folder to be emptied.
+
+        Returns:
+            None
+        """
+        files_inside_folder = os.listdir(folder_name)
+        for i in files_inside_folder:
+            path_to_files = folder_name + i 
+            os.remove(path_to_files)
+
+
+    @staticmethod
+    def delete_files(dataframe, folder_name, file_name_w_format):
+        """
+        Delete files based on information in a DataFrame.
+
+        This method iterates over the rows of a DataFrame and constructs filenames
+        based on specified columns ('geometry' and 'path'). It then attempts to
+        delete each file from the specified folder.
+
+        Args:
+            dataframe (pd.DataFrame): A DataFrame containing information about files.
+            folder_name (str): The directory where the files are located.
+            file_name_w_format (str): The base name of the files with format information.
+
+        Returns:
+            None
+
+        Raises:
+            OSError: If an error occurs during file deletion, an exception is caught,
+                    and an error message is printed.
+        """
+        for idx in range(dataframe["geometry"].size):
+            filename_to_delete = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{file_name_w_format}"
+            filename_to_delete_path = os.path.join(folder_name, filename_to_delete)
+            
+            try:
+                # Attempt to delete the file
+                os.remove(filename_to_delete_path)
+                # print(f"{filename_to_delete_path} has been deleted.")
+            except OSError as e:
+                # Handle any errors that occur during file deletion
+                print(f"Error deleting {filename_to_delete_path}: {e}")
+
+
+def get_structure_with_library(dataframe, destination_directory, filename, structure_reference, var_name, prefix)
     for idx in range(dataframe["geometry"].size):
         if prefix == None: 
             filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
@@ -2367,21 +2458,21 @@ def reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new
         idx_P_new = amount_Li + i
         if lines[idx_line_P].strip().startswith("P"):
             new_label = f"P{idx_P_new}"
-            modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
+            modified_line = lines[idx_line_P].replace_with_nan(lines[idx_line_P].split()[1], new_label)
             new_text_P_S_Cl.append(modified_line)
     for i in range(amount_S):
         idx_line_S = idx_P_S_Cl_line_new_start + amount_P + i
         idx_S_new = amount_Li + amount_P + i
         if lines[idx_line_S].strip().startswith("S"):
             new_label = f"S{idx_S_new}"
-            modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
+            modified_line = lines[idx_line_S].replace_with_nan(lines[idx_line_S].split()[1], new_label)
             new_text_P_S_Cl.append(modified_line)
     for i in range(amount_Cl):
         idx_line_Cl = idx_P_S_Cl_line_new_start + amount_P + amount_S + i
         idx_Cl_new = amount_Li + amount_P + amount_S + i
         if lines[idx_line_Cl].strip().startswith("Cl"):
             new_label = f"Cl{idx_Cl_new}"
-            modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
+            modified_line = lines[idx_line_Cl].replace_with_nan(lines[idx_line_Cl].split()[1], new_label)
             new_text_P_S_Cl.append(modified_line)
 
     lines[idx_P_S_Cl_line_new_start : amount_P + amount_S + amount_Cl + idx_P_S_Cl_line_new_start] = new_text_P_S_Cl
@@ -2917,7 +3008,7 @@ def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, am
             idx_line = idx_Li_start + i
             if lines[idx_line].strip().startswith("Li"):
                 new_label = f"Li{idx_without_weirdos[i]}"
-                modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
+                modified_line = lines[idx_line].replace_with_nan(lines[idx_line].split()[1], new_label)
                 new_text.append(modified_line)
 
         lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
@@ -2971,7 +3062,7 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
             idx_line = idx_Li_start + i
             if lines[idx_line].strip().startswith("Li"):
                 new_label = f"Li{idx_without_weirdos[i]}"
-                modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
+                modified_line = lines[idx_line].replace_with_nan(lines[idx_line].split()[1], new_label)
                 new_text.append(modified_line)
 
         lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
@@ -3010,21 +3101,21 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
             idx_P_new = amount_Li + i
             if lines[idx_line_P].strip().startswith("P"):
                 new_label = f"P{idx_P_new}"
-                modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
+                modified_line = lines[idx_line_P].replace_with_nan(lines[idx_line_P].split()[1], new_label)
                 new_text_P_S_Cl.append(modified_line)
         for i in range(amount_S):
             idx_line_S = idx_P_S_Cl_line_new_start + amount_P + i
             idx_S_new = amount_Li + amount_P + i
             if lines[idx_line_S].strip().startswith("S"):
                 new_label = f"S{idx_S_new}"
-                modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
+                modified_line = lines[idx_line_S].replace_with_nan(lines[idx_line_S].split()[1], new_label)
                 new_text_P_S_Cl.append(modified_line)
         for i in range(amount_Cl):
             idx_line_Cl = idx_P_S_Cl_line_new_start + amount_P + amount_S + i
             idx_Cl_new = amount_Li + amount_P + amount_S + i
             if lines[idx_line_Cl].strip().startswith("Cl"):
                 new_label = f"Cl{idx_Cl_new}"
-                modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
+                modified_line = lines[idx_line_Cl].replace_with_nan(lines[idx_line_Cl].split()[1], new_label)
                 new_text_P_S_Cl.append(modified_line)
 
         lines[idx_P_S_Cl_line_new_start : amount_P + amount_S + amount_Cl + idx_P_S_Cl_line_new_start] = new_text_P_S_Cl
@@ -3121,7 +3212,7 @@ def ascending_Li(dataframe, destination_directory, var_filename_init, var_savefi
         li_lines = [line.strip() for line in lines[idx_Li_start :] if line.strip().startswith("Li")]
         sorted_li_lines = sorted(li_lines, key=lambda line: int(line.split()[1][2:]))
 
-        # Replace the original "Li" lines with the sorted lines
+        # replace the original "Li" lines with the sorted lines
         lines[idx_Li_start :idx_Li_start  + len(sorted_li_lines)] = sorted_li_lines
 
         # Write the modified lines back to the file
@@ -5661,10 +5752,10 @@ def create_file_loc(direc_init_system, data_toten, file_new_system):
                 path_nr = splitall(subdir)[-1]
                 geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
                 geometry_ori = geometry
-                # geometry = geometry.applymap(func=Replace)
+                # geometry = geometry.applymap(func=replace)
                 geometry.dropna(axis=1)
                 path = pd.DataFrame(np.append(path, int(path_nr)), columns=["path"])
-                # path = path.applymap(func=Replace)
+                # path = path.applymap(func=replace)
                 path.dropna(axis=1)
                 path_sorted = path.sort_values(by="path",ascending=False)
                 subdir_file = os.path.join(subdir,file_new_system)
