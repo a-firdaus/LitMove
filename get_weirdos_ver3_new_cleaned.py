@@ -3015,7 +3015,7 @@ def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, am
             if lines[idx_line].strip().startswith("Li"):
                 new_label = f"Li{idx_without_weirdos[i]}"
                 file_operations_instance = FileOperations()
-                modified_line = file_operations_instance.replace_with_nan(lines[idx_line].split()[1], new_label)     
+                modified_line = lines[idx_line].file_operations_instance.replace_with_nan(lines[idx_line].split()[1], new_label)     
                 # modified_line = lines[idx_line].replace_with_nan(lines[idx_line].split()[1], new_label)
                 new_text.append(modified_line)
 
