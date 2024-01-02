@@ -331,7 +331,7 @@ class FileOperations:
                 print(f"Error deleting {filename_to_delete_path}: {e}")
 
 
-def get_structure_with_library(dataframe, destination_directory, filename, structure_reference, var_name, prefix)
+def get_structure_with_library(dataframe, destination_directory, filename, structure_reference, var_name, prefix):
     for idx in range(dataframe["geometry"].size):
         if prefix == None: 
             filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
