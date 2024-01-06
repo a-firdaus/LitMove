@@ -22,6 +22,26 @@ from pymatgen.io.cif import CifWriter
 from pymatgen.io.vasp.inputs import Poscar
 
 
+def replace(i):
+    """
+    Replace a string with NaN if it cannot be converted to a float.
+
+    Args:
+        i (str): The input string.
+
+    Returns:
+        float or np.nan: The converted float or NaN.
+
+    Source:
+        https://stackoverflow.com/questions/57048617/how-do-i-replace-all-string-values-with-nan-dynamically
+    """
+    try:
+        float(i)
+        return float(i)
+    except:
+        return np.nan
+
+
 class FileOperations:
     @staticmethod
     def splitall(path):
@@ -51,27 +71,6 @@ class FileOperations:
                 allparts.insert(0, parts[1])
         return allparts
 
-
-    @staticmethod
-    def replace_with_nan(i):
-        """
-        Replace a string with NaN if it cannot be converted to a float.
-
-        Args:
-            i (str): The input string.
-
-        Returns:
-            float or np.nan: The converted float or NaN.
-
-        Source:
-            https://stackoverflow.com/questions/57048617/how-do-i-replace-all-string-values-with-nan-dynamically
-        """
-        try:
-            float(i)
-            return float(i)
-        except:
-            return np.nan
-        
 
     @staticmethod
     def copy_rename_single_file(destination_directory, source_directory, filename, prefix):
@@ -331,6 +330,7 @@ class FileOperations:
                 print(f"Error deleting {filename_to_delete_path}: {e}")
 
 
+# class Transformation:
 def get_structure_with_library(dataframe, destination_directory, filename, structure_reference, var_name, prefix):
     for idx in range(dataframe["geometry"].size):
         if prefix == None: 
@@ -2458,27 +2458,27 @@ def reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new
         idx_P_new = amount_Li + i
         if lines[idx_line_P].strip().startswith("P"):
             new_label = f"P{idx_P_new}"
-            file_operations_instance = FileOperations()
-            modified_line = file_operations_instance.replace_with_nan(lines[idx_line_P].split()[1], new_label)
-            # modified_line = lines[idx_line_P].replace_with_nan(lines[idx_line_P].split()[1], new_label)
+            # file_operations_instance = FileOperations()
+            # modified_line = file_operations_instance.replace(lines[idx_line_P].split()[1], new_label)
+            modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
             new_text_P_S_Cl.append(modified_line)
     for i in range(amount_S):
         idx_line_S = idx_P_S_Cl_line_new_start + amount_P + i
         idx_S_new = amount_Li + amount_P + i
         if lines[idx_line_S].strip().startswith("S"):
             new_label = f"S{idx_S_new}"
-            file_operations_instance = FileOperations()
-            modified_line = file_operations_instance.replace_with_nan(lines[idx_line_S].split()[1], new_label)            
-            # modified_line = lines[idx_line_S].replace_with_nan(lines[idx_line_S].split()[1], new_label)
+            # file_operations_instance = FileOperations()
+            # modified_line = file_operations_instance.replace(lines[idx_line_S].split()[1], new_label)            
+            modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
             new_text_P_S_Cl.append(modified_line)
     for i in range(amount_Cl):
         idx_line_Cl = idx_P_S_Cl_line_new_start + amount_P + amount_S + i
         idx_Cl_new = amount_Li + amount_P + amount_S + i
         if lines[idx_line_Cl].strip().startswith("Cl"):
             new_label = f"Cl{idx_Cl_new}"
-            file_operations_instance = FileOperations()
-            modified_line = file_operations_instance.replace_with_nan(lines[idx_line_Cl].split()[1], new_label)     
-            # modified_line = lines[idx_line_Cl].replace_with_nan(lines[idx_line_Cl].split()[1], new_label)
+            # file_operations_instance = FileOperations()
+            # modified_line = file_operations_instance.replace(lines[idx_line_Cl].split()[1], new_label)     
+            modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
             new_text_P_S_Cl.append(modified_line)
 
     lines[idx_P_S_Cl_line_new_start : amount_P + amount_S + amount_Cl + idx_P_S_Cl_line_new_start] = new_text_P_S_Cl
@@ -3014,9 +3014,9 @@ def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, am
             idx_line = idx_Li_start + i
             if lines[idx_line].strip().startswith("Li"):
                 new_label = f"Li{idx_without_weirdos[i]}"
-                file_operations_instance = FileOperations()
-                modified_line = lines[idx_line].file_operations_instance.replace_with_nan(lines[idx_line].split()[1], new_label)     
-                # modified_line = lines[idx_line].replace_with_nan(lines[idx_line].split()[1], new_label)
+                # file_operations_instance = FileOperations()
+                # modified_line = lines[idx_line].file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
+                modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
                 new_text.append(modified_line)
 
         lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
@@ -3070,9 +3070,9 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
             idx_line = idx_Li_start + i
             if lines[idx_line].strip().startswith("Li"):
                 new_label = f"Li{idx_without_weirdos[i]}"
-                file_operations_instance = FileOperations()
-                modified_line = file_operations_instance.replace_with_nan(lines[idx_line].split()[1], new_label)     
-                # modified_line = lines[idx_line].replace_with_nan(lines[idx_line].split()[1], new_label)
+                # file_operations_instance = FileOperations()
+                # modified_line = file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
+                modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
                 new_text.append(modified_line)
 
         lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
@@ -3111,27 +3111,27 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
             idx_P_new = amount_Li + i
             if lines[idx_line_P].strip().startswith("P"):
                 new_label = f"P{idx_P_new}"
-                file_operations_instance = FileOperations()
-                modified_line = file_operations_instance.replace_with_nan(lines[idx_line_P].split()[1], new_label)     
-                # modified_line = lines[idx_line_P].replace_with_nan(lines[idx_line_P].split()[1], new_label)
+                # file_operations_instance = FileOperations()
+                # modified_line = file_operations_instance.replace(lines[idx_line_P].split()[1], new_label)     
+                modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
                 new_text_P_S_Cl.append(modified_line)
         for i in range(amount_S):
             idx_line_S = idx_P_S_Cl_line_new_start + amount_P + i
             idx_S_new = amount_Li + amount_P + i
             if lines[idx_line_S].strip().startswith("S"):
                 new_label = f"S{idx_S_new}"
-                file_operations_instance = FileOperations()
-                modified_line = file_operations_instance.replace_with_nan(lines[idx_line_S].split()[1], new_label)     
-                # modified_line = lines[idx_line_S].replace_with_nan(lines[idx_line_S].split()[1], new_label)
+                # file_operations_instance = FileOperations()
+                # modified_line = file_operations_instance.replace(lines[idx_line_S].split()[1], new_label)     
+                modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
                 new_text_P_S_Cl.append(modified_line)
         for i in range(amount_Cl):
             idx_line_Cl = idx_P_S_Cl_line_new_start + amount_P + amount_S + i
             idx_Cl_new = amount_Li + amount_P + amount_S + i
             if lines[idx_line_Cl].strip().startswith("Cl"):
                 new_label = f"Cl{idx_Cl_new}"
-                file_operations_instance = FileOperations()
-                modified_line = file_operations_instance.replace_with_nan(lines[idx_line_Cl].split()[1], new_label)     
-                # modified_line = lines[idx_line_Cl].replace_with_nan(lines[idx_line_Cl].split()[1], new_label)
+                # file_operations_instance = FileOperations()
+                # modified_line = file_operations_instance.replace(lines[idx_line_Cl].split()[1], new_label)     
+                modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
                 new_text_P_S_Cl.append(modified_line)
 
         lines[idx_P_S_Cl_line_new_start : amount_P + amount_S + amount_Cl + idx_P_S_Cl_line_new_start] = new_text_P_S_Cl
@@ -7058,7 +7058,12 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
 
     # df_dist_litoli["dist"] = None
 
-    file_ref = f"{int(dataframe['geometry'][idx_ref])}_{int(dataframe['path'][idx_ref])}_{var_filename}.cif"
+    if var_filename == 'CONTCAR_positive':
+        print('var_filename == "CONTCAR_positive" True')
+        file_ref = f"{int(dataframe['geometry'][idx_ref])}_{int(dataframe['path'][idx_ref])}_{var_filename}"
+    else:
+        print('var_filename =/= "CONTCAR_positive" False')
+        file_ref = f"{int(dataframe['geometry'][idx_ref])}_{int(dataframe['path'][idx_ref])}_{var_filename}.cif"
     file_path_ref = os.path.join(destination_directory, file_ref)
 
     structure_ref = Structure.from_file(file_path_ref)
