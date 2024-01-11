@@ -7058,11 +7058,9 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
 
     # df_dist_litoli["dist"] = None
 
-    if var_filename == 'CONTCAR_positive':
-        print('var_filename == "CONTCAR_positive" True')
+    if 'CONTCAR' in var_filename:
         file_ref = f"{int(dataframe['geometry'][idx_ref])}_{int(dataframe['path'][idx_ref])}_{var_filename}"
     else:
-        print('var_filename =/= "CONTCAR_positive" False')
         file_ref = f"{int(dataframe['geometry'][idx_ref])}_{int(dataframe['path'][idx_ref])}_{var_filename}.cif"
     file_path_ref = os.path.join(destination_directory, file_ref)
 
@@ -7086,7 +7084,10 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
         coor_Li = []
         dict_distance = defaultdict(list)
 
-        file = f"{int(dataframe_group['geometry'][index])}_{int(dataframe_group['path'][index])}_{var_filename}.cif"
+        if 'CONTCAR' in var_filename:
+            file = f"{int(dataframe_group['geometry'][index])}_{int(dataframe_group['path'][index])}_{var_filename}"
+        else:
+            file = f"{int(dataframe_group['geometry'][index])}_{int(dataframe_group['path'][index])}_{var_filename}.cif"
         file_path = os.path.join(destination_directory, file)
 
         structure = Structure.from_file(file_path)
