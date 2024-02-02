@@ -6814,7 +6814,7 @@ def get_amount_type(dataframe, litype, el):
         dataframe.at[idx, col_amount_type] = label_count
     
 
-def plot_amount_type(dataframe, litype, el, style):
+def plot_amount_type(dataframe, litype, el, style, category_labels = None):
     """
         style: scatter, bar
     """
@@ -6869,6 +6869,9 @@ def plot_amount_type(dataframe, litype, el, style):
     wide_df = pd.DataFrame(df)
 
     long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
+
+    if category_labels:
+        long_df['category'] = long_df['category'].replace(category_labels)
 
     if style == "bar":
         fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx file vs Li type")
