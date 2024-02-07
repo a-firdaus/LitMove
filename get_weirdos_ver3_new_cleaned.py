@@ -3303,7 +3303,7 @@ def diagonalizing_latticeconstantsmatrix(dataframe, destination_directory, latti
         # # dataframe['subdir_orientated_positive_poscar'][idx] = destination_path
 
 
-def get_latticeconstant_structure_dict_iterated(dataframe, destination_directory, var_filename):
+def get_latticeconstant_structure_dict_iterated(dataframe, destination_directory, proceed_XDATCAR, var_filename):
     col_latticeconstant_structure_dict = f"latticeconstant_structure_dict_{var_filename}"
     col_latticeconstant_structure_dict_flag = f"latticeconstant_structure_dict_{var_filename}_flag"
 
@@ -3337,6 +3337,10 @@ def get_latticeconstant_structure_dict_iterated(dataframe, destination_directory
             if alpha == beta == gamma:
                 if alpha == 90:
                     latticeconstant_structure_dict_flag = "True"
+        else:
+            if proceed_XDATCAR == "True":
+                latticeconstant_structure_dict_flag = "False"
+
 
         dataframe.at[idx, col_latticeconstant_structure_dict] = latticeconstant_structure_dict
         dataframe.at[idx, col_latticeconstant_structure_dict_flag] = latticeconstant_structure_dict_flag
@@ -6814,7 +6818,7 @@ def get_amount_type(dataframe, litype, el):
         dataframe.at[idx, col_amount_type] = label_count
     
 
-def plot_amount_type(dataframe, litype, el, style):
+def plot_amount_type(dataframe, litype, el, style, category_labels = None):
     """
         style: scatter, bar
     """
@@ -6869,6 +6873,9 @@ def plot_amount_type(dataframe, litype, el, style):
     wide_df = pd.DataFrame(df)
 
     long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
+
+    if category_labels:
+        long_df['category'] = long_df['category'].replace(category_labels)
 
     if style == "bar":
         fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx file vs Li type")
