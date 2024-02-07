@@ -56,6 +56,8 @@ col_excel_geo = "geometry"
 col_excel_path = "path"
 col_excel_toten = "toten [eV]"
 
+proceed_XDATCAR = "True"
+
 amount_P = 4
 amount_S = 20
 amount_Cl = 4
@@ -204,7 +206,7 @@ create_cif_pymatgen(file_loc_important_cols, direc_restructure_destination, file
 
 get_idx_coor_limapped_weirdos_dict_litype(file_loc_important_cols, coor_structure_init_dict, activate_radius, litype, el="Li")
 
-get_latticeconstant_structure_dict_iterated(file_loc_important_cols, direc_restructure_destination, var_filename = "CONTCAR")
+get_latticeconstant_structure_dict_iterated(file_loc_important_cols, direc_restructure_destination, proceed_XDATCAR, var_filename = "CONTCAR")
 # plot_energy_vs_latticeconstant(file_loc_important_cols, var_filename = "CONTCAR")
 # plot_weirdos_directcoor(file_loc_important_cols, activate_radius)
 
