@@ -3018,8 +3018,7 @@ def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, am
                 # modified_line = lines[idx_line].file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
                 modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
                 new_text.append(modified_line)
-
-        print(f"geo: {int(dataframe['geometry'][idx])}, path: {int(dataframe['path'][idx])}")
+                
         lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
 
         # idx_weirdo_line_start   = len(idx_without_weirdos) + idx_Li_start
