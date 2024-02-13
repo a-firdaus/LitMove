@@ -723,6 +723,64 @@ def get_orientated_positive_cif(dataframe, destination_directory, cif_line_nr_st
 #         dataframe['subdir_orientated_positive_lessthan1_cif'][idx] = destination_path
 
 
+def get_CONTCAR_normal_elements(dataframe, destination_directory, filename, prefix = None):
+    for index in range(dataframe["geometry"].size):
+        # Generate the new filename
+        if prefix == None:
+            new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}"
+        else:
+            new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}_{prefix}"
+
+
+        # Get the source file path and destination file path
+        destination_path = os.path.join(destination_directory, new_filename)
+        
+        # # Define the pattern to search for
+        # pattern = '  Li_sv_GW/24a6a  P_GW/715c28f22  S_GW/357db9cfb  Cl_GW/3ef3b316\n              24               4              20               4'
+
+        # # Define the replacement string
+        # replacement = '   Li   P    S    Cl\n'
+
+        # Read CONTCAR file
+        with open(destination_path, 'r') as contcar_file:
+            contcar_lines = contcar_file.readlines()
+        
+        contcar_lines[5] = "   Li   P    S    Cl\n"
+        contcar_lines[6] = "    24     4    20     4\n"
+
+        # # Find the number of configurations
+        # # occurrences = int(contcar_lines[1])
+        # occurrences = contcar_lines.count(contcar_lines[0])
+
+        # Iterate through each line and replace if the pattern is found
+        # for i in range(len(contcar_lines)):
+        #     if pattern in contcar_lines[i]:
+        #         contcar_lines[i] = replacement
+
+        # # Print the modified lines
+        # for line in contcar_lines:
+        #     print(line.strip())  # .strip() is used to remove leading/trailing whitespaces
+
+        # # Loop through each configuration
+        # for occurrence in range(occurrences):
+        #     # Define the starting and ending lines for each configuration
+        #     # start_line = 8 + occurrence * (3 + sum([int(x) for x in contcar_lines[6].split()]))
+        #     # end_line = start_line + 3 + sum([int(x) for x in contcar_lines[6].split()])
+        #     start_line = (occurrence * line_length)
+        #     end_line = start_line + line_length
+        #     print(f"start_line: {start_line}, end_line: {end_line}")
+
+        #     # Extract configuration lines
+        #     config_lines = contcar_lines[start_line:end_line]
+
+        #     new_dir = f"{dir_XDATCAR}/{occurrence}"
+        #     os.makedirs(new_dir, exist_ok=True)
+
+        # Create a new CONTCAR file for each configuration
+        with open(destination_path, 'w') as contcar_file:
+            contcar_file.writelines(contcar_lines)
+
+
 def get_positive_lessthan1_poscarcontcar(dataframe, destination_directory, poscarcontcar_line_nr_start, poscarcontcar_line_nr_end, poscarcontcar_columns_type2, file_type, var_name_in, var_name_out, n_decimal):
     col_subdir_positive_file = f"subdir_positive_{file_type}"
     
@@ -824,6 +882,7 @@ def get_coor_structure24_dict_iterated(dataframe, mapping):
     dataframe[col_coor_structure_init_dict] = None
 
     for idx in range(dataframe["geometry"].size):
+        print(f"idx: {idx}")
         coor_origin_Li_init = []; coor_origin_P_init = []; coor_origin_S_init = []; coor_origin_Cl_init = []
         coor_structure_init_dict = {}
 
@@ -7055,7 +7114,7 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
 ##############################################################################################################################################################
 
 
-def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, idx_file_group, idx_ref, mean_ref, var_filename):
+def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, idx_file_group, idx_ref, mean_ref, var_filename, proceed_NEB):
     """
         idx_file_group = [idx_init, idx_end]
     """
@@ -7080,6 +7139,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
     # for i in path_geo:
     dataframe_group = dataframe[idx_file_group[0]:idx_file_group[1]]
     idx_range = list(range(dataframe_group["geometry"].size))
+    
     if idx_ref > idx_file_group[1]:
          # dataframe_group = dataframe_group.append(dataframe[idx_ref-1:idx_ref], ignore_index=True)
         dataframe_group = pd.concat([dataframe[idx_ref:idx_ref+1], dataframe[idx_file_group[0]:idx_file_group[1]]], ignore_index=False)
@@ -7087,6 +7147,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
         idx_range = [idx_ref] + idx_range
 
     for index in idx_range:
+        print(index)
         # for index in [1]:
         coor_Li = []
         dict_distance = defaultdict(list)
@@ -7095,6 +7156,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
             file = f"{int(dataframe_group['geometry'][index])}_{int(dataframe_group['path'][index])}_{var_filename}"
         else:
             file = f"{int(dataframe_group['geometry'][index])}_{int(dataframe_group['path'][index])}_{var_filename}.cif"
+        print(file)
         file_path = os.path.join(destination_directory, file)
 
         structure = Structure.from_file(file_path)
