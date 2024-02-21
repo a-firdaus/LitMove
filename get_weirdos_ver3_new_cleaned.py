@@ -6639,7 +6639,7 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
-        elif litype == 7:
+        elif litype == 8:
             for j in coor_li48htype1_ref:
                 distance = mic_eucledian_distance(i, j)
 
@@ -6709,15 +6709,17 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
 def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, destination_directory, var_filename, el):
     col_occupancy = "occupancy"
+    col_coor24li_tuple_belongin = "coor24li_tuple_belongin"
 
     dataframe[col_occupancy] = [{} for _ in range(len(dataframe.index))]
+    dataframe[col_coor24li_tuple_belongin] = [{} for _ in range(len(dataframe.index))]
 
     coor_structure_init_dict_expanded_el = coor_structure_init_dict_expanded[el]
     coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
 
-    coor24li_tuple_belongin = defaultdict(list)
-
     for idx in range(dataframe["geometry"].size):
+        coor24li_tuple_belongin = defaultdict(list)
+
         file_24Li = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_filename}.cif"
         file_path_24Li = os.path.join(destination_directory, file_24Li)
 
@@ -6778,9 +6780,158 @@ def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, 
         occupancy = {'2': occupancy_2, '1': occupancy_1, '0': occupancy_0, '48htype1': amount_48htype1,'weirdo': amount_weirdo}
 
         dataframe.at[idx, col_occupancy] = occupancy
+        dataframe.at[idx, col_coor24li_tuple_belongin] = coor24li_tuple_belongin
 
 
-def plot_occupancy(dataframe):
+def get_complete_closest_tuple(dataframe, tuple_metainfo):
+    col_coor24li_tuple_belongin = "coor24li_tuple_belongin"
+    col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
+
+    col_idx_coor24li_tuple_belongin_complete_closest = "idx_coor24li_tuple_belongin_complete_closest"
+    col_top_n_distance_coors = "top_n_distance_coors"
+
+    dataframe[col_idx_coor24li_tuple_belongin_complete_closest] = [{} for _ in range(len(dataframe.index))]
+    dataframe[col_top_n_distance_coors] = [{} for _ in range(len(dataframe.index))]
+
+    for idx in range(dataframe["geometry"].size):
+        idx_coor24li_tuple_belongin = defaultdict(list)
+
+        idx_coor_limapped_weirdos_dict = dataframe[col_idx_coor_limapped_weirdos_dict][idx]
+        coor24li_tuple_belongin = dataframe[col_coor24li_tuple_belongin][idx]
+
+        for key_a, val_a in idx_coor_limapped_weirdos_dict.items():
+            idx_li = key_a
+            coor_li_mapped_a = val_a['coor']
+            coor_li_mapped_a_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_a)
+            label_li_a = val_a['label']
+
+            idx_coor24li_tuple_belongin[idx_li] = []
+            for key_b, val_b in coor24li_tuple_belongin.items():
+                idx_tuple = key_b
+                for entry_b in val_b:
+                    coor_li_mapped_b = entry_b['coor']
+                    coor_li_mapped_b_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_b)
+                    label_li_b = entry_b['type']
+
+                    if coor_li_mapped_a_rounded == coor_li_mapped_b_rounded and label_li_a == label_li_b:
+                        idx_coor24li_tuple_belongin_val = {'coor': coor_li_mapped_a, 'type':label_li_a, 'idx_tuple':idx_tuple}
+                        idx_coor24li_tuple_belongin[idx_li].append(idx_coor24li_tuple_belongin_val)
+        #                 count=count+1
+        # print(count)
+                        
+        distance_coors_all = defaultdict(list)
+        n = 3
+        # idx_coor24li_tuple_belongin_complete_closest = idx_coor24li_tuple_belongin.copy()
+        idx_coor24li_tuple_belongin_complete_closest = defaultdict(list)
+
+        for key_c, val_c in idx_coor24li_tuple_belongin.items():
+            idx_li = key_c
+            idx_coor24li_tuple_belongin_complete_closest[idx_li] = []
+
+            if val_c == []:
+                coor_li_mapped_c = idx_coor_limapped_weirdos_dict[idx_li]['coor']
+                label_li_c = idx_coor_limapped_weirdos_dict[idx_li]['label']
+
+                distance_prev = float("inf")
+                closest_idx_tuple = None
+                
+                for key_d, val_d in tuple_metainfo.items():
+                    for entry_d in val_d: 
+                        idx_tuple = key_d
+                        coor_tuple_d = entry_d['coor']
+                        label_li_d = entry_d['type']
+
+                        distance = mic_eucledian_distance(coor_li_mapped_c, coor_tuple_d)
+
+                        # distance_coors_all_val = {'coor_li_mapped': coor_li_mapped_c, 'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d}
+
+                        distance_coors_all_val = {'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d, 'idx_tuple':idx_tuple}
+
+                        distance_coors_all[idx_li].append(distance_coors_all_val)
+
+                        if distance < distance_prev:
+                            distance_prev = distance
+                            closest_idx_tuple = idx_tuple
+
+                idx_coor24li_tuple_belongin_complete_closest[idx_li] = {'coor': coor_li_mapped_c, 'type': label_li_c, 'idx_tuple': idx_tuple}
+
+        sorted_distance_coors_all = {key: sorted(value, key=lambda x: x['dist']) for key, value in distance_coors_all.items()}
+        top_n_distance_coors = {k: v[0:n] for k, v in sorted_distance_coors_all.items()}
+
+        dataframe.at[idx, col_idx_coor24li_tuple_belongin_complete_closest] = idx_coor24li_tuple_belongin_complete_closest
+        dataframe.at[idx, col_top_n_distance_coors] = top_n_distance_coors
+
+
+def plot_weighted_movement(dataframe, litype, amount_Li):
+    col_idx_coor24li_tuple_belongin_complete_closest = "idx_coor24li_tuple_belongin_complete_closest"
+
+    df_weighted = pd.DataFrame()
+
+    multiplicator = litype + 2
+
+    # TO DO: to be refined with different litype
+    if litype == 4:
+        weight_24g = 0
+        weight_48htype4 = 1
+        weight_48htype2 = 2
+        weight_48htype3 = 3
+        weight_48htype1 = 4
+        weight_weirdos = 5 
+
+    for idx in range(dataframe["geometry"].size):
+        # dict_weighted = defaultdict(list)
+
+        idx_coor24li_tuple_belongin_complete_closest = dataframe[col_idx_coor24li_tuple_belongin_complete_closest][idx]
+
+        idx_coor24li_tuple_belongin_complete_closest_weight = defaultdict(list)
+
+        for key_a, val_a in idx_coor24li_tuple_belongin_complete_closest.items():
+            idx_li = key_a
+            for entry_a in val_a:
+                coor_li_mapped = entry_a['coor']
+                type = entry_a['type']
+                idx_tuple = entry_a['idx_tuple']
+
+                if type == "24g":
+                    weighted_type = weight_24g
+                elif type == "48htype4":
+                    weighted_type = weight_48htype4
+                elif type == "48htype2":
+                    weighted_type = weight_48htype2
+                elif type == "48htype3":
+                    weighted_type = weight_48htype3
+                elif type == "48htype1":
+                    weighted_type = weight_48htype1
+                elif type == "weirdos":
+                    weighted_type = weight_weirdos
+                else:
+                    print("wrong type")
+                
+                weight = idx_tuple * multiplicator + weighted_type
+            
+                idx_coor24li_tuple_belongin_complete_closest_weight[idx_li] = {'coor': coor_li_mapped, 'type': type, 'idx_tuple': idx_tuple, 'weight':weight}
+
+        for j in range(len(amount_Li)):
+            df_weighted.at[idx, f"{j}"] = None  
+
+            # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
+            # distance = mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
+
+            # dict_weighted[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
+            
+            for key_b, val_b in idx_coor24li_tuple_belongin_complete_closest_weight.items():
+                for entry_b in val_b: 
+                    df_weighted.at[idx, f"{j}"] = entry_b['weight']
+
+            # diameter_24g48h = max_mapping_radius * 2
+            # # if distance < diameter_24g48h and index != idx_ref:
+            # if distance > diameter_24g48h and idx != idx_ref:
+            #     print(f"path: {idx}, Li: {j}, distance: {distance}")
+
+    return df_weighted
+
+
+def plot_occupancy(dataframe, category_labels = None):
     col_occupancy = "occupancy"
 
     df = pd.DataFrame()
@@ -6808,6 +6959,9 @@ def plot_occupancy(dataframe):
     # Convert wide format to long format
     # long_df = pd.melt(wide_df, var_name='Category', value_name='Count')
     long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
+
+    if category_labels:
+        long_df['category'] = long_df['category'].replace(category_labels)
 
     fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx of file vs Occupancy")
     fig.show()
@@ -7114,7 +7268,7 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
 ##############################################################################################################################################################
 
 
-def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, idx_file_group, idx_ref, mean_ref, var_filename, proceed_NEB):
+def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, idx_file_group, idx_ref, mean_ref, var_filename):
     """
         idx_file_group = [idx_init, idx_end]
     """
@@ -7136,9 +7290,13 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
         if coor.species_string == "Li":
             coor_Li_ref.append(coor.frac_coords)
 
+    print(f"coor_Li_ref: {coor_Li_ref}")
+
     # for i in path_geo:
-    dataframe_group = dataframe[idx_file_group[0]:idx_file_group[1]]
+    dataframe_group = dataframe.copy()
+    dataframe_group = dataframe_group[idx_file_group[0]:idx_file_group[1]]
     idx_range = list(range(dataframe_group["geometry"].size))
+    print(idx_range)
     
     if idx_ref > idx_file_group[1]:
          # dataframe_group = dataframe_group.append(dataframe[idx_ref-1:idx_ref], ignore_index=True)
@@ -7165,6 +7323,8 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
         for idx, coor in enumerate(structure):
             if coor.species_string == "Li":
                 coor_Li.append(coor.frac_coords)        
+
+        print(f"coor_Li: {coor_Li}")
             
         coors_Li_dist_structures = defaultdict(list)
 
@@ -7179,7 +7339,8 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
                 df_distance.at[index, f"{j}"] = distance
 
                 diameter_24g48h = max_mapping_radius * 2
-                if distance < diameter_24g48h and index != idx_ref:
+                # if distance < diameter_24g48h and index != idx_ref:
+                if distance > diameter_24g48h and index != idx_ref:
                     print(f"path: {index}, Li: {j}, distance: {distance}")
 
         elif mean_ref == False:
@@ -7192,7 +7353,8 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
                 df_distance.at[index, f"{j}"] = distance
 
                 diameter_24g48h = max_mapping_radius * 2
-                if distance < diameter_24g48h and index != idx_ref:
+                # if distance < diameter_24g48h and index != idx_ref:
+                if distance > diameter_24g48h and index != idx_ref:
                     print(f"path: {index}, Li: {j}, distance: {distance}")
 
     #         coors_Li_dist_structures_dict = {}
