@@ -13,6 +13,14 @@ import seaborn as sns
 import math
 from collections import defaultdict
 from sklearn.cluster import KMeans
+from mpl_toolkits.mplot3d import Axes3D
+from chart_studio import plotly
+from adjustText import adjust_text
+
+import plotly.offline as pyoff
+import re
+import mplcursors
+import mpldatacursor
 
 # pymatgen libraries
 from pymatgen.core.structure import Structure
@@ -7027,7 +7035,7 @@ def plot_movement(dataframe, to_plot):
 
         idx_coor24li_tuple_cage_belongin_complete_closest_weight = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
 
-        for j in range(len(col_idx_coor24li_tuple_cage_belongin_complete_closest_weight)):
+        for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest_weight)):
             df_to_plot.at[idx, f"{j}"] = None  
 
             # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
@@ -7082,31 +7090,63 @@ def plot_occupancy(dataframe, category_labels = None):
     fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx of file vs Occupancy")
     fig.show()
 
-    # # # Plotting
-    # fig = px.bar(df, x=df.index, y=['2', '1', '0', '48htype1','weirdo'], title='Stacked Bar Plot')
-    # fig.update_layout(barmode='stack')
-
-    # fig.show()
-
-    # fig, ax = plt.subplots()
-
-    # for i, col in enumerate(df.columns):
-    #     ax.bar(df.index, df[col], label=col, bottom=df.iloc[:, :i].sum(axis=1))
-
-    # ax.legend()
-
-    # plt.xlabel('Index')
-    # plt.ylabel('Count')
-    # plt.title('Stacked Bar Plot from Given Data')
-    # plt.show()
     return df
 
 
-def plot_distance_wrtpath0(df_distance, max_mapping_radius, activate_diameter_line, Li_idxs):
+def get_plot_movement_counted(df_movement):
+    df = pd.DataFrame()
+    df['idx_file'] = None
+    df['inTERcage'] = None
+    df['intracage'] = None
+    df['intratriad'] = None
+    df['staying'] = None
+
+    for i in range(len(df_movement)):
+        counter_inTERcage = 0
+        counter_intracage = 0
+        counter_intratriad = 0
+        counter_staying = 0
+
+        for j in df_movement.iloc[i]:
+            # print(j)
+            if j == 'inTERcage':
+                counter_inTERcage = counter_inTERcage + 1
+            elif j == 'intracage':
+                counter_intracage = counter_intracage + 1
+            elif j == 'intratriad':
+                counter_intratriad = counter_intratriad + 1
+            elif j == 'staying':
+                counter_staying = counter_staying + 1
+
+        df.at[i, 'idx_file'] = i
+        df.at[i, 'inTERcage'] = counter_inTERcage
+        df.at[i, 'intracage'] = counter_intracage
+        df.at[i, 'intratriad'] = counter_intratriad
+        df.at[i, 'staying'] = counter_staying
+
+    wide_df = pd.DataFrame(df)
+
+    # Convert wide format to long format
+    # long_df = pd.melt(wide_df, var_name='Category', value_name='Count')
+    long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
+
+    long_df['idx_file'] += 0.5
+
+    fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx of movement vs Category")
+    fig.show()
+
+    return df
+
+
+def plot_distance_wrtpath0(df_distance, max_mapping_radius, activate_shifting_x, activate_diameter_line, Li_idxs):
 
     diameter_24g48h = max_mapping_radius * 2
 
-    x = range(len(df_distance))
+    # x = df_distance.index
+    if activate_shifting_x == True:
+        x = [xi + 0.5 for xi in range(len(df_distance))]
+    else:
+        x = range(len(df_distance))
 
     # # fig = plt.figure()
     # fig = plt.figure(figsize=(800/96, 600/96))  # 800x600 pixels, assuming 96 DPI
@@ -7116,11 +7156,17 @@ def plot_distance_wrtpath0(df_distance, max_mapping_radius, activate_diameter_li
 
     lines = []
 
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']  # Example color list
+
+    # for i in df_distance.index:
     for i in range(len(df_distance.columns)):
+
+        line_color = colors[i % len(colors)]  # Cycle through colors list
+
         if Li_idxs == "all" or i in Li_idxs:
             # # i = i
             # # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
-            line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", linewidth=2)  # Set line width to 2 pixels
+            line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", color=line_color, linewidth=2)  # Set line width to 2 pixels
             lines.append(line)
             # label = f"{i}" if Li_idxs == "all" else None
             # line, = ax.plot(x, df_distance[f"{i}"], label=label)
@@ -7135,6 +7181,158 @@ def plot_distance_wrtpath0(df_distance, max_mapping_radius, activate_diameter_li
     # # ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}')
     if activate_diameter_line == True:
         ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}', linewidth=1)  # Set line width to 1 pixel
+
+    # plt.title(f"Geometry {geo} with d={diameter_24g48h}")
+        
+    # Explicitly set x-ticks
+    # ax.set_xticks(x)
+    if activate_shifting_x == True:
+        ax.set_xticks([0,1,2,3,4,5,6,7,8])
+
+    # Optionally, if you want to label each tick with the original index before adjustment:
+    # # # if activate_shifting_x == True:
+    # # #     ax.set_xticklabels([str(int(xi - 0.5)) for xi in x])
+
+    # Shrink current axis's height by 10% on the bottom
+        # source: https://stackoverflow.com/questions/4700614/how-to-put-the-legend-outside-the-plot
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+
+    handles, labels = ax.get_legend_handles_labels()
+
+    ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+            fancybox=True, shadow=True, ncol=5)
+
+    # Enable cursor information
+    mplcursors.cursor(hover=True)
+
+    # Enable zooming with cursor
+    mpldatacursor.datacursor(display='multiple', draggable=True)
+
+    plt.show()
+
+
+
+def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_radius, amount_Li, category_labels, activate_diameter_line, Li_idxs):
+
+    # df_distance = df_distance.iloc[:,:amount_Li]
+    # df_type = df_type.iloc[:,:amount_Li]
+    # df_idx_tuple = df_idx_tuple.iloc[:,:amount_Li]
+
+    diameter_24g48h = max_mapping_radius * 2
+
+    x = range(len(df_distance))
+
+    # # fig = plt.figure()
+    # fig = plt.figure(figsize=(800/96, 600/96))  # 800x600 pixels, assuming 96 DPI
+    # ax = plt.subplot(111)
+
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure size in inches
+
+    lines = []
+    texts = []
+
+    # type_marker_mapping = {
+    #     '48htype1': 'o',
+    #     '48htype2': 's',
+    #     '48htype3': '^',
+    #     '48htype4': 'D',
+    #     'weirdos': 'X',
+    #     '24g': 'v'    
+    # }
+
+    type_marker_mapping = {
+        '48htype1': ('o', 'r'),  # Example: Circle marker with red color
+        '48htype2': ('s', 'g'),  # Square marker with green color
+        '48htype3': ('^', 'b'),  # Triangle marker with blue color
+        '48htype4': ('D', 'c'),  # Diamond marker with cyan color
+        'weirdos': ('X', 'm'),   # X marker with magenta color
+        '24g': ('v', 'y')        # Triangle_down marker with yellow color
+    }
+
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']  # Example color list
+    # colors = list(mcolors.CSS4_COLORS.values())
+    # colors = [color + (0.7,) for color in mcolors.CSS4_COLORS.values()]
+    # colors = mcolors
+    # names = list(colors)
+
+    # Define offsets for text position
+    x_offset = 0.02  # Adjust these values as needed
+    y_offset = -0.05  # Adjust these values as needed
+
+    # Track which labels have been added
+    added_labels = set()
+
+    # for i in range(24):
+    for i in range(len(df_distance.columns)):
+        if Li_idxs == "all" or i in Li_idxs:
+            column_data = df_distance[f"{i}"]
+            column_val = df_type[f"{i}"]
+            column_idx_tuple = df_idx_tuple[f"{i}"]
+            # type_val = df_type[0, i]
+            # print(type_val)
+
+            line_color = colors[i % len(colors)]  # Cycle through colors list
+            # # # # # # # line_color = colors[i % len(colors)] if i < len(colors) else 'black'  # Use a default color if the index exceeds available colors
+
+            # # # for j in x:
+            for j, (y_val, type_val, idx_tuple_val) in enumerate(zip(column_data, column_val, column_idx_tuple)):
+                # type = column_val[j]
+                # idx_tuple = column_idx_tuple[j]
+
+                # marker_style = type_marker_mapping.get(column_val, 'o')  # Get the marker style for the type
+                # # marker_style = type_marker_mapping.get(type, 'o')  # Get the marker style for the type
+                marker_style, marker_color = type_marker_mapping.get(type_val, ('o','k'))  # Get the marker style for the type
+                # # # # # # ax.scatter(j, df_distance[f"{i}"][j], label=f"Type: {column_val}", marker=marker_style, s=100)
+                # # # # # label = f"{type_val}" if type_val not in added_labels else None
+                # # # # # # # ax.scatter(j, df_distance.iloc[j, i], label=label, marker=marker_style, s=100)
+                # # # # # # # # # ax.scatter(j, df_distance.iloc[j, i], label=label, marker=marker_style, s=100, color = marker_color, alpha = 0.5)
+                # # # # # ax.scatter(j, y_val, label=label, marker=marker_style, s=100, color = marker_color, alpha = 0.5)
+                # # # # # added_labels.add(type_val)
+                mapped_label = category_labels.get(type_val, type_val)  # Use the original type_val if it's not found in category_labels
+                # Use mapped_label for the label. Only add it if it's not already added.
+                label = mapped_label if mapped_label not in added_labels else None
+                ax.scatter(j, y_val, label=label, marker=marker_style, s=100, color=marker_color, alpha=0.5)
+                if label:  # If a label was added, record it as added
+                    added_labels.add(mapped_label)
+
+                # # # # ax.text(j, df_distance.iloc[j, i], str(int(idx_tuple_val)), color=line_color, fontsize=20)
+                # # # # # ax.text(j, y_val, str(int(idx_tuple_val)), color=line_color, fontsize=20)
+                # Apply offsets to text position
+                text_x = j + x_offset * ax.get_xlim()[1]  # Adjust text x-position
+                text_y = y_val + y_offset * ax.get_ylim()[1]  # Adjust text y-position
+                
+                # # # # # # text = ax.text(j+x_offset, y_val+y_offset, str(int(idx_tuple_val)), color=line_color, fontsize=15)
+                text = ax.text(text_x, text_y, str(int(idx_tuple_val)), color=line_color, fontsize=18)
+                texts.append(text)
+
+            # # i = i
+            # # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
+            # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", linewidth=2, marker=marker_style, markersize=10)  # Set line width to 2 pixels
+
+            line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", color=line_color, linewidth=2)  # Set line width to 2 pixels
+            # ax.text(i, value, str(int(idx_value)), color=line_color, fontsize=8)
+
+            lines.append(line)
+            # label = f"{i}" if Li_idxs == "all" else None
+            # line, = ax.plot(x, df_distance[f"{i}"], label=label)
+            # lines.append(line)
+
+        # if type(Li_idxs) == list:
+        #     for j in Li_idxs:
+        #         if i == j:
+        #             line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
+        #             lines.append(line)
+
+    adjust_text(texts, arrowprops=dict(arrowstyle='->', color='red'))
+    
+    # # ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}')
+    if activate_diameter_line == True:
+        ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}', linewidth=1)  # Set line width to 1 pixel
+
+    # Set the y-axis to only show ticks at 0, 1, 2, 3
+    plt.yticks([0, 1, 2, 3])
 
     # plt.title(f"Geometry {geo} with d={diameter_24g48h}")
 
@@ -7156,6 +7354,57 @@ def plot_distance_wrtpath0(df_distance, max_mapping_radius, activate_diameter_li
     mpldatacursor.datacursor(display='multiple', draggable=True)
 
     plt.show()
+
+
+def get_df_movement(dataframe):
+    col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
+
+    df_to_plot = pd.DataFrame()
+
+    for idx in range(dataframe["geometry"].size - 1):  # CHANGED HERE
+
+        idx_coor24li_tuple_cage_belongin_complete_closest_weight = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
+        idx_coor24li_tuple_cage_belongin_complete_closest_weight_next = dataframe.at[idx+1, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
+
+        for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest_weight)):
+            df_to_plot.at[idx, f"{j}"] = None  
+
+            type = idx_coor24li_tuple_cage_belongin_complete_closest_weight[j]['type']
+            idx_tuple = idx_coor24li_tuple_cage_belongin_complete_closest_weight[j]['idx_tuple']
+            idx_cage = idx_coor24li_tuple_cage_belongin_complete_closest_weight[j]['idx_cage']
+
+            type_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['type']
+            idx_tuple_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['idx_tuple']
+            idx_cage_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['idx_cage']
+
+            if idx_cage != idx_cage_next:
+                type_movement = 'inTERcage'
+            elif idx_cage == idx_cage_next and idx_tuple != idx_tuple_next:
+                type_movement = 'intracage'
+            elif idx_cage == idx_cage_next and idx_tuple == idx_tuple_next and type != type_next:
+                type_movement = 'intratriad'
+            elif idx_cage == idx_cage_next and idx_tuple == idx_tuple_next and type == type_next:
+                type_movement = 'staying'
+
+            df_to_plot.at[idx, f"{j}"] = type_movement
+
+            # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
+            # distance = mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
+
+            # dict_weighted[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
+            
+            # for key_b, val_b in idx_coor24li_tuple_cage_belongin_complete_closest_weight.items():
+            #     type = val_b['type']
+            #     idx_tuple = val_b['idx_tuple']
+            #     idx_cage = val_b['idx_cage']
+                # for entry_b in val_b: 
+                # df_to_plot.at[idx, f"{key_b}"] = val_b[f'{to_plot}']
+
+            # diameter_24g48h = max_mapping_radius * 2
+            # # if distance < diameter_24g48h and index != idx_ref:
+            # if distance > diameter_24g48h and idx != idx_ref:
+            #     print(f"path: {idx}, Li: {j}, distance: {distance}")
+    return df_to_plot
 
 
 def get_amount_type(dataframe, litype, el):
