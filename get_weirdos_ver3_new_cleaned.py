@@ -3069,31 +3069,44 @@ def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, am
         with open(source_filename_path, "r") as f:
             lines = f.readlines()
 
+        # added: check if the search_string is found
+        search_string_found = False
         for idx_line, line in enumerate(lines):
             if search_string in line:
+                search_string_found = True
                 idx_Li_start = idx_line
                 break
 
         idx_without_weirdos = [i for i in range(amount_Li) if i not in idx0_weirdos_Li]
 
-        new_text = []
-        for i in range(len(idx_without_weirdos)):
-            idx_line = idx_Li_start + i
-            if lines[idx_line].strip().startswith("Li"):
-                new_label = f"Li{idx_without_weirdos[i]}"
-                # file_operations_instance = FileOperations()
-                # modified_line = lines[idx_line].file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
-                modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
-                new_text.append(modified_line)
-                
-        lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
+        if not search_string_found:
+            pass
+        else:
+            # idx_without_weirdos = [i for i in range(amount_Li) if i not in idx0_weirdos_Li]
 
-        # idx_weirdo_line_start   = len(idx_without_weirdos) + idx_Li_start
-        # idx_weirdo_line_end     = idx_weirdo_line_start + len(idx0_weirdos_Li)
-        # lines[idx_weirdo_line_start : idx_weirdo_line_end] = weirdos_text
+            new_text = []
+            for i in range(len(idx_without_weirdos)):
+                idx_line = idx_Li_start + i
+                if lines[idx_line].strip().startswith("Li"):
+                    new_label = f"Li{idx_without_weirdos[i]}"
+                    # file_operations_instance = FileOperations()
+                    # modified_line = lines[idx_line].file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
+                    modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
+                    new_text.append(modified_line)
+                    
+            lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
 
-        idx_P_S_Cl_line_new_start    = len(idx_without_weirdos) + idx_Li_start
-        reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_Li, amount_P, amount_S, amount_Cl)
+            # idx_weirdo_line_start   = len(idx_without_weirdos) + idx_Li_start
+            # idx_weirdo_line_end     = idx_weirdo_line_start + len(idx0_weirdos_Li)
+            # lines[idx_weirdo_line_start : idx_weirdo_line_end] = weirdos_text
+
+            idx_P_S_Cl_line_new_start    = len(idx_without_weirdos) + idx_Li_start
+            reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_Li, amount_P, amount_S, amount_Cl)
+
+            # dataframe.at[idx, col_idx_without_weirdos] = idx_without_weirdos
+
+            # with open(destination_path_combined_new, "w") as f:
+            #     f.write("\n".join(line.strip() for line in lines))
 
         dataframe.at[idx, col_idx_without_weirdos] = idx_without_weirdos
 
