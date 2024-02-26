@@ -5758,7 +5758,7 @@ def kmeans_cluster_weirdos(coor_weirdos, amount_clusters):
 
     ax.legend()
 
-    return centroids
+    return centroids, labels
 
 
 def create_POSCAR_weirdos_centroids_appended(coor_weirdos, coor_centroids, destination_directory, lattice_constant, filename):
@@ -6709,16 +6709,16 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
 def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, destination_directory, var_filename, el):
     col_occupancy = "occupancy"
-    col_coor24li_tuple_belongin = "coor24li_tuple_belongin"
+    col_coor24li_tuple_cage_belongin = "coor24li_tuple_cage_belongin"
 
     dataframe[col_occupancy] = [{} for _ in range(len(dataframe.index))]
-    dataframe[col_coor24li_tuple_belongin] = [{} for _ in range(len(dataframe.index))]
+    dataframe[col_coor24li_tuple_cage_belongin] = [{} for _ in range(len(dataframe.index))]
 
     coor_structure_init_dict_expanded_el = coor_structure_init_dict_expanded[el]
     coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
 
     for idx in range(dataframe["geometry"].size):
-        coor24li_tuple_belongin = defaultdict(list)
+        coor24li_tuple_cage_belongin = defaultdict(list)
 
         file_24Li = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_filename}.cif"
         file_path_24Li = os.path.join(destination_directory, file_24Li)
@@ -6737,27 +6737,28 @@ def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, 
         # for idx_triad, val in tuple_metainfo.items():
 
         for idx_triad, values_list in tuple_metainfo.items():
-            coor24li_tuple_belongin[idx_triad] = []
+            coor24li_tuple_cage_belongin[idx_triad] = []
             
             for entry in values_list:
                 for i in result_list:
             
                     if (i == entry['coor']).all():
                         # if (tuple(i) == tuple(entry['coor'])).all():
-                        coor24li_tuple_belongin_dict = {'coor': i, 'type':entry['type']}
-                        coor24li_tuple_belongin[idx_triad].append(coor24li_tuple_belongin_dict)
+                        # coor24li_tuple_belongin_dict = {'coor': i, 'type':entry['type']}
+                        coor24li_tuple_cage_belongin_dict = {'coor': i, 'type':entry['type'], 'idx_cage':entry['idx_cage']}
+                        coor24li_tuple_cage_belongin[idx_triad].append(coor24li_tuple_cage_belongin_dict)
 
         # idx_coor_weirdos_Li_dict = dataframe['idx_coor_weirdos_Li'][idx]
 
         # for idx_weirdo, values_list in idx_coor_weirdos_Li_dict.items():
         #         coorweirdo_tuple_belongin_dict = {'coor': values_list, 'type':'weirdo'}
-        #         coor24li_tuple_belongin['weirdo'].append(coorweirdo_tuple_belongin_dict)
+        #         coor24li_tuple_cage_belongin['weirdo'].append(coorweirdo_tuple_belongin_dict)
         
-        # for key, val in coor24li_tuple_belongin.items():
+        # for key, val in coor24li_tuple_cage_belongin.items():
         #     for i
 
         len_occupancy = []
-        for key, val in coor24li_tuple_belongin.items():
+        for key, val in coor24li_tuple_cage_belongin.items():
             len_occupancy.append(len(val))
 
 
@@ -6780,24 +6781,106 @@ def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, 
         occupancy = {'2': occupancy_2, '1': occupancy_1, '0': occupancy_0, '48htype1': amount_48htype1,'weirdo': amount_weirdo}
 
         dataframe.at[idx, col_occupancy] = occupancy
-        dataframe.at[idx, col_coor24li_tuple_belongin] = coor24li_tuple_belongin
+        dataframe.at[idx, col_coor24li_tuple_cage_belongin] = coor24li_tuple_cage_belongin
+
+
+def get_idx_cage_coor_24g(coor_24g_array, labels, idx_coor_cage_order, amount_clusters):
+    idx_cage_coor_24g = defaultdict(list)
+
+    # idx_coor_cage_order = {0_1: np.array([0.97111, 0.25   , 0.25   ]), 3_4: np.array([0.02889, 0.75   , 0.25   ]),
+    #                        1_3: np.array([0.02889, 0.25   , 0.75   ]), 2_2: np.array([0.97111, 0.75   , 0.75   ])}
+
+    for idx_cluster in range(amount_clusters):
+        idx_cage_coor_24g[idx_cluster] = []
+
+        cluster_mask = np.array(labels == idx_cluster)
+
+        # print(f"idx_cluster:{idx_cluster}\n{coor_24g_array[np.array(labels == idx_cluster)]}")
+
+        coors_cluster = coor_24g_array[cluster_mask]
+        # print(coor_cluster)
+
+        for coor_cluster in coors_cluster: 
+
+            # coor_cluster_rounded = tuple(round(coordinate, 5) for coordinate in coor_cluster)
+            # # print(coor_cluster_rounded)
+            # print(coor_cluster)
+
+            idx_cage_coor_24g[idx_cluster].append(coor_cluster)
+
+    updated_idx_cage_coor_24g = {}
+
+    # Iterate over idx_coor_cage_order
+    for new_key, coor in idx_coor_cage_order.items():
+        # Find the corresponding key in idx_cage_coor_24g based on coor
+        for old_key, coor_list in idx_cage_coor_24g.items():
+            if any((coor == c).all() for c in coor_list):
+                updated_idx_cage_coor_24g[new_key] = coor_list
+                break
+
+    return updated_idx_cage_coor_24g
+
+
+def get_tuple_cage_metainfo(tuple_metainfo, idx_cage_coor_24g):
+    # Good. use further!
+
+    tuple_cage_metainfo = tuple_metainfo.copy()
+
+    # for idx_tuple, value_list in tuple_cage_metainfo.items():
+    #     # Iterate over values in idx_cage_coor_24g
+    #     for idx_cage, coor_list in idx_cage_coor_24g.items():
+    #         # Iterate over coordinate lists
+    #         for coor in coor_list:
+    #             # Check if coor matches any 'coor' in value_list with 'type': '24g'
+    #             for item in value_list:
+    #                 if item['type'] == '24g' and (item['coor'] == coor).all():
+    #                     # Assign idx_cage to the matching value
+    #                     item['idx_cage'] = idx_cage
+    #                 elif item['type'] != '24g':
+    #                     item['idx_cage'] = idx_cage
+
+    # Iterate over tuple_metainfo
+    for key, value_list in tuple_cage_metainfo.items():
+        # Initialize idx_cage for the current group
+        current_idx_cage = None
+        
+        # Iterate over values in idx_cage_coor_24g
+        for idx_cage, coor_list in idx_cage_coor_24g.items():
+            # Iterate over coordinate lists
+            for coor in coor_list:
+                # Check if coor matches any 'coor' in value_list with 'type': '24g'
+                for item in value_list:
+                    if item['type'] == '24g' and (item['coor'] == coor).all():
+                        # Assign idx_cage to the matching value
+                        item['idx_cage'] = idx_cage
+                        current_idx_cage = idx_cage
+        
+        # Assign the same idx_cage to other types in the current group
+        if current_idx_cage is not None:
+            for item in value_list:
+                if item['type'] != '24g':
+                    item['idx_cage'] = current_idx_cage
+
+    return tuple_cage_metainfo
 
 
 def get_complete_closest_tuple(dataframe, tuple_metainfo):
-    col_coor24li_tuple_belongin = "coor24li_tuple_belongin"
+    col_coor24li_tuple_cage_belongin = "coor24li_tuple_cage_belongin"
     col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
 
-    col_idx_coor24li_tuple_belongin_complete_closest = "idx_coor24li_tuple_belongin_complete_closest"
+    col_idx_coor24li_tuple_cage_belongin = "idx_coor24li_tuple_cage_belongin"
+    col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
     col_top_n_distance_coors = "top_n_distance_coors"
 
-    dataframe[col_idx_coor24li_tuple_belongin_complete_closest] = [{} for _ in range(len(dataframe.index))]
+    dataframe[col_idx_coor24li_tuple_cage_belongin] = [{} for _ in range(len(dataframe.index))]
+    dataframe[col_idx_coor24li_tuple_cage_belongin_complete_closest] = [{} for _ in range(len(dataframe.index))]
     dataframe[col_top_n_distance_coors] = [{} for _ in range(len(dataframe.index))]
-
+    
     for idx in range(dataframe["geometry"].size):
-        idx_coor24li_tuple_belongin = defaultdict(list)
+        idx_coor24li_tuple_cage_belongin = defaultdict(list)
 
         idx_coor_limapped_weirdos_dict = dataframe[col_idx_coor_limapped_weirdos_dict][idx]
-        coor24li_tuple_belongin = dataframe[col_coor24li_tuple_belongin][idx]
+        coor24li_tuple_cage_belongin = dataframe[col_coor24li_tuple_cage_belongin][idx]
 
         for key_a, val_a in idx_coor_limapped_weirdos_dict.items():
             idx_li = key_a
@@ -6805,28 +6888,32 @@ def get_complete_closest_tuple(dataframe, tuple_metainfo):
             coor_li_mapped_a_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_a)
             label_li_a = val_a['label']
 
-            idx_coor24li_tuple_belongin[idx_li] = []
-            for key_b, val_b in coor24li_tuple_belongin.items():
+            idx_coor24li_tuple_cage_belongin[idx_li] = []
+            for key_b, val_b in coor24li_tuple_cage_belongin.items():
                 idx_tuple = key_b
                 for entry_b in val_b:
                     coor_li_mapped_b = entry_b['coor']
                     coor_li_mapped_b_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_b)
                     label_li_b = entry_b['type']
+                    idx_cage_b = entry_b['idx_cage']
 
-                    if coor_li_mapped_a_rounded == coor_li_mapped_b_rounded and label_li_a == label_li_b:
-                        idx_coor24li_tuple_belongin_val = {'coor': coor_li_mapped_a, 'type':label_li_a, 'idx_tuple':idx_tuple}
-                        idx_coor24li_tuple_belongin[idx_li].append(idx_coor24li_tuple_belongin_val)
-        #                 count=count+1
-        # print(count)
+                    if (coor_li_mapped_a_rounded == coor_li_mapped_b_rounded) and (label_li_a == label_li_b):
+                        # idx_coor24li_tuple_belongin_val = {'coor': coor_li_mapped_a, 'type':label_li_a, 'idx_tuple':idx_tuple}
+                        idx_coor24li_tuple_cage_belongin_val = {'coor': coor_li_mapped_a, 'type':label_li_a, 'idx_tuple':idx_tuple, 'idx_cage':idx_cage_b}
+                        idx_coor24li_tuple_cage_belongin[idx_li].append(idx_coor24li_tuple_cage_belongin_val)
+        
+        dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin] = idx_coor24li_tuple_cage_belongin
                         
         distance_coors_all = defaultdict(list)
         n = 3
-        # idx_coor24li_tuple_belongin_complete_closest = idx_coor24li_tuple_belongin.copy()
-        idx_coor24li_tuple_belongin_complete_closest = defaultdict(list)
+        idx_coor_limapped_weirdos_dict = dataframe[col_idx_coor_limapped_weirdos_dict][idx]
+        idx_coor24li_tuple_cage_belongin = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin]
+        # idx_coor24li_tuple_cage_belongin_complete_closest = idx_coor24li_tuple_cage_belongin.copy()
+        idx_coor24li_tuple_cage_belongin_complete_closest = defaultdict(list)
 
-        for key_c, val_c in idx_coor24li_tuple_belongin.items():
+        for key_c, val_c in idx_coor24li_tuple_cage_belongin.items():
             idx_li = key_c
-            idx_coor24li_tuple_belongin_complete_closest[idx_li] = []
+            idx_coor24li_tuple_cage_belongin_complete_closest[idx_li] = []
 
             if val_c == []:
                 coor_li_mapped_c = idx_coor_limapped_weirdos_dict[idx_li]['coor']
@@ -6834,38 +6921,52 @@ def get_complete_closest_tuple(dataframe, tuple_metainfo):
 
                 distance_prev = float("inf")
                 closest_idx_tuple = None
+                closest_idx_cage = None
                 
                 for key_d, val_d in tuple_metainfo.items():
                     for entry_d in val_d: 
                         idx_tuple = key_d
                         coor_tuple_d = entry_d['coor']
                         label_li_d = entry_d['type']
+                        idx_cage_d = entry_d['idx_cage']
 
                         distance = mic_eucledian_distance(coor_li_mapped_c, coor_tuple_d)
 
                         # distance_coors_all_val = {'coor_li_mapped': coor_li_mapped_c, 'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d}
 
-                        distance_coors_all_val = {'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d, 'idx_tuple':idx_tuple}
+                        distance_coors_all_val = {'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d, 'idx_tuple':idx_tuple, 'idx_cage':idx_cage_d}
 
                         distance_coors_all[idx_li].append(distance_coors_all_val)
 
                         if distance < distance_prev:
                             distance_prev = distance
                             closest_idx_tuple = idx_tuple
+                            closest_idx_cage = idx_cage_d
 
-                idx_coor24li_tuple_belongin_complete_closest[idx_li] = {'coor': coor_li_mapped_c, 'type': label_li_c, 'idx_tuple': idx_tuple}
+                idx_coor24li_tuple_cage_belongin_complete_closest[idx_li] = {'coor': coor_li_mapped_c, 'type': label_li_c, 'idx_tuple': closest_idx_tuple, 'idx_cage': closest_idx_cage}
+
+            elif val_c != []:
+                for entry_c in val_c: 
+                    coor_li_mapped_c = entry_c['coor']
+                    label_li_c = entry_c['type']
+                    idx_tuple_c = entry_c['idx_tuple']
+                    idx_cage_c = entry_c['idx_cage']
+
+                    idx_coor24li_tuple_cage_belongin_complete_closest[idx_li] = {'coor': coor_li_mapped_c, 'type': label_li_c, 'idx_tuple': idx_tuple_c, 'idx_cage': idx_cage_c}
 
         sorted_distance_coors_all = {key: sorted(value, key=lambda x: x['dist']) for key, value in distance_coors_all.items()}
         top_n_distance_coors = {k: v[0:n] for k, v in sorted_distance_coors_all.items()}
+        # !!! assumed there's NO DUPLICATE with the SECOND distance
 
-        dataframe.at[idx, col_idx_coor24li_tuple_belongin_complete_closest] = idx_coor24li_tuple_belongin_complete_closest
+        dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest] = idx_coor24li_tuple_cage_belongin_complete_closest
         dataframe.at[idx, col_top_n_distance_coors] = top_n_distance_coors
 
 
-def plot_weighted_movement(dataframe, litype, amount_Li):
-    col_idx_coor24li_tuple_belongin_complete_closest = "idx_coor24li_tuple_belongin_complete_closest"
+def weighing_movement(dataframe, litype):
+    col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
+    col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
 
-    df_weighted = pd.DataFrame()
+    dataframe[col_idx_coor24li_tuple_cage_belongin_complete_closest_weight] = [{} for _ in range(len(dataframe.index))]
 
     multiplicator = litype + 2
 
@@ -6881,54 +6982,69 @@ def plot_weighted_movement(dataframe, litype, amount_Li):
     for idx in range(dataframe["geometry"].size):
         # dict_weighted = defaultdict(list)
 
-        idx_coor24li_tuple_belongin_complete_closest = dataframe[col_idx_coor24li_tuple_belongin_complete_closest][idx]
+        idx_coor24li_tuple_cage_belongin_complete_closest = dataframe[col_idx_coor24li_tuple_cage_belongin_complete_closest][idx]
 
-        idx_coor24li_tuple_belongin_complete_closest_weight = defaultdict(list)
+        idx_coor24li_tuple_cage_belongin_complete_closest_weight = defaultdict(list)
 
-        for key_a, val_a in idx_coor24li_tuple_belongin_complete_closest.items():
+        for key_a, val_a in idx_coor24li_tuple_cage_belongin_complete_closest.items():
             idx_li = key_a
-            for entry_a in val_a:
-                coor_li_mapped = entry_a['coor']
-                type = entry_a['type']
-                idx_tuple = entry_a['idx_tuple']
+            coor_li_mapped = val_a['coor']
+            type = val_a['type']
+            idx_tuple = val_a['idx_tuple']
+            idx_cage = val_a['idx_cage']
 
-                if type == "24g":
-                    weighted_type = weight_24g
-                elif type == "48htype4":
-                    weighted_type = weight_48htype4
-                elif type == "48htype2":
-                    weighted_type = weight_48htype2
-                elif type == "48htype3":
-                    weighted_type = weight_48htype3
-                elif type == "48htype1":
-                    weighted_type = weight_48htype1
-                elif type == "weirdos":
-                    weighted_type = weight_weirdos
-                else:
-                    print("wrong type")
-                
-                weight = idx_tuple * multiplicator + weighted_type
+            if type == "24g":
+                weighted_type = weight_24g
+            elif type == "48htype4":
+                weighted_type = weight_48htype4
+            elif type == "48htype2":
+                weighted_type = weight_48htype2
+            elif type == "48htype3":
+                weighted_type = weight_48htype3
+            elif type == "48htype1":
+                weighted_type = weight_48htype1
+            elif type == "weirdos":
+                weighted_type = weight_weirdos
+            else:
+                print("wrong type")
             
-                idx_coor24li_tuple_belongin_complete_closest_weight[idx_li] = {'coor': coor_li_mapped, 'type': type, 'idx_tuple': idx_tuple, 'weight':weight}
+            weight = idx_tuple * multiplicator + weighted_type
+        
+            idx_coor24li_tuple_cage_belongin_complete_closest_weight[idx_li] = {'coor': coor_li_mapped, 'type': type, 'idx_tuple': idx_tuple, 'weight':weight, 'idx_cage': idx_cage}
 
-        for j in range(len(amount_Li)):
-            df_weighted.at[idx, f"{j}"] = None  
+        dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight] = idx_coor24li_tuple_cage_belongin_complete_closest_weight
+
+
+def plot_movement(dataframe, to_plot):
+    """
+    to_plot = idx_tuple, type, idx_cage
+    """
+    col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
+
+    df_to_plot = pd.DataFrame()
+
+    for idx in range(dataframe["geometry"].size):
+
+        idx_coor24li_tuple_cage_belongin_complete_closest_weight = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
+
+        for j in range(len(col_idx_coor24li_tuple_cage_belongin_complete_closest_weight)):
+            df_to_plot.at[idx, f"{j}"] = None  
 
             # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
             # distance = mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
 
             # dict_weighted[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
             
-            for key_b, val_b in idx_coor24li_tuple_belongin_complete_closest_weight.items():
-                for entry_b in val_b: 
-                    df_weighted.at[idx, f"{j}"] = entry_b['weight']
+            for key_b, val_b in idx_coor24li_tuple_cage_belongin_complete_closest_weight.items():
+                # for entry_b in val_b: 
+                df_to_plot.at[idx, f"{key_b}"] = val_b[f'{to_plot}']
 
             # diameter_24g48h = max_mapping_radius * 2
             # # if distance < diameter_24g48h and index != idx_ref:
             # if distance > diameter_24g48h and idx != idx_ref:
             #     print(f"path: {idx}, Li: {j}, distance: {distance}")
 
-    return df_weighted
+    return df_to_plot
 
 
 def plot_occupancy(dataframe, category_labels = None):
@@ -6984,6 +7100,62 @@ def plot_occupancy(dataframe, category_labels = None):
     # plt.title('Stacked Bar Plot from Given Data')
     # plt.show()
     return df
+
+
+def plot_distance_wrtpath0(df_distance, max_mapping_radius, activate_diameter_line, Li_idxs):
+
+    diameter_24g48h = max_mapping_radius * 2
+
+    x = range(len(df_distance))
+
+    # # fig = plt.figure()
+    # fig = plt.figure(figsize=(800/96, 600/96))  # 800x600 pixels, assuming 96 DPI
+    # ax = plt.subplot(111)
+
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure size in inches
+
+    lines = []
+
+    for i in range(len(df_distance.columns)):
+        if Li_idxs == "all" or i in Li_idxs:
+            # # i = i
+            # # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
+            line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", linewidth=2)  # Set line width to 2 pixels
+            lines.append(line)
+            # label = f"{i}" if Li_idxs == "all" else None
+            # line, = ax.plot(x, df_distance[f"{i}"], label=label)
+            # lines.append(line)
+
+        # if type(Li_idxs) == list:
+        #     for j in Li_idxs:
+        #         if i == j:
+        #             line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
+        #             lines.append(line)
+
+    # # ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}')
+    if activate_diameter_line == True:
+        ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}', linewidth=1)  # Set line width to 1 pixel
+
+    # plt.title(f"Geometry {geo} with d={diameter_24g48h}")
+
+    # Shrink current axis's height by 10% on the bottom
+        # source: https://stackoverflow.com/questions/4700614/how-to-put-the-legend-outside-the-plot
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+
+    handles, labels = ax.get_legend_handles_labels()
+
+    ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+            fancybox=True, shadow=True, ncol=5)
+
+    # Enable cursor information
+    mplcursors.cursor(hover=True)
+
+    # Enable zooming with cursor
+    mpldatacursor.datacursor(display='multiple', draggable=True)
+
+    plt.show()
 
 
 def get_amount_type(dataframe, litype, el):

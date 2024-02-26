@@ -1,7 +1,6 @@
 results/
 perfect_poscar/
 _results/
-__pycache__/
 home/
 ./06_distance_LitoLi_intracage_litype4.xlsx
 ./06_distance_LitoLi_intracage_litype4_meanref.xlsx
@@ -12,3 +11,4 @@ home/
 
 0/
 restructure_0.051_Li6PS5Cl_optitype1n2_strictr_a_type4_weirdo1_var2_opti_zoomedin/
+_images/
