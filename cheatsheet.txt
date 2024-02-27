@@ -1,3 +1,7 @@
 sudo apt-get update
 sudo apt-get install netpbm
 convert vmd result.mpg to .mp4: ffmpeg -i untitled.mpg output.mp4
+
+https://www.youtube.com/watch?v=lueqjpjo3yY&ab_channel=Mohamedshehata
+
+
