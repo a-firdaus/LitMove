@@ -890,7 +890,7 @@ def get_coor_structure24_dict_iterated(dataframe, mapping):
     dataframe[col_coor_structure_init_dict] = None
 
     for idx in range(dataframe["geometry"].size):
-        print(f"idx: {idx}")
+        # print(f"idx: {idx}")
         coor_origin_Li_init = []; coor_origin_P_init = []; coor_origin_S_init = []; coor_origin_Cl_init = []
         coor_structure_init_dict = {}
 
@@ -3138,85 +3138,91 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
         with open(source_filename_path, "r") as f:
             lines = f.readlines()
 
+        # added: check if the search_string is found
+        search_string_found = False
         for idx_line, line in enumerate(lines):
             if search_string in line:
+                search_string_found = True
                 idx_Li_start = idx_line
                 break
 
         idx_without_weirdos = [i for i in range(amount_Li) if i not in idx0_weirdos_Li]
 
-        new_text = []
-        for i in range(len(idx_without_weirdos)):
-            idx_line = idx_Li_start + i
-            if lines[idx_line].strip().startswith("Li"):
-                new_label = f"Li{idx_without_weirdos[i]}"
-                # file_operations_instance = FileOperations()
-                # modified_line = file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
-                modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
-                new_text.append(modified_line)
+        if not search_string_found:
+            pass
+        else:
+            new_text = []
+            for i in range(len(idx_without_weirdos)):
+                idx_line = idx_Li_start + i
+                if lines[idx_line].strip().startswith("Li"):
+                    new_label = f"Li{idx_without_weirdos[i]}"
+                    # file_operations_instance = FileOperations()
+                    # modified_line = file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
+                    modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
+                    new_text.append(modified_line)
 
-        lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
+            lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
 
-        # now appending weirdos below existing lines of Li
-        coor_weirdos = dataframe[col_coor_weirdos_el][idx] # coor_weirdos = dataframe["coor_weirdos_Li"][idx]
+            # now appending weirdos below existing lines of Li
+            coor_weirdos = dataframe[col_coor_weirdos_el][idx] # coor_weirdos = dataframe["coor_weirdos_Li"][idx]
 
-        weirdos_text = []
-        for i in range(len(idx0_weirdos_Li)):
-            coor_weirdo_x = coor_weirdos[i][0]
-            coor_weirdo_y = coor_weirdos[i][1]
-            coor_weirdo_z = coor_weirdos[i][2]
-            idx_weirdo = idx0_weirdos_Li[i]
-            new_line_weirdo = f"Li  Li{idx_weirdo}  1  {coor_weirdo_x:.8f}  {coor_weirdo_y:.8f}  {coor_weirdo_z:.8f}  1"  # manually created
-            weirdos_text.append(new_line_weirdo)
-            # idx_line_weirdos = idx_Li_start + len(idx_without_weirdos)
+            weirdos_text = []
+            for i in range(len(idx0_weirdos_Li)):
+                coor_weirdo_x = coor_weirdos[i][0]
+                coor_weirdo_y = coor_weirdos[i][1]
+                coor_weirdo_z = coor_weirdos[i][2]
+                idx_weirdo = idx0_weirdos_Li[i]
+                new_line_weirdo = f"Li  Li{idx_weirdo}  1  {coor_weirdo_x:.8f}  {coor_weirdo_y:.8f}  {coor_weirdo_z:.8f}  1"  # manually created
+                weirdos_text.append(new_line_weirdo)
+                # idx_line_weirdos = idx_Li_start + len(idx_without_weirdos)
+                
+            old_text_P_S_Cl = lines[len(idx_without_weirdos) + idx_Li_start :]
+
+            idx_weirdo_line_start   = len(idx_without_weirdos) + idx_Li_start
+            idx_weirdo_line_end     = idx_weirdo_line_start + len(idx0_weirdos_Li)
+            lines[idx_weirdo_line_start : idx_weirdo_line_end] = weirdos_text
+
+            idx_P_S_Cl_line_new_start    = idx_weirdo_line_end
+
+            # !!!: for the moment not using the function because P is gone
+            # reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_P, amount_S, amount_Cl)
             
-        old_text_P_S_Cl = lines[len(idx_without_weirdos) + idx_Li_start :]
+            idx_P_S_Cl_line_new_end      = idx_P_S_Cl_line_new_start + len(old_text_P_S_Cl)
+            lines[idx_P_S_Cl_line_new_start : idx_P_S_Cl_line_new_end] = old_text_P_S_Cl
+    
+            # re-write the index of P_S_Cl accordingly
+            new_text_P_S_Cl = []
+            for i in range(amount_P):
+                idx_line_P = idx_P_S_Cl_line_new_start + i
+                idx_P_new = amount_Li + i
+                if lines[idx_line_P].strip().startswith("P"):
+                    new_label = f"P{idx_P_new}"
+                    # file_operations_instance = FileOperations()
+                    # modified_line = file_operations_instance.replace(lines[idx_line_P].split()[1], new_label)     
+                    modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
+                    new_text_P_S_Cl.append(modified_line)
+            for i in range(amount_S):
+                idx_line_S = idx_P_S_Cl_line_new_start + amount_P + i
+                idx_S_new = amount_Li + amount_P + i
+                if lines[idx_line_S].strip().startswith("S"):
+                    new_label = f"S{idx_S_new}"
+                    # file_operations_instance = FileOperations()
+                    # modified_line = file_operations_instance.replace(lines[idx_line_S].split()[1], new_label)     
+                    modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
+                    new_text_P_S_Cl.append(modified_line)
+            for i in range(amount_Cl):
+                idx_line_Cl = idx_P_S_Cl_line_new_start + amount_P + amount_S + i
+                idx_Cl_new = amount_Li + amount_P + amount_S + i
+                if lines[idx_line_Cl].strip().startswith("Cl"):
+                    new_label = f"Cl{idx_Cl_new}"
+                    # file_operations_instance = FileOperations()
+                    # modified_line = file_operations_instance.replace(lines[idx_line_Cl].split()[1], new_label)     
+                    modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
+                    new_text_P_S_Cl.append(modified_line)
 
-        idx_weirdo_line_start   = len(idx_without_weirdos) + idx_Li_start
-        idx_weirdo_line_end     = idx_weirdo_line_start + len(idx0_weirdos_Li)
-        lines[idx_weirdo_line_start : idx_weirdo_line_end] = weirdos_text
+            lines[idx_P_S_Cl_line_new_start : amount_P + amount_S + amount_Cl + idx_P_S_Cl_line_new_start] = new_text_P_S_Cl
 
-        idx_P_S_Cl_line_new_start    = idx_weirdo_line_end
-
-        # !!!: for the moment not using the function because P is gone
-        # reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_P, amount_S, amount_Cl)
-        
-        idx_P_S_Cl_line_new_end      = idx_P_S_Cl_line_new_start + len(old_text_P_S_Cl)
-        lines[idx_P_S_Cl_line_new_start : idx_P_S_Cl_line_new_end] = old_text_P_S_Cl
- 
-        # re-write the index of P_S_Cl accordingly
-        new_text_P_S_Cl = []
-        for i in range(amount_P):
-            idx_line_P = idx_P_S_Cl_line_new_start + i
-            idx_P_new = amount_Li + i
-            if lines[idx_line_P].strip().startswith("P"):
-                new_label = f"P{idx_P_new}"
-                # file_operations_instance = FileOperations()
-                # modified_line = file_operations_instance.replace(lines[idx_line_P].split()[1], new_label)     
-                modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
-                new_text_P_S_Cl.append(modified_line)
-        for i in range(amount_S):
-            idx_line_S = idx_P_S_Cl_line_new_start + amount_P + i
-            idx_S_new = amount_Li + amount_P + i
-            if lines[idx_line_S].strip().startswith("S"):
-                new_label = f"S{idx_S_new}"
-                # file_operations_instance = FileOperations()
-                # modified_line = file_operations_instance.replace(lines[idx_line_S].split()[1], new_label)     
-                modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
-                new_text_P_S_Cl.append(modified_line)
-        for i in range(amount_Cl):
-            idx_line_Cl = idx_P_S_Cl_line_new_start + amount_P + amount_S + i
-            idx_Cl_new = amount_Li + amount_P + amount_S + i
-            if lines[idx_line_Cl].strip().startswith("Cl"):
-                new_label = f"Cl{idx_Cl_new}"
-                # file_operations_instance = FileOperations()
-                # modified_line = file_operations_instance.replace(lines[idx_line_Cl].split()[1], new_label)     
-                modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
-                new_text_P_S_Cl.append(modified_line)
-
-        lines[idx_P_S_Cl_line_new_start : amount_P + amount_S + amount_Cl + idx_P_S_Cl_line_new_start] = new_text_P_S_Cl
-
-        # dataframe.at[idx, col_subdir_cif_w_correct_Li_idx_weirdos_appended] = destination_path_combined_new
+            # dataframe.at[idx, col_subdir_cif_w_correct_Li_idx_weirdos_appended] = destination_path_combined_new
 
         # Write the modified lines back to the file
         with open(destination_path_combined_new, "w") as f:
@@ -6983,72 +6989,75 @@ def get_complete_closest_tuple(dataframe, tuple_metainfo):
         dataframe.at[idx, col_top_n_distance_coors] = top_n_distance_coors
 
 
-def weighing_movement(dataframe, litype):
-    col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
-    col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
+# def weighing_movement(dataframe, litype):
+#     col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
+#     col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
 
-    dataframe[col_idx_coor24li_tuple_cage_belongin_complete_closest_weight] = [{} for _ in range(len(dataframe.index))]
+#     dataframe[col_idx_coor24li_tuple_cage_belongin_complete_closest_weight] = [{} for _ in range(len(dataframe.index))]
 
-    multiplicator = litype + 2
+#     multiplicator = litype + 2
 
-    # TO DO: to be refined with different litype
-    if litype == 4:
-        weight_24g = 0
-        weight_48htype4 = 1
-        weight_48htype2 = 2
-        weight_48htype3 = 3
-        weight_48htype1 = 4
-        weight_weirdos = 5 
+#     # TO DO: to be refined with different litype
+#     if litype == 4:
+#         weight_24g = 0
+#         weight_48htype4 = 1
+#         weight_48htype2 = 2
+#         weight_48htype3 = 3
+#         weight_48htype1 = 4
+#         weight_weirdos = 5 
 
-    for idx in range(dataframe["geometry"].size):
-        # dict_weighted = defaultdict(list)
+#     for idx in range(dataframe["geometry"].size):
+#         # dict_weighted = defaultdict(list)
 
-        idx_coor24li_tuple_cage_belongin_complete_closest = dataframe[col_idx_coor24li_tuple_cage_belongin_complete_closest][idx]
+#         idx_coor24li_tuple_cage_belongin_complete_closest = dataframe[col_idx_coor24li_tuple_cage_belongin_complete_closest][idx]
 
-        idx_coor24li_tuple_cage_belongin_complete_closest_weight = defaultdict(list)
+#         idx_coor24li_tuple_cage_belongin_complete_closest_weight = defaultdict(list)
 
-        for key_a, val_a in idx_coor24li_tuple_cage_belongin_complete_closest.items():
-            idx_li = key_a
-            coor_li_mapped = val_a['coor']
-            type = val_a['type']
-            idx_tuple = val_a['idx_tuple']
-            idx_cage = val_a['idx_cage']
+#         for key_a, val_a in idx_coor24li_tuple_cage_belongin_complete_closest.items():
+#             idx_li = key_a
+#             coor_li_mapped = val_a['coor']
+#             type = val_a['type']
+#             idx_tuple = val_a['idx_tuple']
+#             idx_cage = val_a['idx_cage']
 
-            if type == "24g":
-                weighted_type = weight_24g
-            elif type == "48htype4":
-                weighted_type = weight_48htype4
-            elif type == "48htype2":
-                weighted_type = weight_48htype2
-            elif type == "48htype3":
-                weighted_type = weight_48htype3
-            elif type == "48htype1":
-                weighted_type = weight_48htype1
-            elif type == "weirdos":
-                weighted_type = weight_weirdos
-            else:
-                print("wrong type")
+#             if type == "24g":
+#                 weighted_type = weight_24g
+#             elif type == "48htype4":
+#                 weighted_type = weight_48htype4
+#             elif type == "48htype2":
+#                 weighted_type = weight_48htype2
+#             elif type == "48htype3":
+#                 weighted_type = weight_48htype3
+#             elif type == "48htype1":
+#                 weighted_type = weight_48htype1
+#             elif type == "weirdos":
+#                 weighted_type = weight_weirdos
+#             else:
+#                 print("wrong type")
             
-            weight = idx_tuple * multiplicator + weighted_type
+#             weight = idx_tuple * multiplicator + weighted_type
         
-            idx_coor24li_tuple_cage_belongin_complete_closest_weight[idx_li] = {'coor': coor_li_mapped, 'type': type, 'idx_tuple': idx_tuple, 'weight':weight, 'idx_cage': idx_cage}
+#             idx_coor24li_tuple_cage_belongin_complete_closest_weight[idx_li] = {'coor': coor_li_mapped, 'type': type, 'idx_tuple': idx_tuple, 'weight':weight, 'idx_cage': idx_cage}
 
-        dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight] = idx_coor24li_tuple_cage_belongin_complete_closest_weight
+#         dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight] = idx_coor24li_tuple_cage_belongin_complete_closest_weight
 
 
 def plot_movement(dataframe, to_plot):
     """
     to_plot = idx_tuple, type, idx_cage
     """
-    col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
+    # col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
+    col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
 
     df_to_plot = pd.DataFrame()
 
     for idx in range(dataframe["geometry"].size):
 
-        idx_coor24li_tuple_cage_belongin_complete_closest_weight = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
+        # idx_coor24li_tuple_cage_belongin_complete_closest_weight = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
+        idx_coor24li_tuple_cage_belongin_complete_closest = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest]
 
-        for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest_weight)):
+        # for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest_weight)):
+        for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest)):
             df_to_plot.at[idx, f"{j}"] = None  
 
             # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
@@ -7056,7 +7065,8 @@ def plot_movement(dataframe, to_plot):
 
             # dict_weighted[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
             
-            for key_b, val_b in idx_coor24li_tuple_cage_belongin_complete_closest_weight.items():
+            # # for key_b, val_b in idx_coor24li_tuple_cage_belongin_complete_closest_weight.items():
+            for key_b, val_b in idx_coor24li_tuple_cage_belongin_complete_closest.items():
                 # for entry_b in val_b: 
                 df_to_plot.at[idx, f"{key_b}"] = val_b[f'{to_plot}']
 
@@ -7370,25 +7380,37 @@ def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_
 
 
 def get_df_movement(dataframe):
-    col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
+    # col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
+    col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
 
     df_to_plot = pd.DataFrame()
 
     for idx in range(dataframe["geometry"].size - 1):  # CHANGED HERE
 
-        idx_coor24li_tuple_cage_belongin_complete_closest_weight = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
-        idx_coor24li_tuple_cage_belongin_complete_closest_weight_next = dataframe.at[idx+1, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
+        # idx_coor24li_tuple_cage_belongin_complete_closest_weight = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
+        # idx_coor24li_tuple_cage_belongin_complete_closest_weight_next = dataframe.at[idx+1, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
+        idx_coor24li_tuple_cage_belongin_complete_closest = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest]
+        idx_coor24li_tuple_cage_belongin_complete_closest_next = dataframe.at[idx+1, col_idx_coor24li_tuple_cage_belongin_complete_closest]
 
-        for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest_weight)):
+        # for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest_weight)):
+        for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest)):
             df_to_plot.at[idx, f"{j}"] = None  
 
-            type = idx_coor24li_tuple_cage_belongin_complete_closest_weight[j]['type']
-            idx_tuple = idx_coor24li_tuple_cage_belongin_complete_closest_weight[j]['idx_tuple']
-            idx_cage = idx_coor24li_tuple_cage_belongin_complete_closest_weight[j]['idx_cage']
+            # type = idx_coor24li_tuple_cage_belongin_complete_closest_weight[j]['type']
+            # idx_tuple = idx_coor24li_tuple_cage_belongin_complete_closest_weight[j]['idx_tuple']
+            # idx_cage = idx_coor24li_tuple_cage_belongin_complete_closest_weight[j]['idx_cage']
 
-            type_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['type']
-            idx_tuple_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['idx_tuple']
-            idx_cage_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['idx_cage']
+            # type_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['type']
+            # idx_tuple_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['idx_tuple']
+            # idx_cage_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['idx_cage']
+
+            type = idx_coor24li_tuple_cage_belongin_complete_closest[j]['type']
+            idx_tuple = idx_coor24li_tuple_cage_belongin_complete_closest[j]['idx_tuple']
+            idx_cage = idx_coor24li_tuple_cage_belongin_complete_closest[j]['idx_cage']
+
+            type_next = idx_coor24li_tuple_cage_belongin_complete_closest_next[j]['type']
+            idx_tuple_next = idx_coor24li_tuple_cage_belongin_complete_closest_next[j]['idx_tuple']
+            idx_cage_next = idx_coor24li_tuple_cage_belongin_complete_closest_next[j]['idx_cage']
 
             if idx_cage != idx_cage_next:
                 type_movement = 'inTERcage'

@@ -35,8 +35,10 @@ from get_weirdos_ver3_new_cleaned import get_idx_coor_limapped_weirdos_dict, get
 from get_weirdos_ver3_new_cleaned import get_dx_dz_init, get_flag_map_weirdos_48htype1_48htype2_el, get_flag_map_weirdos_48htypesmerged_level1_el
 from get_weirdos_ver3_new_cleaned import plot_varying_radius_vs_sumweirdosLi, get_orientation
 from get_weirdos_ver3_new_cleaned import get_flag_map_weirdos_48htype2_el, get_flag_map_48htypesmerged_el, get_idx_weirdos_el, idx_correcting_mapped_el, create_combine_structure, get_distance_weirdos_label_el, plot_weirdos_directcoor, get_coor_weirdos_array, create_POSCAR_weirdos, kmeans_cluster_weirdos, create_POSCAR_weirdos_centroids_appended, plot_distweirdos, get_label_mapping
-from get_weirdos_ver3_new_cleaned import create_file_loc
+from get_weirdos_ver3_new_cleaned import create_file_loc, get_CONTCAR_normal_elements
 from get_weirdos_ver3_new_cleaned import mic_eucledian_distance, get_tuple_metainfo, get_occupancy, plot_occupancy, get_amount_type, plot_amount_type
+from get_weirdos_ver3_new_cleaned import get_tuple_metainfo, get_occupancy, get_amount_type, get_idx_cage_coor_24g, get_tuple_cage_metainfo, get_complete_closest_tuple
+
 
 direc = os.getcwd() # get current working directory
 
@@ -57,6 +59,7 @@ col_excel_path = "path"
 col_excel_toten = "toten [eV]"
 
 proceed_XDATCAR = "True"
+proceed_NEB = "False"
 
 amount_P = 4
 amount_S = 20
@@ -150,6 +153,12 @@ FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perf
 # file_loc_important_cols = file_loc.copy()
 FileOperations.copy_rename_files(file_loc, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
 
+### ADJUSTMENT HERE !!!
+if proceed_NEB == "True":
+    get_CONTCAR_normal_elements(file_loc, direc_restructure_destination, file_restructure, prefix = None)
+else:
+    pass
+
 get_positive_lessthan1_poscarcontcar(file_loc, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
 
 file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure_positive, path_perfect_poscar_24, col_excel_toten, orientation="False")
@@ -207,8 +216,6 @@ create_cif_pymatgen(file_loc_important_cols, direc_restructure_destination, file
 get_idx_coor_limapped_weirdos_dict_litype(file_loc_important_cols, coor_structure_init_dict, activate_radius, litype, el="Li")
 
 get_latticeconstant_structure_dict_iterated(file_loc_important_cols, direc_restructure_destination, proceed_XDATCAR, var_filename = "CONTCAR")
-# plot_energy_vs_latticeconstant(file_loc_important_cols, var_filename = "CONTCAR")
-# plot_weirdos_directcoor(file_loc_important_cols, activate_radius)
 
 coor_weirdos_Li = get_coor_weirdos_array(file_loc_important_cols, activate_radius)
 create_POSCAR_weirdos(coor_weirdos_Li, direc_restructure_destination, lattice_constant, filename = "POSCAR_weirdos")
@@ -217,11 +224,20 @@ get_label_mapping(file_loc_important_cols, coor_structure_init_dict, "Li", activ
 
 
 tuple_metainfo = get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el = "Li")
+idx_coor_cage_order = {0: np.array([0.97111, 0.25   , 0.25   ]), 3: np.array([0.02889, 0.75   , 0.25   ]),
+                       1: np.array([0.02889, 0.25   , 0.75   ]), 2: np.array([0.97111, 0.75   , 0.75   ])}
+coor_24g_array = np.array([item['coor'] for sublist in tuple_metainfo.values() for item in sublist if item['type'] == '24g'])
+centroids, labels = kmeans_cluster_weirdos(coor_24g_array, amount_clusters = 4)
+idx_cage_coor_24g = get_idx_cage_coor_24g(coor_24g_array, labels, idx_coor_cage_order, amount_clusters = 4)
+tuple_cage_metainfo = get_tuple_cage_metainfo(tuple_metainfo, idx_cage_coor_24g)
 
-get_occupancy(file_loc_important_cols, coor_structure_init_dict_expanded, tuple_metainfo, direc_restructure_destination, var_filename = "mapLi", el = "Li")
+get_occupancy(file_loc_important_cols, coor_structure_init_dict_expanded, tuple_cage_metainfo, direc_restructure_destination, var_filename = "mapLi", el = "Li")
+
+get_complete_closest_tuple(file_loc_important_cols, tuple_cage_metainfo)
 
 get_amount_type(file_loc_important_cols, litype, el = "Li")
 
+# file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_weirdos_48htype2_Li","dist_weirdos_atom"dist_weirdos_48htype2_atom72_Li","idx1_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
 # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_weirdos_48htype2_Li","dist_weirdos_atom"dist_weirdos_48htype2_atom72_Li","idx1_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
 if activate_radius == 3:
     file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","sum_weirdos_Li","sum_mapped_48htype1_48htype2_Li_closestduplicate","sum_weirdos_48htype1_48htype2_Li","sum_mapped_48htype2_Li_closestduplicate","#weirdos_Li","sum_mapped_48htypesmerged_Li","sum_sanitycheck_48htypesmerged_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
