@@ -13,6 +13,14 @@ import seaborn as sns
 import math
 from collections import defaultdict
 from sklearn.cluster import KMeans
+from mpl_toolkits.mplot3d import Axes3D
+from chart_studio import plotly
+from adjustText import adjust_text
+
+import plotly.offline as pyoff
+import re
+import mplcursors
+import mpldatacursor
 
 # pymatgen libraries
 from pymatgen.core.structure import Structure
@@ -723,6 +731,64 @@ def get_orientated_positive_cif(dataframe, destination_directory, cif_line_nr_st
 #         dataframe['subdir_orientated_positive_lessthan1_cif'][idx] = destination_path
 
 
+def get_CONTCAR_normal_elements(dataframe, destination_directory, filename, prefix = None):
+    for index in range(dataframe["geometry"].size):
+        # Generate the new filename
+        if prefix == None:
+            new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}"
+        else:
+            new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}_{prefix}"
+
+
+        # Get the source file path and destination file path
+        destination_path = os.path.join(destination_directory, new_filename)
+        
+        # # Define the pattern to search for
+        # pattern = '  Li_sv_GW/24a6a  P_GW/715c28f22  S_GW/357db9cfb  Cl_GW/3ef3b316\n              24               4              20               4'
+
+        # # Define the replacement string
+        # replacement = '   Li   P    S    Cl\n'
+
+        # Read CONTCAR file
+        with open(destination_path, 'r') as contcar_file:
+            contcar_lines = contcar_file.readlines()
+        
+        contcar_lines[5] = "   Li   P    S    Cl\n"
+        contcar_lines[6] = "    24     4    20     4\n"
+
+        # # Find the number of configurations
+        # # occurrences = int(contcar_lines[1])
+        # occurrences = contcar_lines.count(contcar_lines[0])
+
+        # Iterate through each line and replace if the pattern is found
+        # for i in range(len(contcar_lines)):
+        #     if pattern in contcar_lines[i]:
+        #         contcar_lines[i] = replacement
+
+        # # Print the modified lines
+        # for line in contcar_lines:
+        #     print(line.strip())  # .strip() is used to remove leading/trailing whitespaces
+
+        # # Loop through each configuration
+        # for occurrence in range(occurrences):
+        #     # Define the starting and ending lines for each configuration
+        #     # start_line = 8 + occurrence * (3 + sum([int(x) for x in contcar_lines[6].split()]))
+        #     # end_line = start_line + 3 + sum([int(x) for x in contcar_lines[6].split()])
+        #     start_line = (occurrence * line_length)
+        #     end_line = start_line + line_length
+        #     print(f"start_line: {start_line}, end_line: {end_line}")
+
+        #     # Extract configuration lines
+        #     config_lines = contcar_lines[start_line:end_line]
+
+        #     new_dir = f"{dir_XDATCAR}/{occurrence}"
+        #     os.makedirs(new_dir, exist_ok=True)
+
+        # Create a new CONTCAR file for each configuration
+        with open(destination_path, 'w') as contcar_file:
+            contcar_file.writelines(contcar_lines)
+
+
 def get_positive_lessthan1_poscarcontcar(dataframe, destination_directory, poscarcontcar_line_nr_start, poscarcontcar_line_nr_end, poscarcontcar_columns_type2, file_type, var_name_in, var_name_out, n_decimal):
     col_subdir_positive_file = f"subdir_positive_{file_type}"
     
@@ -824,6 +890,7 @@ def get_coor_structure24_dict_iterated(dataframe, mapping):
     dataframe[col_coor_structure_init_dict] = None
 
     for idx in range(dataframe["geometry"].size):
+        # print(f"idx: {idx}")
         coor_origin_Li_init = []; coor_origin_P_init = []; coor_origin_S_init = []; coor_origin_Cl_init = []
         coor_structure_init_dict = {}
 
@@ -3002,31 +3069,44 @@ def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, am
         with open(source_filename_path, "r") as f:
             lines = f.readlines()
 
+        # added: check if the search_string is found
+        search_string_found = False
         for idx_line, line in enumerate(lines):
             if search_string in line:
+                search_string_found = True
                 idx_Li_start = idx_line
                 break
 
         idx_without_weirdos = [i for i in range(amount_Li) if i not in idx0_weirdos_Li]
 
-        new_text = []
-        for i in range(len(idx_without_weirdos)):
-            idx_line = idx_Li_start + i
-            if lines[idx_line].strip().startswith("Li"):
-                new_label = f"Li{idx_without_weirdos[i]}"
-                # file_operations_instance = FileOperations()
-                # modified_line = lines[idx_line].file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
-                modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
-                new_text.append(modified_line)
+        if not search_string_found:
+            pass
+        else:
+            # idx_without_weirdos = [i for i in range(amount_Li) if i not in idx0_weirdos_Li]
 
-        lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
+            new_text = []
+            for i in range(len(idx_without_weirdos)):
+                idx_line = idx_Li_start + i
+                if lines[idx_line].strip().startswith("Li"):
+                    new_label = f"Li{idx_without_weirdos[i]}"
+                    # file_operations_instance = FileOperations()
+                    # modified_line = lines[idx_line].file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
+                    modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
+                    new_text.append(modified_line)
+                    
+            lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
 
-        # idx_weirdo_line_start   = len(idx_without_weirdos) + idx_Li_start
-        # idx_weirdo_line_end     = idx_weirdo_line_start + len(idx0_weirdos_Li)
-        # lines[idx_weirdo_line_start : idx_weirdo_line_end] = weirdos_text
+            # idx_weirdo_line_start   = len(idx_without_weirdos) + idx_Li_start
+            # idx_weirdo_line_end     = idx_weirdo_line_start + len(idx0_weirdos_Li)
+            # lines[idx_weirdo_line_start : idx_weirdo_line_end] = weirdos_text
 
-        idx_P_S_Cl_line_new_start    = len(idx_without_weirdos) + idx_Li_start
-        reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_Li, amount_P, amount_S, amount_Cl)
+            idx_P_S_Cl_line_new_start    = len(idx_without_weirdos) + idx_Li_start
+            reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_Li, amount_P, amount_S, amount_Cl)
+
+            # dataframe.at[idx, col_idx_without_weirdos] = idx_without_weirdos
+
+            # with open(destination_path_combined_new, "w") as f:
+            #     f.write("\n".join(line.strip() for line in lines))
 
         dataframe.at[idx, col_idx_without_weirdos] = idx_without_weirdos
 
@@ -3058,85 +3138,91 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
         with open(source_filename_path, "r") as f:
             lines = f.readlines()
 
+        # added: check if the search_string is found
+        search_string_found = False
         for idx_line, line in enumerate(lines):
             if search_string in line:
+                search_string_found = True
                 idx_Li_start = idx_line
                 break
 
         idx_without_weirdos = [i for i in range(amount_Li) if i not in idx0_weirdos_Li]
 
-        new_text = []
-        for i in range(len(idx_without_weirdos)):
-            idx_line = idx_Li_start + i
-            if lines[idx_line].strip().startswith("Li"):
-                new_label = f"Li{idx_without_weirdos[i]}"
-                # file_operations_instance = FileOperations()
-                # modified_line = file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
-                modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
-                new_text.append(modified_line)
+        if not search_string_found:
+            pass
+        else:
+            new_text = []
+            for i in range(len(idx_without_weirdos)):
+                idx_line = idx_Li_start + i
+                if lines[idx_line].strip().startswith("Li"):
+                    new_label = f"Li{idx_without_weirdos[i]}"
+                    # file_operations_instance = FileOperations()
+                    # modified_line = file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
+                    modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
+                    new_text.append(modified_line)
 
-        lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
+            lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
 
-        # now appending weirdos below existing lines of Li
-        coor_weirdos = dataframe[col_coor_weirdos_el][idx] # coor_weirdos = dataframe["coor_weirdos_Li"][idx]
+            # now appending weirdos below existing lines of Li
+            coor_weirdos = dataframe[col_coor_weirdos_el][idx] # coor_weirdos = dataframe["coor_weirdos_Li"][idx]
 
-        weirdos_text = []
-        for i in range(len(idx0_weirdos_Li)):
-            coor_weirdo_x = coor_weirdos[i][0]
-            coor_weirdo_y = coor_weirdos[i][1]
-            coor_weirdo_z = coor_weirdos[i][2]
-            idx_weirdo = idx0_weirdos_Li[i]
-            new_line_weirdo = f"Li  Li{idx_weirdo}  1  {coor_weirdo_x:.8f}  {coor_weirdo_y:.8f}  {coor_weirdo_z:.8f}  1"  # manually created
-            weirdos_text.append(new_line_weirdo)
-            # idx_line_weirdos = idx_Li_start + len(idx_without_weirdos)
+            weirdos_text = []
+            for i in range(len(idx0_weirdos_Li)):
+                coor_weirdo_x = coor_weirdos[i][0]
+                coor_weirdo_y = coor_weirdos[i][1]
+                coor_weirdo_z = coor_weirdos[i][2]
+                idx_weirdo = idx0_weirdos_Li[i]
+                new_line_weirdo = f"Li  Li{idx_weirdo}  1  {coor_weirdo_x:.8f}  {coor_weirdo_y:.8f}  {coor_weirdo_z:.8f}  1"  # manually created
+                weirdos_text.append(new_line_weirdo)
+                # idx_line_weirdos = idx_Li_start + len(idx_without_weirdos)
+                
+            old_text_P_S_Cl = lines[len(idx_without_weirdos) + idx_Li_start :]
+
+            idx_weirdo_line_start   = len(idx_without_weirdos) + idx_Li_start
+            idx_weirdo_line_end     = idx_weirdo_line_start + len(idx0_weirdos_Li)
+            lines[idx_weirdo_line_start : idx_weirdo_line_end] = weirdos_text
+
+            idx_P_S_Cl_line_new_start    = idx_weirdo_line_end
+
+            # !!!: for the moment not using the function because P is gone
+            # reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_P, amount_S, amount_Cl)
             
-        old_text_P_S_Cl = lines[len(idx_without_weirdos) + idx_Li_start :]
+            idx_P_S_Cl_line_new_end      = idx_P_S_Cl_line_new_start + len(old_text_P_S_Cl)
+            lines[idx_P_S_Cl_line_new_start : idx_P_S_Cl_line_new_end] = old_text_P_S_Cl
+    
+            # re-write the index of P_S_Cl accordingly
+            new_text_P_S_Cl = []
+            for i in range(amount_P):
+                idx_line_P = idx_P_S_Cl_line_new_start + i
+                idx_P_new = amount_Li + i
+                if lines[idx_line_P].strip().startswith("P"):
+                    new_label = f"P{idx_P_new}"
+                    # file_operations_instance = FileOperations()
+                    # modified_line = file_operations_instance.replace(lines[idx_line_P].split()[1], new_label)     
+                    modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
+                    new_text_P_S_Cl.append(modified_line)
+            for i in range(amount_S):
+                idx_line_S = idx_P_S_Cl_line_new_start + amount_P + i
+                idx_S_new = amount_Li + amount_P + i
+                if lines[idx_line_S].strip().startswith("S"):
+                    new_label = f"S{idx_S_new}"
+                    # file_operations_instance = FileOperations()
+                    # modified_line = file_operations_instance.replace(lines[idx_line_S].split()[1], new_label)     
+                    modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
+                    new_text_P_S_Cl.append(modified_line)
+            for i in range(amount_Cl):
+                idx_line_Cl = idx_P_S_Cl_line_new_start + amount_P + amount_S + i
+                idx_Cl_new = amount_Li + amount_P + amount_S + i
+                if lines[idx_line_Cl].strip().startswith("Cl"):
+                    new_label = f"Cl{idx_Cl_new}"
+                    # file_operations_instance = FileOperations()
+                    # modified_line = file_operations_instance.replace(lines[idx_line_Cl].split()[1], new_label)     
+                    modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
+                    new_text_P_S_Cl.append(modified_line)
 
-        idx_weirdo_line_start   = len(idx_without_weirdos) + idx_Li_start
-        idx_weirdo_line_end     = idx_weirdo_line_start + len(idx0_weirdos_Li)
-        lines[idx_weirdo_line_start : idx_weirdo_line_end] = weirdos_text
+            lines[idx_P_S_Cl_line_new_start : amount_P + amount_S + amount_Cl + idx_P_S_Cl_line_new_start] = new_text_P_S_Cl
 
-        idx_P_S_Cl_line_new_start    = idx_weirdo_line_end
-
-        # !!!: for the moment not using the function because P is gone
-        # reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_P, amount_S, amount_Cl)
-        
-        idx_P_S_Cl_line_new_end      = idx_P_S_Cl_line_new_start + len(old_text_P_S_Cl)
-        lines[idx_P_S_Cl_line_new_start : idx_P_S_Cl_line_new_end] = old_text_P_S_Cl
- 
-        # re-write the index of P_S_Cl accordingly
-        new_text_P_S_Cl = []
-        for i in range(amount_P):
-            idx_line_P = idx_P_S_Cl_line_new_start + i
-            idx_P_new = amount_Li + i
-            if lines[idx_line_P].strip().startswith("P"):
-                new_label = f"P{idx_P_new}"
-                # file_operations_instance = FileOperations()
-                # modified_line = file_operations_instance.replace(lines[idx_line_P].split()[1], new_label)     
-                modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
-                new_text_P_S_Cl.append(modified_line)
-        for i in range(amount_S):
-            idx_line_S = idx_P_S_Cl_line_new_start + amount_P + i
-            idx_S_new = amount_Li + amount_P + i
-            if lines[idx_line_S].strip().startswith("S"):
-                new_label = f"S{idx_S_new}"
-                # file_operations_instance = FileOperations()
-                # modified_line = file_operations_instance.replace(lines[idx_line_S].split()[1], new_label)     
-                modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
-                new_text_P_S_Cl.append(modified_line)
-        for i in range(amount_Cl):
-            idx_line_Cl = idx_P_S_Cl_line_new_start + amount_P + amount_S + i
-            idx_Cl_new = amount_Li + amount_P + amount_S + i
-            if lines[idx_line_Cl].strip().startswith("Cl"):
-                new_label = f"Cl{idx_Cl_new}"
-                # file_operations_instance = FileOperations()
-                # modified_line = file_operations_instance.replace(lines[idx_line_Cl].split()[1], new_label)     
-                modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
-                new_text_P_S_Cl.append(modified_line)
-
-        lines[idx_P_S_Cl_line_new_start : amount_P + amount_S + amount_Cl + idx_P_S_Cl_line_new_start] = new_text_P_S_Cl
-
-        # dataframe.at[idx, col_subdir_cif_w_correct_Li_idx_weirdos_appended] = destination_path_combined_new
+            # dataframe.at[idx, col_subdir_cif_w_correct_Li_idx_weirdos_appended] = destination_path_combined_new
 
         # Write the modified lines back to the file
         with open(destination_path_combined_new, "w") as f:
@@ -3303,7 +3389,7 @@ def diagonalizing_latticeconstantsmatrix(dataframe, destination_directory, latti
         # # dataframe['subdir_orientated_positive_poscar'][idx] = destination_path
 
 
-def get_latticeconstant_structure_dict_iterated(dataframe, destination_directory, var_filename):
+def get_latticeconstant_structure_dict_iterated(dataframe, destination_directory, proceed_XDATCAR, var_filename):
     col_latticeconstant_structure_dict = f"latticeconstant_structure_dict_{var_filename}"
     col_latticeconstant_structure_dict_flag = f"latticeconstant_structure_dict_{var_filename}_flag"
 
@@ -3337,6 +3423,10 @@ def get_latticeconstant_structure_dict_iterated(dataframe, destination_directory
             if alpha == beta == gamma:
                 if alpha == 90:
                     latticeconstant_structure_dict_flag = "True"
+        else:
+            if proceed_XDATCAR == "True":
+                latticeconstant_structure_dict_flag = "False"
+
 
         dataframe.at[idx, col_latticeconstant_structure_dict] = latticeconstant_structure_dict
         dataframe.at[idx, col_latticeconstant_structure_dict_flag] = latticeconstant_structure_dict_flag
@@ -5695,7 +5785,7 @@ def kmeans_cluster_weirdos(coor_weirdos, amount_clusters):
 
     ax.legend()
 
-    return centroids
+    return centroids, labels
 
 
 def create_POSCAR_weirdos_centroids_appended(coor_weirdos, coor_centroids, destination_directory, lattice_constant, filename):
@@ -6576,7 +6666,7 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
-        elif litype == 7:
+        elif litype == 8:
             for j in coor_li48htype1_ref:
                 distance = mic_eucledian_distance(i, j)
 
@@ -6646,15 +6736,17 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
 def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, destination_directory, var_filename, el):
     col_occupancy = "occupancy"
+    col_coor24li_tuple_cage_belongin = "coor24li_tuple_cage_belongin"
 
     dataframe[col_occupancy] = [{} for _ in range(len(dataframe.index))]
+    dataframe[col_coor24li_tuple_cage_belongin] = [{} for _ in range(len(dataframe.index))]
 
     coor_structure_init_dict_expanded_el = coor_structure_init_dict_expanded[el]
     coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
 
-    coor24li_tuple_belongin = defaultdict(list)
-
     for idx in range(dataframe["geometry"].size):
+        coor24li_tuple_cage_belongin = defaultdict(list)
+
         file_24Li = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_filename}.cif"
         file_path_24Li = os.path.join(destination_directory, file_24Li)
 
@@ -6672,27 +6764,28 @@ def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, 
         # for idx_triad, val in tuple_metainfo.items():
 
         for idx_triad, values_list in tuple_metainfo.items():
-            coor24li_tuple_belongin[idx_triad] = []
+            coor24li_tuple_cage_belongin[idx_triad] = []
             
             for entry in values_list:
                 for i in result_list:
             
                     if (i == entry['coor']).all():
                         # if (tuple(i) == tuple(entry['coor'])).all():
-                        coor24li_tuple_belongin_dict = {'coor': i, 'type':entry['type']}
-                        coor24li_tuple_belongin[idx_triad].append(coor24li_tuple_belongin_dict)
+                        # coor24li_tuple_belongin_dict = {'coor': i, 'type':entry['type']}
+                        coor24li_tuple_cage_belongin_dict = {'coor': i, 'type':entry['type'], 'idx_cage':entry['idx_cage']}
+                        coor24li_tuple_cage_belongin[idx_triad].append(coor24li_tuple_cage_belongin_dict)
 
         # idx_coor_weirdos_Li_dict = dataframe['idx_coor_weirdos_Li'][idx]
 
         # for idx_weirdo, values_list in idx_coor_weirdos_Li_dict.items():
         #         coorweirdo_tuple_belongin_dict = {'coor': values_list, 'type':'weirdo'}
-        #         coor24li_tuple_belongin['weirdo'].append(coorweirdo_tuple_belongin_dict)
+        #         coor24li_tuple_cage_belongin['weirdo'].append(coorweirdo_tuple_belongin_dict)
         
-        # for key, val in coor24li_tuple_belongin.items():
+        # for key, val in coor24li_tuple_cage_belongin.items():
         #     for i
 
         len_occupancy = []
-        for key, val in coor24li_tuple_belongin.items():
+        for key, val in coor24li_tuple_cage_belongin.items():
             len_occupancy.append(len(val))
 
 
@@ -6715,9 +6808,277 @@ def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, 
         occupancy = {'2': occupancy_2, '1': occupancy_1, '0': occupancy_0, '48htype1': amount_48htype1,'weirdo': amount_weirdo}
 
         dataframe.at[idx, col_occupancy] = occupancy
+        dataframe.at[idx, col_coor24li_tuple_cage_belongin] = coor24li_tuple_cage_belongin
 
 
-def plot_occupancy(dataframe):
+def get_idx_cage_coor_24g(coor_24g_array, labels, idx_coor_cage_order, amount_clusters):
+    idx_cage_coor_24g = defaultdict(list)
+
+    # idx_coor_cage_order = {0_1: np.array([0.97111, 0.25   , 0.25   ]), 3_4: np.array([0.02889, 0.75   , 0.25   ]),
+    #                        1_3: np.array([0.02889, 0.25   , 0.75   ]), 2_2: np.array([0.97111, 0.75   , 0.75   ])}
+
+    for idx_cluster in range(amount_clusters):
+        idx_cage_coor_24g[idx_cluster] = []
+
+        cluster_mask = np.array(labels == idx_cluster)
+
+        # print(f"idx_cluster:{idx_cluster}\n{coor_24g_array[np.array(labels == idx_cluster)]}")
+
+        coors_cluster = coor_24g_array[cluster_mask]
+        # print(coor_cluster)
+
+        for coor_cluster in coors_cluster: 
+
+            # coor_cluster_rounded = tuple(round(coordinate, 5) for coordinate in coor_cluster)
+            # # print(coor_cluster_rounded)
+            # print(coor_cluster)
+
+            idx_cage_coor_24g[idx_cluster].append(coor_cluster)
+
+    updated_idx_cage_coor_24g = {}
+
+    # Iterate over idx_coor_cage_order
+    for new_key, coor in idx_coor_cage_order.items():
+        # Find the corresponding key in idx_cage_coor_24g based on coor
+        for old_key, coor_list in idx_cage_coor_24g.items():
+            if any((coor == c).all() for c in coor_list):
+                updated_idx_cage_coor_24g[new_key] = coor_list
+                break
+
+    return updated_idx_cage_coor_24g
+
+
+def get_tuple_cage_metainfo(tuple_metainfo, idx_cage_coor_24g):
+    # Good. use further!
+
+    tuple_cage_metainfo = tuple_metainfo.copy()
+
+    # for idx_tuple, value_list in tuple_cage_metainfo.items():
+    #     # Iterate over values in idx_cage_coor_24g
+    #     for idx_cage, coor_list in idx_cage_coor_24g.items():
+    #         # Iterate over coordinate lists
+    #         for coor in coor_list:
+    #             # Check if coor matches any 'coor' in value_list with 'type': '24g'
+    #             for item in value_list:
+    #                 if item['type'] == '24g' and (item['coor'] == coor).all():
+    #                     # Assign idx_cage to the matching value
+    #                     item['idx_cage'] = idx_cage
+    #                 elif item['type'] != '24g':
+    #                     item['idx_cage'] = idx_cage
+
+    # Iterate over tuple_metainfo
+    for key, value_list in tuple_cage_metainfo.items():
+        # Initialize idx_cage for the current group
+        current_idx_cage = None
+        
+        # Iterate over values in idx_cage_coor_24g
+        for idx_cage, coor_list in idx_cage_coor_24g.items():
+            # Iterate over coordinate lists
+            for coor in coor_list:
+                # Check if coor matches any 'coor' in value_list with 'type': '24g'
+                for item in value_list:
+                    if item['type'] == '24g' and (item['coor'] == coor).all():
+                        # Assign idx_cage to the matching value
+                        item['idx_cage'] = idx_cage
+                        current_idx_cage = idx_cage
+        
+        # Assign the same idx_cage to other types in the current group
+        if current_idx_cage is not None:
+            for item in value_list:
+                if item['type'] != '24g':
+                    item['idx_cage'] = current_idx_cage
+
+    return tuple_cage_metainfo
+
+
+def get_complete_closest_tuple(dataframe, tuple_metainfo):
+    col_coor24li_tuple_cage_belongin = "coor24li_tuple_cage_belongin"
+    col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
+
+    col_idx_coor24li_tuple_cage_belongin = "idx_coor24li_tuple_cage_belongin"
+    col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
+    col_top_n_distance_coors = "top_n_distance_coors"
+
+    dataframe[col_idx_coor24li_tuple_cage_belongin] = [{} for _ in range(len(dataframe.index))]
+    dataframe[col_idx_coor24li_tuple_cage_belongin_complete_closest] = [{} for _ in range(len(dataframe.index))]
+    dataframe[col_top_n_distance_coors] = [{} for _ in range(len(dataframe.index))]
+    
+    for idx in range(dataframe["geometry"].size):
+        idx_coor24li_tuple_cage_belongin = defaultdict(list)
+
+        idx_coor_limapped_weirdos_dict = dataframe[col_idx_coor_limapped_weirdos_dict][idx]
+        coor24li_tuple_cage_belongin = dataframe[col_coor24li_tuple_cage_belongin][idx]
+
+        for key_a, val_a in idx_coor_limapped_weirdos_dict.items():
+            idx_li = key_a
+            coor_li_mapped_a = val_a['coor']
+            coor_li_mapped_a_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_a)
+            label_li_a = val_a['label']
+
+            idx_coor24li_tuple_cage_belongin[idx_li] = []
+            for key_b, val_b in coor24li_tuple_cage_belongin.items():
+                idx_tuple = key_b
+                for entry_b in val_b:
+                    coor_li_mapped_b = entry_b['coor']
+                    coor_li_mapped_b_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_b)
+                    label_li_b = entry_b['type']
+                    idx_cage_b = entry_b['idx_cage']
+
+                    if (coor_li_mapped_a_rounded == coor_li_mapped_b_rounded) and (label_li_a == label_li_b):
+                        # idx_coor24li_tuple_belongin_val = {'coor': coor_li_mapped_a, 'type':label_li_a, 'idx_tuple':idx_tuple}
+                        idx_coor24li_tuple_cage_belongin_val = {'coor': coor_li_mapped_a, 'type':label_li_a, 'idx_tuple':idx_tuple, 'idx_cage':idx_cage_b}
+                        idx_coor24li_tuple_cage_belongin[idx_li].append(idx_coor24li_tuple_cage_belongin_val)
+        
+        dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin] = idx_coor24li_tuple_cage_belongin
+                        
+        distance_coors_all = defaultdict(list)
+        n = 3
+        idx_coor_limapped_weirdos_dict = dataframe[col_idx_coor_limapped_weirdos_dict][idx]
+        idx_coor24li_tuple_cage_belongin = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin]
+        # idx_coor24li_tuple_cage_belongin_complete_closest = idx_coor24li_tuple_cage_belongin.copy()
+        idx_coor24li_tuple_cage_belongin_complete_closest = defaultdict(list)
+
+        for key_c, val_c in idx_coor24li_tuple_cage_belongin.items():
+            idx_li = key_c
+            idx_coor24li_tuple_cage_belongin_complete_closest[idx_li] = []
+
+            if val_c == []:
+                coor_li_mapped_c = idx_coor_limapped_weirdos_dict[idx_li]['coor']
+                label_li_c = idx_coor_limapped_weirdos_dict[idx_li]['label']
+
+                distance_prev = float("inf")
+                closest_idx_tuple = None
+                closest_idx_cage = None
+                
+                for key_d, val_d in tuple_metainfo.items():
+                    for entry_d in val_d: 
+                        idx_tuple = key_d
+                        coor_tuple_d = entry_d['coor']
+                        label_li_d = entry_d['type']
+                        idx_cage_d = entry_d['idx_cage']
+
+                        distance = mic_eucledian_distance(coor_li_mapped_c, coor_tuple_d)
+
+                        # distance_coors_all_val = {'coor_li_mapped': coor_li_mapped_c, 'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d}
+
+                        distance_coors_all_val = {'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d, 'idx_tuple':idx_tuple, 'idx_cage':idx_cage_d}
+
+                        distance_coors_all[idx_li].append(distance_coors_all_val)
+
+                        if distance < distance_prev:
+                            distance_prev = distance
+                            closest_idx_tuple = idx_tuple
+                            closest_idx_cage = idx_cage_d
+
+                idx_coor24li_tuple_cage_belongin_complete_closest[idx_li] = {'coor': coor_li_mapped_c, 'type': label_li_c, 'idx_tuple': closest_idx_tuple, 'idx_cage': closest_idx_cage}
+
+            elif val_c != []:
+                for entry_c in val_c: 
+                    coor_li_mapped_c = entry_c['coor']
+                    label_li_c = entry_c['type']
+                    idx_tuple_c = entry_c['idx_tuple']
+                    idx_cage_c = entry_c['idx_cage']
+
+                    idx_coor24li_tuple_cage_belongin_complete_closest[idx_li] = {'coor': coor_li_mapped_c, 'type': label_li_c, 'idx_tuple': idx_tuple_c, 'idx_cage': idx_cage_c}
+
+        sorted_distance_coors_all = {key: sorted(value, key=lambda x: x['dist']) for key, value in distance_coors_all.items()}
+        top_n_distance_coors = {k: v[0:n] for k, v in sorted_distance_coors_all.items()}
+        # !!! assumed there's NO DUPLICATE with the SECOND distance
+
+        dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest] = idx_coor24li_tuple_cage_belongin_complete_closest
+        dataframe.at[idx, col_top_n_distance_coors] = top_n_distance_coors
+
+
+# def weighing_movement(dataframe, litype):
+#     col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
+#     col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
+
+#     dataframe[col_idx_coor24li_tuple_cage_belongin_complete_closest_weight] = [{} for _ in range(len(dataframe.index))]
+
+#     multiplicator = litype + 2
+
+#     # TO DO: to be refined with different litype
+#     if litype == 4:
+#         weight_24g = 0
+#         weight_48htype4 = 1
+#         weight_48htype2 = 2
+#         weight_48htype3 = 3
+#         weight_48htype1 = 4
+#         weight_weirdos = 5 
+
+#     for idx in range(dataframe["geometry"].size):
+#         # dict_weighted = defaultdict(list)
+
+#         idx_coor24li_tuple_cage_belongin_complete_closest = dataframe[col_idx_coor24li_tuple_cage_belongin_complete_closest][idx]
+
+#         idx_coor24li_tuple_cage_belongin_complete_closest_weight = defaultdict(list)
+
+#         for key_a, val_a in idx_coor24li_tuple_cage_belongin_complete_closest.items():
+#             idx_li = key_a
+#             coor_li_mapped = val_a['coor']
+#             type = val_a['type']
+#             idx_tuple = val_a['idx_tuple']
+#             idx_cage = val_a['idx_cage']
+
+#             if type == "24g":
+#                 weighted_type = weight_24g
+#             elif type == "48htype4":
+#                 weighted_type = weight_48htype4
+#             elif type == "48htype2":
+#                 weighted_type = weight_48htype2
+#             elif type == "48htype3":
+#                 weighted_type = weight_48htype3
+#             elif type == "48htype1":
+#                 weighted_type = weight_48htype1
+#             elif type == "weirdos":
+#                 weighted_type = weight_weirdos
+#             else:
+#                 print("wrong type")
+            
+#             weight = idx_tuple * multiplicator + weighted_type
+        
+#             idx_coor24li_tuple_cage_belongin_complete_closest_weight[idx_li] = {'coor': coor_li_mapped, 'type': type, 'idx_tuple': idx_tuple, 'weight':weight, 'idx_cage': idx_cage}
+
+#         dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight] = idx_coor24li_tuple_cage_belongin_complete_closest_weight
+
+
+def plot_movement(dataframe, to_plot):
+    """
+    to_plot = idx_tuple, type, idx_cage
+    """
+    # col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
+    col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
+
+    df_to_plot = pd.DataFrame()
+
+    for idx in range(dataframe["geometry"].size):
+
+        # idx_coor24li_tuple_cage_belongin_complete_closest_weight = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
+        idx_coor24li_tuple_cage_belongin_complete_closest = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest]
+
+        # for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest_weight)):
+        for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest)):
+            df_to_plot.at[idx, f"{j}"] = None  
+
+            # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
+            # distance = mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
+
+            # dict_weighted[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
+            
+            # # for key_b, val_b in idx_coor24li_tuple_cage_belongin_complete_closest_weight.items():
+            for key_b, val_b in idx_coor24li_tuple_cage_belongin_complete_closest.items():
+                # for entry_b in val_b: 
+                df_to_plot.at[idx, f"{key_b}"] = val_b[f'{to_plot}']
+
+            # diameter_24g48h = max_mapping_radius * 2
+            # # if distance < diameter_24g48h and index != idx_ref:
+            # if distance > diameter_24g48h and idx != idx_ref:
+            #     print(f"path: {idx}, Li: {j}, distance: {distance}")
+
+    return df_to_plot
+
+
+def plot_occupancy(dataframe, category_labels = None):
     col_occupancy = "occupancy"
 
     df = pd.DataFrame()
@@ -6746,27 +7107,339 @@ def plot_occupancy(dataframe):
     # long_df = pd.melt(wide_df, var_name='Category', value_name='Count')
     long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
 
+    if category_labels:
+        long_df['category'] = long_df['category'].replace(category_labels)
+
     fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx of file vs Occupancy")
     fig.show()
 
-    # # # Plotting
-    # fig = px.bar(df, x=df.index, y=['2', '1', '0', '48htype1','weirdo'], title='Stacked Bar Plot')
-    # fig.update_layout(barmode='stack')
-
-    # fig.show()
-
-    # fig, ax = plt.subplots()
-
-    # for i, col in enumerate(df.columns):
-    #     ax.bar(df.index, df[col], label=col, bottom=df.iloc[:, :i].sum(axis=1))
-
-    # ax.legend()
-
-    # plt.xlabel('Index')
-    # plt.ylabel('Count')
-    # plt.title('Stacked Bar Plot from Given Data')
-    # plt.show()
     return df
+
+
+def get_plot_movement_counted(df_movement):
+    df = pd.DataFrame()
+    df['idx_file'] = None
+    df['inTERcage'] = None
+    df['intracage'] = None
+    df['intratriad'] = None
+    df['staying'] = None
+
+    for i in range(len(df_movement)):
+        counter_inTERcage = 0
+        counter_intracage = 0
+        counter_intratriad = 0
+        counter_staying = 0
+
+        for j in df_movement.iloc[i]:
+            # print(j)
+            if j == 'inTERcage':
+                counter_inTERcage = counter_inTERcage + 1
+            elif j == 'intracage':
+                counter_intracage = counter_intracage + 1
+            elif j == 'intratriad':
+                counter_intratriad = counter_intratriad + 1
+            elif j == 'staying':
+                counter_staying = counter_staying + 1
+
+        df.at[i, 'idx_file'] = i
+        df.at[i, 'inTERcage'] = counter_inTERcage
+        df.at[i, 'intracage'] = counter_intracage
+        df.at[i, 'intratriad'] = counter_intratriad
+        df.at[i, 'staying'] = counter_staying
+
+    wide_df = pd.DataFrame(df)
+
+    # Convert wide format to long format
+    # long_df = pd.melt(wide_df, var_name='Category', value_name='Count')
+    long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
+
+    long_df['idx_file'] += 0.5
+
+    fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx of movement vs Category")
+    fig.show()
+
+    return df
+
+
+def plot_distance_wrtpath0(df_distance, max_mapping_radius, activate_shifting_x, activate_diameter_line, Li_idxs):
+
+    diameter_24g48h = max_mapping_radius * 2
+
+    # x = df_distance.index
+    if activate_shifting_x == True:
+        x = [xi + 0.5 for xi in range(len(df_distance))]
+    else:
+        x = range(len(df_distance))
+
+    # # fig = plt.figure()
+    # fig = plt.figure(figsize=(800/96, 600/96))  # 800x600 pixels, assuming 96 DPI
+    # ax = plt.subplot(111)
+
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure size in inches
+
+    lines = []
+
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']  # Example color list
+
+    # for i in df_distance.index:
+    for i in range(len(df_distance.columns)):
+
+        line_color = colors[i % len(colors)]  # Cycle through colors list
+
+        if Li_idxs == "all" or i in Li_idxs:
+            # # i = i
+            # # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
+            line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", color=line_color, linewidth=2)  # Set line width to 2 pixels
+            lines.append(line)
+            # label = f"{i}" if Li_idxs == "all" else None
+            # line, = ax.plot(x, df_distance[f"{i}"], label=label)
+            # lines.append(line)
+
+        # if type(Li_idxs) == list:
+        #     for j in Li_idxs:
+        #         if i == j:
+        #             line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
+        #             lines.append(line)
+
+    # # ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}')
+    if activate_diameter_line == True:
+        ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}', linewidth=1)  # Set line width to 1 pixel
+
+    # plt.title(f"Geometry {geo} with d={diameter_24g48h}")
+        
+    # Explicitly set x-ticks
+    # ax.set_xticks(x)
+    if activate_shifting_x == True:
+        ax.set_xticks([0,1,2,3,4,5,6,7,8])
+
+    # Optionally, if you want to label each tick with the original index before adjustment:
+    # # # if activate_shifting_x == True:
+    # # #     ax.set_xticklabels([str(int(xi - 0.5)) for xi in x])
+
+    # Shrink current axis's height by 10% on the bottom
+        # source: https://stackoverflow.com/questions/4700614/how-to-put-the-legend-outside-the-plot
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+
+    handles, labels = ax.get_legend_handles_labels()
+
+    ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+            fancybox=True, shadow=True, ncol=5)
+
+    # Enable cursor information
+    mplcursors.cursor(hover=True)
+
+    # Enable zooming with cursor
+    mpldatacursor.datacursor(display='multiple', draggable=True)
+
+    plt.show()
+
+
+
+def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_radius, amount_Li, category_labels, activate_diameter_line, Li_idxs):
+
+    # df_distance = df_distance.iloc[:,:amount_Li]
+    # df_type = df_type.iloc[:,:amount_Li]
+    # df_idx_tuple = df_idx_tuple.iloc[:,:amount_Li]
+
+    diameter_24g48h = max_mapping_radius * 2
+
+    x = range(len(df_distance))
+
+    # # fig = plt.figure()
+    # fig = plt.figure(figsize=(800/96, 600/96))  # 800x600 pixels, assuming 96 DPI
+    # ax = plt.subplot(111)
+
+    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure size in inches
+
+    lines = []
+    texts = []
+
+    # type_marker_mapping = {
+    #     '48htype1': 'o',
+    #     '48htype2': 's',
+    #     '48htype3': '^',
+    #     '48htype4': 'D',
+    #     'weirdos': 'X',
+    #     '24g': 'v'    
+    # }
+
+    type_marker_mapping = {
+        '48htype1': ('o', 'r'),  # Example: Circle marker with red color
+        '48htype2': ('s', 'g'),  # Square marker with green color
+        '48htype3': ('^', 'b'),  # Triangle marker with blue color
+        '48htype4': ('D', 'c'),  # Diamond marker with cyan color
+        'weirdos': ('X', 'm'),   # X marker with magenta color
+        '24g': ('v', 'y')        # Triangle_down marker with yellow color
+    }
+
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']  # Example color list
+    # colors = list(mcolors.CSS4_COLORS.values())
+    # colors = [color + (0.7,) for color in mcolors.CSS4_COLORS.values()]
+    # colors = mcolors
+    # names = list(colors)
+
+    # Define offsets for text position
+    x_offset = 0.02  # Adjust these values as needed
+    y_offset = -0.05  # Adjust these values as needed
+
+    # Track which labels have been added
+    added_labels = set()
+
+    # for i in range(24):
+    for i in range(len(df_distance.columns)):
+        if Li_idxs == "all" or i in Li_idxs:
+            column_data = df_distance[f"{i}"]
+            column_val = df_type[f"{i}"]
+            column_idx_tuple = df_idx_tuple[f"{i}"]
+            # type_val = df_type[0, i]
+            # print(type_val)
+
+            line_color = colors[i % len(colors)]  # Cycle through colors list
+            # # # # # # # line_color = colors[i % len(colors)] if i < len(colors) else 'black'  # Use a default color if the index exceeds available colors
+
+            # # # for j in x:
+            for j, (y_val, type_val, idx_tuple_val) in enumerate(zip(column_data, column_val, column_idx_tuple)):
+                # type = column_val[j]
+                # idx_tuple = column_idx_tuple[j]
+
+                # marker_style = type_marker_mapping.get(column_val, 'o')  # Get the marker style for the type
+                # # marker_style = type_marker_mapping.get(type, 'o')  # Get the marker style for the type
+                marker_style, marker_color = type_marker_mapping.get(type_val, ('o','k'))  # Get the marker style for the type
+                # # # # # # ax.scatter(j, df_distance[f"{i}"][j], label=f"Type: {column_val}", marker=marker_style, s=100)
+                # # # # # label = f"{type_val}" if type_val not in added_labels else None
+                # # # # # # # ax.scatter(j, df_distance.iloc[j, i], label=label, marker=marker_style, s=100)
+                # # # # # # # # # ax.scatter(j, df_distance.iloc[j, i], label=label, marker=marker_style, s=100, color = marker_color, alpha = 0.5)
+                # # # # # ax.scatter(j, y_val, label=label, marker=marker_style, s=100, color = marker_color, alpha = 0.5)
+                # # # # # added_labels.add(type_val)
+                mapped_label = category_labels.get(type_val, type_val)  # Use the original type_val if it's not found in category_labels
+                # Use mapped_label for the label. Only add it if it's not already added.
+                label = mapped_label if mapped_label not in added_labels else None
+                ax.scatter(j, y_val, label=label, marker=marker_style, s=100, color=marker_color, alpha=0.5)
+                if label:  # If a label was added, record it as added
+                    added_labels.add(mapped_label)
+
+                # # # # ax.text(j, df_distance.iloc[j, i], str(int(idx_tuple_val)), color=line_color, fontsize=20)
+                # # # # # ax.text(j, y_val, str(int(idx_tuple_val)), color=line_color, fontsize=20)
+                # Apply offsets to text position
+                text_x = j + x_offset * ax.get_xlim()[1]  # Adjust text x-position
+                text_y = y_val + y_offset * ax.get_ylim()[1]  # Adjust text y-position
+                
+                # # # # # # text = ax.text(j+x_offset, y_val+y_offset, str(int(idx_tuple_val)), color=line_color, fontsize=15)
+                text = ax.text(text_x, text_y, str(int(idx_tuple_val)), color=line_color, fontsize=18)
+                texts.append(text)
+
+            # # i = i
+            # # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
+            # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", linewidth=2, marker=marker_style, markersize=10)  # Set line width to 2 pixels
+
+            line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", color=line_color, linewidth=2)  # Set line width to 2 pixels
+            # ax.text(i, value, str(int(idx_value)), color=line_color, fontsize=8)
+
+            lines.append(line)
+            # label = f"{i}" if Li_idxs == "all" else None
+            # line, = ax.plot(x, df_distance[f"{i}"], label=label)
+            # lines.append(line)
+
+        # if type(Li_idxs) == list:
+        #     for j in Li_idxs:
+        #         if i == j:
+        #             line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
+        #             lines.append(line)
+
+    adjust_text(texts, arrowprops=dict(arrowstyle='->', color='red'))
+    
+    # # ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}')
+    if activate_diameter_line == True:
+        ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}', linewidth=1)  # Set line width to 1 pixel
+
+    # Set the y-axis to only show ticks at 0, 1, 2, 3
+    plt.yticks([0, 1, 2, 3])
+
+    # plt.title(f"Geometry {geo} with d={diameter_24g48h}")
+
+    # Shrink current axis's height by 10% on the bottom
+        # source: https://stackoverflow.com/questions/4700614/how-to-put-the-legend-outside-the-plot
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+
+    handles, labels = ax.get_legend_handles_labels()
+
+    ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+            fancybox=True, shadow=True, ncol=5)
+
+    # Enable cursor information
+    mplcursors.cursor(hover=True)
+
+    # Enable zooming with cursor
+    mpldatacursor.datacursor(display='multiple', draggable=True)
+
+    plt.show()
+
+
+def get_df_movement(dataframe):
+    # col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
+    col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
+
+    df_to_plot = pd.DataFrame()
+
+    for idx in range(dataframe["geometry"].size - 1):  # CHANGED HERE
+
+        # idx_coor24li_tuple_cage_belongin_complete_closest_weight = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
+        # idx_coor24li_tuple_cage_belongin_complete_closest_weight_next = dataframe.at[idx+1, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
+        idx_coor24li_tuple_cage_belongin_complete_closest = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest]
+        idx_coor24li_tuple_cage_belongin_complete_closest_next = dataframe.at[idx+1, col_idx_coor24li_tuple_cage_belongin_complete_closest]
+
+        # for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest_weight)):
+        for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest)):
+            df_to_plot.at[idx, f"{j}"] = None  
+
+            # type = idx_coor24li_tuple_cage_belongin_complete_closest_weight[j]['type']
+            # idx_tuple = idx_coor24li_tuple_cage_belongin_complete_closest_weight[j]['idx_tuple']
+            # idx_cage = idx_coor24li_tuple_cage_belongin_complete_closest_weight[j]['idx_cage']
+
+            # type_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['type']
+            # idx_tuple_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['idx_tuple']
+            # idx_cage_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['idx_cage']
+
+            type = idx_coor24li_tuple_cage_belongin_complete_closest[j]['type']
+            idx_tuple = idx_coor24li_tuple_cage_belongin_complete_closest[j]['idx_tuple']
+            idx_cage = idx_coor24li_tuple_cage_belongin_complete_closest[j]['idx_cage']
+
+            type_next = idx_coor24li_tuple_cage_belongin_complete_closest_next[j]['type']
+            idx_tuple_next = idx_coor24li_tuple_cage_belongin_complete_closest_next[j]['idx_tuple']
+            idx_cage_next = idx_coor24li_tuple_cage_belongin_complete_closest_next[j]['idx_cage']
+
+            if idx_cage != idx_cage_next:
+                type_movement = 'inTERcage'
+            elif idx_cage == idx_cage_next and idx_tuple != idx_tuple_next:
+                type_movement = 'intracage'
+            elif idx_cage == idx_cage_next and idx_tuple == idx_tuple_next and type != type_next:
+                type_movement = 'intratriad'
+            elif idx_cage == idx_cage_next and idx_tuple == idx_tuple_next and type == type_next:
+                type_movement = 'staying'
+
+            df_to_plot.at[idx, f"{j}"] = type_movement
+
+            # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
+            # distance = mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
+
+            # dict_weighted[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
+            
+            # for key_b, val_b in idx_coor24li_tuple_cage_belongin_complete_closest_weight.items():
+            #     type = val_b['type']
+            #     idx_tuple = val_b['idx_tuple']
+            #     idx_cage = val_b['idx_cage']
+                # for entry_b in val_b: 
+                # df_to_plot.at[idx, f"{key_b}"] = val_b[f'{to_plot}']
+
+            # diameter_24g48h = max_mapping_radius * 2
+            # # if distance < diameter_24g48h and index != idx_ref:
+            # if distance > diameter_24g48h and idx != idx_ref:
+            #     print(f"path: {idx}, Li: {j}, distance: {distance}")
+    return df_to_plot
 
 
 def get_amount_type(dataframe, litype, el):
@@ -7073,9 +7746,14 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
         if coor.species_string == "Li":
             coor_Li_ref.append(coor.frac_coords)
 
+    print(f"coor_Li_ref: {coor_Li_ref}")
+
     # for i in path_geo:
-    dataframe_group = dataframe[idx_file_group[0]:idx_file_group[1]]
+    dataframe_group = dataframe.copy()
+    dataframe_group = dataframe_group[idx_file_group[0]:idx_file_group[1]]
     idx_range = list(range(dataframe_group["geometry"].size))
+    print(idx_range)
+    
     if idx_ref > idx_file_group[1]:
          # dataframe_group = dataframe_group.append(dataframe[idx_ref-1:idx_ref], ignore_index=True)
         dataframe_group = pd.concat([dataframe[idx_ref:idx_ref+1], dataframe[idx_file_group[0]:idx_file_group[1]]], ignore_index=False)
@@ -7083,6 +7761,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
         idx_range = [idx_ref] + idx_range
 
     for index in idx_range:
+        print(index)
         # for index in [1]:
         coor_Li = []
         dict_distance = defaultdict(list)
@@ -7091,6 +7770,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
             file = f"{int(dataframe_group['geometry'][index])}_{int(dataframe_group['path'][index])}_{var_filename}"
         else:
             file = f"{int(dataframe_group['geometry'][index])}_{int(dataframe_group['path'][index])}_{var_filename}.cif"
+        print(file)
         file_path = os.path.join(destination_directory, file)
 
         structure = Structure.from_file(file_path)
@@ -7099,6 +7779,8 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
         for idx, coor in enumerate(structure):
             if coor.species_string == "Li":
                 coor_Li.append(coor.frac_coords)        
+
+        print(f"coor_Li: {coor_Li}")
             
         coors_Li_dist_structures = defaultdict(list)
 
@@ -7113,7 +7795,8 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
                 df_distance.at[index, f"{j}"] = distance
 
                 diameter_24g48h = max_mapping_radius * 2
-                if distance < diameter_24g48h and index != idx_ref:
+                # if distance < diameter_24g48h and index != idx_ref:
+                if distance > diameter_24g48h and index != idx_ref:
                     print(f"path: {index}, Li: {j}, distance: {distance}")
 
         elif mean_ref == False:
@@ -7126,7 +7809,8 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
                 df_distance.at[index, f"{j}"] = distance
 
                 diameter_24g48h = max_mapping_radius * 2
-                if distance < diameter_24g48h and index != idx_ref:
+                # if distance < diameter_24g48h and index != idx_ref:
+                if distance > diameter_24g48h and index != idx_ref:
                     print(f"path: {index}, Li: {j}, distance: {distance}")
 
     #         coors_Li_dist_structures_dict = {}
