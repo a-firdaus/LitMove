@@ -540,131 +540,133 @@ class Transformation:
 
 
 class PreProcessingCONTCAR:
-    def get_orientated_cif_positive(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out):
-        dataframe['subdir_orientated_positive'] = None
-        for idx in range(dataframe["geometry"].size):
-            # lines = []
-            # print(idx)
-            # print(idx)
-            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
-            filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
+    # # NOUSAGE
+    # def get_orientated_cif_positive(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out):
+    #     dataframe['subdir_orientated_positive'] = None
+    #     for idx in range(dataframe["geometry"].size):
+    #         # lines = []
+    #         # print(idx)
+    #         # print(idx)
+    #         filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
+    #         filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
 
-            with open(filename_to_transform_path, 'r') as file:
-                lines = file.readlines()
-            data = lines[cif_line_nr_start:]
+    #         with open(filename_to_transform_path, 'r') as file:
+    #             lines = file.readlines()
+    #         data = lines[cif_line_nr_start:]
 
-            # Split each string by space and create the DataFrame
-            df = pd.DataFrame([string.strip().split() for string in data])
+    #         # Split each string by space and create the DataFrame
+    #         df = pd.DataFrame([string.strip().split() for string in data])
 
-            # Optional: Rename the columns
-            df.columns = cif_columns
+    #         # Optional: Rename the columns
+    #         df.columns = cif_columns
 
-            df_positive_val = df
-            for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
-                if float(coord_x) < 0:
-                    coord_x = float(coord_x) + 1
-                    df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(coord_x, width=8)
-                else:
-                    df_positive_val['coord_x'][idx_a] = coord_x
+    #         df_positive_val = df
+    #         for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
+    #             if float(coord_x) < 0:
+    #                 coord_x = float(coord_x) + 1
+    #                 df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(coord_x, width=8)
+    #             else:
+    #                 df_positive_val['coord_x'][idx_a] = coord_x
 
-            for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
-                if float(coord_y) < 0:
-                    coord_y = float(coord_y) + 1
-                    df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(coord_y, width=8)
-                else:
-                    df_positive_val['coord_y'][idx_a] = coord_y
+    #         for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
+    #             if float(coord_y) < 0:
+    #                 coord_y = float(coord_y) + 1
+    #                 df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(coord_y, width=8)
+    #             else:
+    #                 df_positive_val['coord_y'][idx_a] = coord_y
 
-            for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
-                if float(coord_z) < 0:
-                    coord_z = float(coord_z) + 1
-                    df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(coord_z, width=8)
-                else:
-                    df_positive_val['coord_z'][idx_a] = coord_z
+    #         for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
+    #             if float(coord_z) < 0:
+    #                 coord_z = float(coord_z) + 1
+    #                 df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(coord_z, width=8)
+    #             else:
+    #                 df_positive_val['coord_z'][idx_a] = coord_z
 
-            row_list = df_positive_val.to_string(index=False, header=False).split('\n')
-            row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
-            row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
-            absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
+    #         row_list = df_positive_val.to_string(index=False, header=False).split('\n')
+    #         row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
+    #         row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
+    #         absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
 
-            line_append_list = []
-            for idx_c, line in enumerate(absolute_correct_list):
-                line_new_line = str(line) + '\n'
-                line_append_list.append(line_new_line)
+    #         line_append_list = []
+    #         for idx_c, line in enumerate(absolute_correct_list):
+    #             line_new_line = str(line) + '\n'
+    #             line_append_list.append(line_new_line)
 
-            file_list = lines[:cif_line_nr_start] + line_append_list
-
-            
-            # print(cif_filename_positive)
-            
-            # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
-            cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
-            destination_path = os.path.join(destination_directory, cif_filename_positive)
-
-            with open(destination_path, 'w') as fp:
-                for item in file_list:
-                    fp.write(item)
-
-            dataframe['subdir_orientated_positive'][idx] = destination_path
-
-
-    def get_orientated_positive_cif(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal):
-        ## Convert new cif file of orientated structure into only positive value
-        dataframe['subdir_orientated_positive_cif'] = None
-
-        for idx in range(dataframe["geometry"].size):
-            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
-            filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
-
-            with open(filename_to_transform_path, 'r') as file:
-                lines = file.readlines()
-            data = lines[cif_line_nr_start:]
-
-            # Split each string by space and create the DataFrame
-            df = pd.DataFrame([string.strip().split() for string in data])
-
-            # Optional: Rename the columns
-            df.columns = cif_columns
-
-            df_positive_val = df
-            for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
-                while float(coord_x) < 0:
-                    coord_x = float(coord_x) + 1
-                df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(float(coord_x), width=n_decimal)
-
-            for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
-                while float(coord_y) < 0:
-                    coord_y = float(coord_y) + 1
-                df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(float(coord_y), width=n_decimal)
-
-            for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
-                while float(coord_z) < 0:
-                    coord_z = float(coord_z) + 1
-                df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(float(coord_z), width=n_decimal)
-
-            row_list = df_positive_val.to_string(index=False, header=False).split('\n')
-            row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
-            row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
-            absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
-
-            line_append_list = []
-            for idx_c, line in enumerate(absolute_correct_list):
-                line_new_line = str(line) + '\n'
-                line_append_list.append(line_new_line)
-
-            file_list = lines[:cif_line_nr_start] + line_append_list
+    #         file_list = lines[:cif_line_nr_start] + line_append_list
 
             
-            # print(cif_filename_positive)
+    #         # print(cif_filename_positive)
             
-            # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
-            cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
-            destination_path = os.path.join(destination_directory, cif_filename_positive)
+    #         # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
+    #         cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
+    #         destination_path = os.path.join(destination_directory, cif_filename_positive)
 
-            with open(destination_path, 'w') as fp:
-                for item in file_list:
-                    fp.write(item)
+    #         with open(destination_path, 'w') as fp:
+    #             for item in file_list:
+    #                 fp.write(item)
 
-            dataframe['subdir_orientated_positive_cif'][idx] = destination_path
+    #         dataframe['subdir_orientated_positive'][idx] = destination_path
+
+
+    # # NOUSAGE
+    # def get_orientated_positive_cif(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal):
+    #     ## Convert new cif file of orientated structure into only positive value
+    #     dataframe['subdir_orientated_positive_cif'] = None
+
+    #     for idx in range(dataframe["geometry"].size):
+    #         filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
+    #         filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
+
+    #         with open(filename_to_transform_path, 'r') as file:
+    #             lines = file.readlines()
+    #         data = lines[cif_line_nr_start:]
+
+    #         # Split each string by space and create the DataFrame
+    #         df = pd.DataFrame([string.strip().split() for string in data])
+
+    #         # Optional: Rename the columns
+    #         df.columns = cif_columns
+
+    #         df_positive_val = df
+    #         for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
+    #             while float(coord_x) < 0:
+    #                 coord_x = float(coord_x) + 1
+    #             df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(float(coord_x), width=n_decimal)
+
+    #         for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
+    #             while float(coord_y) < 0:
+    #                 coord_y = float(coord_y) + 1
+    #             df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(float(coord_y), width=n_decimal)
+
+    #         for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
+    #             while float(coord_z) < 0:
+    #                 coord_z = float(coord_z) + 1
+    #             df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(float(coord_z), width=n_decimal)
+
+    #         row_list = df_positive_val.to_string(index=False, header=False).split('\n')
+    #         row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
+    #         row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
+    #         absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
+
+    #         line_append_list = []
+    #         for idx_c, line in enumerate(absolute_correct_list):
+    #             line_new_line = str(line) + '\n'
+    #             line_append_list.append(line_new_line)
+
+    #         file_list = lines[:cif_line_nr_start] + line_append_list
+
+            
+    #         # print(cif_filename_positive)
+            
+    #         # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
+    #         cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
+    #         destination_path = os.path.join(destination_directory, cif_filename_positive)
+
+    #         with open(destination_path, 'w') as fp:
+    #             for item in file_list:
+    #                 fp.write(item)
+
+    #         dataframe['subdir_orientated_positive_cif'][idx] = destination_path
 
 
     # def get_orientated_positive_lessthan1_cif(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal):
@@ -855,67 +857,61 @@ class PreProcessingCONTCAR:
             dataframe[col_subdir_positive_file][idx] = destination_path
 
 
-def get_coor_dict_structure(structure):
-    coor_origin_Li_init = []; coor_origin_P_init = []; coor_origin_S_init = []; coor_origin_Cl_init = []
-    coor_structure_init_dict = {}
-    
-    for idx, coor in enumerate(structure):
-        if coor.species_string == "Li":
-            coor_origin_Li_init.append(coor.frac_coords) 
-        if coor.species_string == "P":
-            coor_origin_P_init.append(coor.frac_coords) 
-        if coor.species_string == "S":
-            coor_origin_S_init.append(coor.frac_coords) 
-        if coor.species_string == "Cl":
-            coor_origin_Cl_init.append(coor.frac_coords) 
-        
-    coor_structure_init_dict["Li"] = coor_origin_Li_init
-    coor_structure_init_dict["P"] = coor_origin_P_init
-    coor_structure_init_dict["S"] = coor_origin_S_init
-    coor_structure_init_dict["Cl"] = coor_origin_Cl_init
-
-    return coor_structure_init_dict
-
-
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-
-
-def get_coor_structure24_dict_iterated(dataframe, mapping):
-    col_coor_structure_init_dict = "coor_structure_init_dict"
-
-    dataframe[col_coor_structure_init_dict] = None
-
-    for idx in range(dataframe["geometry"].size):
-        # print(f"idx: {idx}")
+class ReadStructure:
+    def get_coor_dict_structure(structure):
         coor_origin_Li_init = []; coor_origin_P_init = []; coor_origin_S_init = []; coor_origin_Cl_init = []
         coor_structure_init_dict = {}
-
-        if mapping == "False":
-            new_structure = Structure.from_file(dataframe['subdir_positive_CONTCAR'][idx]) # use this instead if no mapping is done
-        else:
-            new_structure = Structure.from_file(dataframe['subdir_orientated_positive_poscar'][idx]) # or we use this
-            # new_structure = Structure.from_file(dataframe['subdir_orientated_positive'][idx])
-
-        for idx_24, coor24 in enumerate(new_structure):
-            if coor24.species_string == "Li":
-                coor_origin_Li_init.append(coor24.frac_coords) 
-            if coor24.species_string == "P":
-                coor_origin_P_init.append(coor24.frac_coords)
-            if coor24.species_string == "S":
-                coor_origin_S_init.append(coor24.frac_coords)  
-            if coor24.species_string == "Cl":
-                coor_origin_Cl_init.append(coor24.frac_coords) 
+        
+        for idx, coor in enumerate(structure):
+            if coor.species_string == "Li":
+                coor_origin_Li_init.append(coor.frac_coords) 
+            if coor.species_string == "P":
+                coor_origin_P_init.append(coor.frac_coords) 
+            if coor.species_string == "S":
+                coor_origin_S_init.append(coor.frac_coords) 
+            if coor.species_string == "Cl":
+                coor_origin_Cl_init.append(coor.frac_coords) 
             
         coor_structure_init_dict["Li"] = coor_origin_Li_init
         coor_structure_init_dict["P"] = coor_origin_P_init
         coor_structure_init_dict["S"] = coor_origin_S_init
         coor_structure_init_dict["Cl"] = coor_origin_Cl_init
-    
-        dataframe.at[idx, col_coor_structure_init_dict] = coor_structure_init_dict
+
+        return coor_structure_init_dict
+
+
+    def get_coor_structure24_dict_iterated(dataframe, mapping):
+        col_coor_structure_init_dict = "coor_structure_init_dict"
+
+        dataframe[col_coor_structure_init_dict] = None
+
+        for idx in range(dataframe["geometry"].size):
+            # print(f"idx: {idx}")
+            coor_origin_Li_init = []; coor_origin_P_init = []; coor_origin_S_init = []; coor_origin_Cl_init = []
+            coor_structure_init_dict = {}
+
+            if mapping == "False":
+                new_structure = Structure.from_file(dataframe['subdir_positive_CONTCAR'][idx]) # use this instead if no mapping is done
+            else:
+                new_structure = Structure.from_file(dataframe['subdir_orientated_positive_poscar'][idx]) # or we use this
+                # new_structure = Structure.from_file(dataframe['subdir_orientated_positive'][idx])
+
+            for idx_24, coor24 in enumerate(new_structure):
+                if coor24.species_string == "Li":
+                    coor_origin_Li_init.append(coor24.frac_coords) 
+                if coor24.species_string == "P":
+                    coor_origin_P_init.append(coor24.frac_coords)
+                if coor24.species_string == "S":
+                    coor_origin_S_init.append(coor24.frac_coords)  
+                if coor24.species_string == "Cl":
+                    coor_origin_Cl_init.append(coor24.frac_coords) 
+                
+            coor_structure_init_dict["Li"] = coor_origin_Li_init
+            coor_structure_init_dict["P"] = coor_origin_P_init
+            coor_structure_init_dict["S"] = coor_origin_S_init
+            coor_structure_init_dict["Cl"] = coor_origin_Cl_init
+        
+            dataframe.at[idx, col_coor_structure_init_dict] = coor_structure_init_dict
 
 
 ##############################################################################################################################################################
@@ -4797,11 +4793,11 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     cif = CifWriter(cif_structure)
     cif.write_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif")
 
-    coor_structure_init_dict = get_coor_dict_structure(ref_structure_48n24)
-    coor_structure_init_dict_expanded = get_coor_dict_structure(Structure.from_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif"))
+    coor_structure_init_dict = ReadStructure.get_coor_dict_structure(ref_structure_48n24)
+    coor_structure_init_dict_expanded = ReadStructure.get_coor_dict_structure(Structure.from_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif"))
 
     # PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-    get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
+    ReadStructure.get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
 
     # if activate_radius == 3:
     #     get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
@@ -5089,9 +5085,9 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 #     # max_mapping_radius = 0.04197083906
 #     ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
 
-#     coor_structure_init_dict = get_coor_dict_structure(ref_structure_48n24)
+#     coor_structure_init_dict = ReadStructure.get_coor_dict_structure(ref_structure_48n24)
 #     PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-#     get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
+#     ReadStructure.get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
 
 #     # if activate_radius == 3:
 #     #     get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
@@ -5277,9 +5273,9 @@ def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_rad
     # max_mapping_radius = 0.04197083906
     ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
 
-    coor_structure_init_dict = get_coor_dict_structure(ref_structure_48n24)
+    coor_structure_init_dict = ReadStructure.get_coor_dict_structure(ref_structure_48n24)
     PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-    get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
+    ReadStructure.get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
 
     if activate_radius == 2:
         get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
@@ -5471,9 +5467,9 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
     # max_mapping_radius = 0.04197083906
     ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
 
-    coor_structure_init_dict = get_coor_dict_structure(ref_structure_48n24)
+    coor_structure_init_dict = ReadStructure.get_coor_dict_structure(ref_structure_48n24)
     PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-    get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
+    ReadStructure.get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
 
     if activate_radius == 2:
         get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
@@ -6750,7 +6746,7 @@ def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, 
         file_24Li = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_filename}.cif"
         file_path_24Li = os.path.join(destination_directory, file_24Li)
 
-        coor_structure_24Li_dict_el = get_coor_dict_structure(Structure.from_file(file_path_24Li))[el]
+        coor_structure_24Li_dict_el = ReadStructure.get_coor_dict_structure(Structure.from_file(file_path_24Li))[el]
         
         # Convert lists of arrays to sets for efficient comparison
         set_coor_structure = set(map(tuple, coor_structure_24Li_dict_el))
