@@ -166,7 +166,7 @@ class FileOperations:
     #     shutil.copy2(source_path, destination_path)
     #     print(f"File copied and renamed: {filename} -> {new_filename}")
 
-    #     delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
+    #     FileOperations.delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
 
 
     # @staticmethod
@@ -181,7 +181,7 @@ class FileOperations:
     #     shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
     #     print(f"File copied and renamed: {filename} -> {new_filename}")
 
-    #     delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
+    #     FileOperations.delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
 
 
     @staticmethod
@@ -339,520 +339,520 @@ class FileOperations:
 
 
 # class Transformation:
-def get_structure_with_library(dataframe, destination_directory, filename, structure_reference, var_name, prefix):
-    for idx in range(dataframe["geometry"].size):
-        if prefix == None: 
-            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
-        else:
-            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}_{prefix}"
-        filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
-        structure = Structure.from_file(filename_to_transform_path)
-        
-        # StructureMatcher can accept different tolerances for judging equivalence
-        matcher = StructureMatcher(primitive_cell=False)
-        # first, we can verify these lattices are equivalent
-        matcher_verify = matcher.fit(structure_reference, structure)  # returns True
-        dataframe['verify_w_lib'][idx] = matcher_verify
-        # # df['verify_w_lib'][idx] = matcher_verify
-        # # # print(f"verify_w_lib: {matcher_verify}")
-        if matcher_verify == False:
-            print(f"Matcher doesn't match.")
-
-        transformed_structure = matcher.get_s2_like_s1(structure_reference, structure, include_ignored_species=True)
-        cif = CifWriter(transformed_structure)
-        if prefix == None: 
-            cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}.cif"
-        else:
-            cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}_{prefix}.cif"
-        destination_path = os.path.join(destination_directory, cif_filename)
-        cif.write_file(destination_path)
-
-
-# corrected or at least attempted to
-def get_structure_with_linalg(dataframe, destination_directory, filename, structure_reference, var_name, prefix):
-    for idx in range(dataframe["geometry"].size):
-        if prefix == None: 
-            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
-        else:
-            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}_{prefix}"
-        filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
-        structure = Structure.from_file(filename_to_transform_path)
-
-        # StructureMatcher can accept different tolerances for judging equivalence
-        matcher = StructureMatcher(primitive_cell=False) # don't work if it's True
-        # first, we can verify these lattices are equivalent
-        matcher_verify = matcher.fit(structure_reference, structure)  # returns True
-        dataframe['verify_w_linalg'][idx] = matcher_verify
-        if matcher_verify == False:
-            print(f"Matcher doesn't match.")
-
-        # Transform desired structure into structure_reference
-            # output of transformation:
-                # 3x3 matrix of supercell transformation;
-                # 1x3 vector of fractional translation;
-                # 1x4 mapping to transform struct2 to be similar to struct1
-        transformation = matcher.get_transformation(structure_reference, structure)
-        if transformation is None:
-            return None
-        # if prefix == None:
-        #     dataframe['trf_matrix'][idx] = transformation[0]
-        # else: 
-        #     dataframe['trf_matrix_P'][idx] = transformation[0]
-        scaling, translation, mapping = transformation
-        # print(f"scaling: {scaling}")
-        # print(f"scaling type: {type(scaling)}")
-
-        if prefix == None:
-            dataframe.at[idx, 'scaling'] = scaling
-            dataframe.at[idx, 'translation'] = translation
-            dataframe.at[idx, 'mapping'] = mapping
-        else:
-            dataframe.at[idx, 'transformation_P'] = transformation
-
-        # Apply scaling
-        scaled_coords = np.dot(structure.frac_coords, scaling.T)
-        # scaled_coords = np.round(scaled_coords, decimals=16)
-        # print(scaled_coords)
-        # apply translation
-        translated_coords = scaled_coords + translation
-        # apply mapping
-        mapped_coords = translated_coords[mapping]
-        # # # long story short
-        # # transformed_coords = np.dot(structure.frac_coords[mapping], scaling.T) + translation
-
-        # Create a new structure with the transformed coordinates
-        transformed_structure = Structure(structure.lattice, structure.species, mapped_coords)
-        # transformed_structure = Structure.from_sites(mapped_coords) # similar to above but different input
-        
-        cif = CifWriter(transformed_structure)
-        if prefix == None: 
-            cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}.cif"
-        else:
-            cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}_{prefix}.cif"
-        destination_path = os.path.join(destination_directory, cif_filename)
-        cif.write_file(destination_path)
-
-
-# for sanity check
-def get_structure_with_linalg_combinded_with_library(dataframe, destination_directory, filename, structure_reference, var_name, prefix):
-    for idx in range(dataframe["geometry"].size):
-        if prefix == None: 
-            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
-        else:
-            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}_{prefix}"
-        filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
-        structure = Structure.from_file(filename_to_transform_path)
-
-        # StructureMatcher can accept different tolerances for judging equivalence
-        matcher = StructureMatcher(primitive_cell=False)
-        # first, we can verify these lattices are equivalent
-        matcher_verify = matcher.fit(structure_reference, structure)  # returns True
-        dataframe['verify_w_linalg'][idx] = matcher_verify
-        if matcher_verify == False:
-            print(f"Matcher doesn't match.")
-
-        # Transform desired structure into structure_reference
-            # output of transformation:
-                # 3x3 matrix of supercell transformation;
-                # 1x3 vector of fractional translation;
-                # 1x4 mapping to transform struct2 to be similar to struct1
-        transformation = matcher.get_transformation(structure_reference, structure)
-        if transformation is None:
-            return None
-        
-        scaling, translation, mapping = transformation
-
-        if prefix == None:
-            dataframe.at[idx, 'transformation'] = transformation
-        else:
-            dataframe.at[idx, f'transformation_{prefix}'] = transformation
-
-        sites = list(structure)
-        # Append the ignored sites at the end.
-        # # sites.extend([site for site in struct2 if site not in s2])
-        temp = Structure.from_sites(sites)
-
-        # Apply scaling
-        temp.make_supercell(scaling)
-        # apply translation
-        temp.translate_sites(list(range(len(temp))), translation)
-
-        # Apply some modification from library
-        for i, j in enumerate(mapping[: len(structure_reference)]):
-            if j is not None:
-                vec = np.round(structure_reference[i].frac_coords - temp[j].frac_coords)
-                temp.translate_sites(j, vec, to_unit_cell=False)
-        sites = [temp.sites[i] for i in mapping if i is not None]
-        # if include_ignored_species:
-        #     start = int(round(len(temp) / len(struct2) * len(s2)))
-        #     sites.extend(temp.sites[start:])
-        transformed_structure = Structure.from_sites(sites)
-        # transformed_structure = Structure(structure.lattice, structure.species, mapped_coords) # similar to above but different input
-        
-        cif = CifWriter(transformed_structure)
-        if prefix == None: 
-            cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}.cif"
-        else:
-            cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}_{prefix}.cif"
-        destination_path = os.path.join(destination_directory, cif_filename)
-        cif.write_file(destination_path)
-
-
-def get_structure_with_linalg_orientated(dataframe, destination_directory, filename, var_name):
-    ## POSCAR file is also created
-    dataframe['subdir_orientated'] = None
-    for idx in range(dataframe["geometry"].size):
-        filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
-        filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
-        structure = Structure.from_file(filename_to_transform_path)
-
-        # Transform desired structure into structure_reference
-        scaling = dataframe["scaling"][idx]
-        translation = dataframe["translation"][idx]
-        mapping = dataframe["mapping"][idx]
-
-        # Apply scaling
-        scaled_coords = np.dot(structure.frac_coords, scaling.T)
-        # apply translation
-        translated_coords = scaled_coords + translation
-        # apply mapping (no mapping here)
-        mapped_coords = translated_coords[mapping]
-        # # # long story short
-        # # transformed_coords = np.dot(structure.frac_coords[mapping], scaling.T) + translation
-
-        # Create a new structure with the transformed coordinates
-        transformed_structure = Structure(structure.lattice, structure.species, mapped_coords)
-        # transformed_structure = Structure.from_sites(mapped_coords) # similar to above but different input
-        
-        cif = CifWriter(transformed_structure)
-        cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}.cif"
-        destination_path = os.path.join(destination_directory, cif_filename)
-        # dataframe
-        cif.write_file(destination_path)
-
-        poscar = Poscar(transformed_structure)
-        poscar_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_POSCAR_{var_name}"
-        destination_path_poscar = os.path.join(destination_directory, poscar_filename)
-        poscar.write_file(destination_path_poscar)
-        
-        dataframe['subdir_orientated'][idx] = destination_path
-
-
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-
-def get_orientated_cif_positive(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out):
-    dataframe['subdir_orientated_positive'] = None
-    for idx in range(dataframe["geometry"].size):
-        # lines = []
-        # print(idx)
-        # print(idx)
-        filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
-        filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
-
-        with open(filename_to_transform_path, 'r') as file:
-            lines = file.readlines()
-        data = lines[cif_line_nr_start:]
-
-        # Split each string by space and create the DataFrame
-        df = pd.DataFrame([string.strip().split() for string in data])
-
-        # Optional: Rename the columns
-        df.columns = cif_columns
-
-        df_positive_val = df
-        for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
-            if float(coord_x) < 0:
-                coord_x = float(coord_x) + 1
-                df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(coord_x, width=8)
+class Transformation:
+    def get_structure_with_library(dataframe, destination_directory, filename, structure_reference, var_name, prefix):
+        for idx in range(dataframe["geometry"].size):
+            if prefix == None: 
+                filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
             else:
-                df_positive_val['coord_x'][idx_a] = coord_x
+                filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}_{prefix}"
+            filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
+            structure = Structure.from_file(filename_to_transform_path)
+            
+            # StructureMatcher can accept different tolerances for judging equivalence
+            matcher = StructureMatcher(primitive_cell=False)
+            # first, we can verify these lattices are equivalent
+            matcher_verify = matcher.fit(structure_reference, structure)  # returns True
+            dataframe['verify_w_lib'][idx] = matcher_verify
+            # # df['verify_w_lib'][idx] = matcher_verify
+            # # # print(f"verify_w_lib: {matcher_verify}")
+            if matcher_verify == False:
+                print(f"Matcher doesn't match.")
 
-        for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
-            if float(coord_y) < 0:
-                coord_y = float(coord_y) + 1
-                df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(coord_y, width=8)
+            transformed_structure = matcher.get_s2_like_s1(structure_reference, structure, include_ignored_species=True)
+            cif = CifWriter(transformed_structure)
+            if prefix == None: 
+                cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}.cif"
             else:
-                df_positive_val['coord_y'][idx_a] = coord_y
+                cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}_{prefix}.cif"
+            destination_path = os.path.join(destination_directory, cif_filename)
+            cif.write_file(destination_path)
 
-        for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
-            if float(coord_z) < 0:
-                coord_z = float(coord_z) + 1
-                df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(coord_z, width=8)
+
+    # corrected or at least attempted to
+    def get_structure_with_linalg(dataframe, destination_directory, filename, structure_reference, var_name, prefix):
+        for idx in range(dataframe["geometry"].size):
+            if prefix == None: 
+                filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
             else:
-                df_positive_val['coord_z'][idx_a] = coord_z
+                filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}_{prefix}"
+            filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
+            structure = Structure.from_file(filename_to_transform_path)
 
-        row_list = df_positive_val.to_string(index=False, header=False).split('\n')
-        row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
-        row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
-        absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
+            # StructureMatcher can accept different tolerances for judging equivalence
+            matcher = StructureMatcher(primitive_cell=False) # don't work if it's True
+            # first, we can verify these lattices are equivalent
+            matcher_verify = matcher.fit(structure_reference, structure)  # returns True
+            dataframe['verify_w_linalg'][idx] = matcher_verify
+            if matcher_verify == False:
+                print(f"Matcher doesn't match.")
 
-        line_append_list = []
-        for idx_c, line in enumerate(absolute_correct_list):
-            line_new_line = str(line) + '\n'
-            line_append_list.append(line_new_line)
+            # Transform desired structure into structure_reference
+                # output of transformation:
+                    # 3x3 matrix of supercell transformation;
+                    # 1x3 vector of fractional translation;
+                    # 1x4 mapping to transform struct2 to be similar to struct1
+            transformation = matcher.get_transformation(structure_reference, structure)
+            if transformation is None:
+                return None
+            # if prefix == None:
+            #     dataframe['trf_matrix'][idx] = transformation[0]
+            # else: 
+            #     dataframe['trf_matrix_P'][idx] = transformation[0]
+            scaling, translation, mapping = transformation
+            # print(f"scaling: {scaling}")
+            # print(f"scaling type: {type(scaling)}")
 
-        file_list = lines[:cif_line_nr_start] + line_append_list
+            if prefix == None:
+                dataframe.at[idx, 'scaling'] = scaling
+                dataframe.at[idx, 'translation'] = translation
+                dataframe.at[idx, 'mapping'] = mapping
+            else:
+                dataframe.at[idx, 'transformation_P'] = transformation
 
+            # Apply scaling
+            scaled_coords = np.dot(structure.frac_coords, scaling.T)
+            # scaled_coords = np.round(scaled_coords, decimals=16)
+            # print(scaled_coords)
+            # apply translation
+            translated_coords = scaled_coords + translation
+            # apply mapping
+            mapped_coords = translated_coords[mapping]
+            # # # long story short
+            # # transformed_coords = np.dot(structure.frac_coords[mapping], scaling.T) + translation
+
+            # Create a new structure with the transformed coordinates
+            transformed_structure = Structure(structure.lattice, structure.species, mapped_coords)
+            # transformed_structure = Structure.from_sites(mapped_coords) # similar to above but different input
+            
+            cif = CifWriter(transformed_structure)
+            if prefix == None: 
+                cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}.cif"
+            else:
+                cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}_{prefix}.cif"
+            destination_path = os.path.join(destination_directory, cif_filename)
+            cif.write_file(destination_path)
+
+
+    # for sanity check
+    def get_structure_with_linalg_combinded_with_library(dataframe, destination_directory, filename, structure_reference, var_name, prefix):
+        for idx in range(dataframe["geometry"].size):
+            if prefix == None: 
+                filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
+            else:
+                filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}_{prefix}"
+            filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
+            structure = Structure.from_file(filename_to_transform_path)
+
+            # StructureMatcher can accept different tolerances for judging equivalence
+            matcher = StructureMatcher(primitive_cell=False)
+            # first, we can verify these lattices are equivalent
+            matcher_verify = matcher.fit(structure_reference, structure)  # returns True
+            dataframe['verify_w_linalg'][idx] = matcher_verify
+            if matcher_verify == False:
+                print(f"Matcher doesn't match.")
+
+            # Transform desired structure into structure_reference
+                # output of transformation:
+                    # 3x3 matrix of supercell transformation;
+                    # 1x3 vector of fractional translation;
+                    # 1x4 mapping to transform struct2 to be similar to struct1
+            transformation = matcher.get_transformation(structure_reference, structure)
+            if transformation is None:
+                return None
+            
+            scaling, translation, mapping = transformation
+
+            if prefix == None:
+                dataframe.at[idx, 'transformation'] = transformation
+            else:
+                dataframe.at[idx, f'transformation_{prefix}'] = transformation
+
+            sites = list(structure)
+            # Append the ignored sites at the end.
+            # # sites.extend([site for site in struct2 if site not in s2])
+            temp = Structure.from_sites(sites)
+
+            # Apply scaling
+            temp.make_supercell(scaling)
+            # apply translation
+            temp.translate_sites(list(range(len(temp))), translation)
+
+            # Apply some modification from library
+            for i, j in enumerate(mapping[: len(structure_reference)]):
+                if j is not None:
+                    vec = np.round(structure_reference[i].frac_coords - temp[j].frac_coords)
+                    temp.translate_sites(j, vec, to_unit_cell=False)
+            sites = [temp.sites[i] for i in mapping if i is not None]
+            # if include_ignored_species:
+            #     start = int(round(len(temp) / len(struct2) * len(s2)))
+            #     sites.extend(temp.sites[start:])
+            transformed_structure = Structure.from_sites(sites)
+            # transformed_structure = Structure(structure.lattice, structure.species, mapped_coords) # similar to above but different input
+            
+            cif = CifWriter(transformed_structure)
+            if prefix == None: 
+                cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}.cif"
+            else:
+                cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}_{prefix}.cif"
+            destination_path = os.path.join(destination_directory, cif_filename)
+            cif.write_file(destination_path)
+
+
+    def get_structure_with_linalg_orientated(dataframe, destination_directory, filename, var_name):
+        ## POSCAR file is also created
+        dataframe['subdir_orientated'] = None
+        for idx in range(dataframe["geometry"].size):
+            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
+            filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
+            structure = Structure.from_file(filename_to_transform_path)
+
+            # Transform desired structure into structure_reference
+            scaling = dataframe["scaling"][idx]
+            translation = dataframe["translation"][idx]
+            mapping = dataframe["mapping"][idx]
+
+            # Apply scaling
+            scaled_coords = np.dot(structure.frac_coords, scaling.T)
+            # apply translation
+            translated_coords = scaled_coords + translation
+            # apply mapping (no mapping here)
+            mapped_coords = translated_coords[mapping]
+            # # # long story short
+            # # transformed_coords = np.dot(structure.frac_coords[mapping], scaling.T) + translation
+
+            # Create a new structure with the transformed coordinates
+            transformed_structure = Structure(structure.lattice, structure.species, mapped_coords)
+            # transformed_structure = Structure.from_sites(mapped_coords) # similar to above but different input
+            
+            cif = CifWriter(transformed_structure)
+            cif_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name}.cif"
+            destination_path = os.path.join(destination_directory, cif_filename)
+            # dataframe
+            cif.write_file(destination_path)
+
+            poscar = Poscar(transformed_structure)
+            poscar_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_POSCAR_{var_name}"
+            destination_path_poscar = os.path.join(destination_directory, poscar_filename)
+            poscar.write_file(destination_path_poscar)
+            
+            dataframe['subdir_orientated'][idx] = destination_path
+
+
+class PreProcessingCONTCAR:
+    def get_orientated_cif_positive(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out):
+        dataframe['subdir_orientated_positive'] = None
+        for idx in range(dataframe["geometry"].size):
+            # lines = []
+            # print(idx)
+            # print(idx)
+            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
+            filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
+
+            with open(filename_to_transform_path, 'r') as file:
+                lines = file.readlines()
+            data = lines[cif_line_nr_start:]
+
+            # Split each string by space and create the DataFrame
+            df = pd.DataFrame([string.strip().split() for string in data])
+
+            # Optional: Rename the columns
+            df.columns = cif_columns
+
+            df_positive_val = df
+            for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
+                if float(coord_x) < 0:
+                    coord_x = float(coord_x) + 1
+                    df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(coord_x, width=8)
+                else:
+                    df_positive_val['coord_x'][idx_a] = coord_x
+
+            for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
+                if float(coord_y) < 0:
+                    coord_y = float(coord_y) + 1
+                    df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(coord_y, width=8)
+                else:
+                    df_positive_val['coord_y'][idx_a] = coord_y
+
+            for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
+                if float(coord_z) < 0:
+                    coord_z = float(coord_z) + 1
+                    df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(coord_z, width=8)
+                else:
+                    df_positive_val['coord_z'][idx_a] = coord_z
+
+            row_list = df_positive_val.to_string(index=False, header=False).split('\n')
+            row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
+            row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
+            absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
+
+            line_append_list = []
+            for idx_c, line in enumerate(absolute_correct_list):
+                line_new_line = str(line) + '\n'
+                line_append_list.append(line_new_line)
+
+            file_list = lines[:cif_line_nr_start] + line_append_list
+
+            
+            # print(cif_filename_positive)
+            
+            # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
+            cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
+            destination_path = os.path.join(destination_directory, cif_filename_positive)
+
+            with open(destination_path, 'w') as fp:
+                for item in file_list:
+                    fp.write(item)
+
+            dataframe['subdir_orientated_positive'][idx] = destination_path
+
+
+    def get_orientated_positive_cif(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal):
+        ## Convert new cif file of orientated structure into only positive value
+        dataframe['subdir_orientated_positive_cif'] = None
+
+        for idx in range(dataframe["geometry"].size):
+            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
+            filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
+
+            with open(filename_to_transform_path, 'r') as file:
+                lines = file.readlines()
+            data = lines[cif_line_nr_start:]
+
+            # Split each string by space and create the DataFrame
+            df = pd.DataFrame([string.strip().split() for string in data])
+
+            # Optional: Rename the columns
+            df.columns = cif_columns
+
+            df_positive_val = df
+            for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
+                while float(coord_x) < 0:
+                    coord_x = float(coord_x) + 1
+                df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(float(coord_x), width=n_decimal)
+
+            for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
+                while float(coord_y) < 0:
+                    coord_y = float(coord_y) + 1
+                df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(float(coord_y), width=n_decimal)
+
+            for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
+                while float(coord_z) < 0:
+                    coord_z = float(coord_z) + 1
+                df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(float(coord_z), width=n_decimal)
+
+            row_list = df_positive_val.to_string(index=False, header=False).split('\n')
+            row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
+            row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
+            absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
+
+            line_append_list = []
+            for idx_c, line in enumerate(absolute_correct_list):
+                line_new_line = str(line) + '\n'
+                line_append_list.append(line_new_line)
+
+            file_list = lines[:cif_line_nr_start] + line_append_list
+
+            
+            # print(cif_filename_positive)
+            
+            # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
+            cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
+            destination_path = os.path.join(destination_directory, cif_filename_positive)
+
+            with open(destination_path, 'w') as fp:
+                for item in file_list:
+                    fp.write(item)
+
+            dataframe['subdir_orientated_positive_cif'][idx] = destination_path
+
+
+    # def get_orientated_positive_lessthan1_cif(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal):
+    #     dataframe['subdir_orientated_positive_lessthan1_cif'] = None
+    #     for idx in range(dataframe["geometry"].size):
+    #         filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
+    #         filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
+
+    #         with open(filename_to_transform_path, 'r') as file:
+    #             lines = file.readlines()
+    #         data = lines[cif_line_nr_start:]
+
+    #         # Split each string by space and create the DataFrame
+    #         df = pd.DataFrame([string.strip().split() for string in data])
+
+    #         # Optional: Rename the columns
+    #         df.columns = cif_columns
+
+    #         df_positive_val = df
+    #         for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
+    #             while float(coord_x) < 0:
+    #                 coord_x = float(coord_x) + 1
+    #             while float(coord_x) > 1:
+    #                 coord_x = float(coord_x) - 1
+    #             df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(float(coord_x), width=n_decimal)
+
+    #         for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
+    #             while float(coord_y) < 0:
+    #                 coord_y = float(coord_y) + 1
+    #             while float(coord_y) > 1:
+    #                 coord_y = float(coord_y) - 1
+    #             df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(float(coord_y), width=n_decimal)
+
+    #         for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
+    #             while float(coord_z) < 0:
+    #                 coord_z = float(coord_z) + 1
+    #             while float(coord_z) > 1:
+    #                 coord_z = float(coord_z) - 1
+    #             df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(float(coord_z), width=n_decimal)
+
+    #         row_list = df_positive_val.to_string(index=False, header=False).split('\n')
+    #         row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
+    #         row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
+    #         absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
+
+    #         line_append_list = []
+    #         for idx_c, line in enumerate(absolute_correct_list):
+    #             line_new_line = str(line) + '\n'
+    #             line_append_list.append(line_new_line)
+
+    #         file_list = lines[:cif_line_nr_start] + line_append_list
+
+            
+    #         # print(cif_filename_positive)
+            
+    #         # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
+    #         cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
+    #         destination_path = os.path.join(destination_directory, cif_filename_positive)
+
+    #         with open(destination_path, 'w') as fp:
+    #             for item in file_list:
+    #                 fp.write(item)
+
+    #         dataframe['subdir_orientated_positive_lessthan1_cif'][idx] = destination_path
+
+
+    def get_CONTCAR_normal_elements(dataframe, destination_directory, filename, prefix = None):
+        for index in range(dataframe["geometry"].size):
+            # Generate the new filename
+            if prefix == None:
+                new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}"
+            else:
+                new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}_{prefix}"
+
+
+            # Get the source file path and destination file path
+            destination_path = os.path.join(destination_directory, new_filename)
+            
+            # # Define the pattern to search for
+            # pattern = '  Li_sv_GW/24a6a  P_GW/715c28f22  S_GW/357db9cfb  Cl_GW/3ef3b316\n              24               4              20               4'
+
+            # # Define the replacement string
+            # replacement = '   Li   P    S    Cl\n'
+
+            # Read CONTCAR file
+            with open(destination_path, 'r') as contcar_file:
+                contcar_lines = contcar_file.readlines()
+            
+            contcar_lines[5] = "   Li   P    S    Cl\n"
+            contcar_lines[6] = "    24     4    20     4\n"
+
+            # # Find the number of configurations
+            # # occurrences = int(contcar_lines[1])
+            # occurrences = contcar_lines.count(contcar_lines[0])
+
+            # Iterate through each line and replace if the pattern is found
+            # for i in range(len(contcar_lines)):
+            #     if pattern in contcar_lines[i]:
+            #         contcar_lines[i] = replacement
+
+            # # Print the modified lines
+            # for line in contcar_lines:
+            #     print(line.strip())  # .strip() is used to remove leading/trailing whitespaces
+
+            # # Loop through each configuration
+            # for occurrence in range(occurrences):
+            #     # Define the starting and ending lines for each configuration
+            #     # start_line = 8 + occurrence * (3 + sum([int(x) for x in contcar_lines[6].split()]))
+            #     # end_line = start_line + 3 + sum([int(x) for x in contcar_lines[6].split()])
+            #     start_line = (occurrence * line_length)
+            #     end_line = start_line + line_length
+            #     print(f"start_line: {start_line}, end_line: {end_line}")
+
+            #     # Extract configuration lines
+            #     config_lines = contcar_lines[start_line:end_line]
+
+            #     new_dir = f"{dir_XDATCAR}/{occurrence}"
+            #     os.makedirs(new_dir, exist_ok=True)
+
+            # Create a new CONTCAR file for each configuration
+            with open(destination_path, 'w') as contcar_file:
+                contcar_file.writelines(contcar_lines)
+
+
+    def get_positive_lessthan1_poscarcontcar(dataframe, destination_directory, poscarcontcar_line_nr_start, poscarcontcar_line_nr_end, poscarcontcar_columns_type2, file_type, var_name_in, var_name_out, n_decimal):
+        col_subdir_positive_file = f"subdir_positive_{file_type}"
         
-        # print(cif_filename_positive)
+        dataframe[col_subdir_positive_file] = None
         
-        # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
-        cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
-        destination_path = os.path.join(destination_directory, cif_filename_positive)
+        for idx in range(dataframe["geometry"].size):
+            if var_name_in == None:
+                filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{file_type}"
+            else:
+                filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{file_type}_{var_name_in}"
+            filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
 
-        with open(destination_path, 'w') as fp:
-            for item in file_list:
-                fp.write(item)
+            with open(filename_to_transform_path, 'r') as file:
+                lines = file.readlines()
+            data = lines[poscarcontcar_line_nr_start:poscarcontcar_line_nr_end]
 
-        dataframe['subdir_orientated_positive'][idx] = destination_path
+            # Split each string by space and create the DataFrame
+            df = pd.DataFrame([string.strip().split() for string in data])
 
+            # Optional: Rename the columns
+            df.columns = poscarcontcar_columns_type2
 
-def get_orientated_positive_cif(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal):
-    ## Convert new cif file of orientated structure into only positive value
-    dataframe['subdir_orientated_positive_cif'] = None
+            df_positive_val = df[['coord_x', 'coord_y', 'coord_z']]
+            for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
+                while float(coord_x) < 0.0:
+                    coord_x = float(coord_x) + 1.0
+                while float(coord_x) > 1:
+                    coord_x = float(coord_x) - 1
+                df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(float(coord_x), width=n_decimal)
 
-    for idx in range(dataframe["geometry"].size):
-        filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
-        filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
+            for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
+                while float(coord_y) < 0.0:
+                    coord_y = float(coord_y) + 1.0
+                while float(coord_y) > 1:
+                    coord_y = float(coord_y) - 1
+                df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(float(coord_y), width=n_decimal)
 
-        with open(filename_to_transform_path, 'r') as file:
-            lines = file.readlines()
-        data = lines[cif_line_nr_start:]
+            for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
+                while float(coord_z) < 0.0:
+                    coord_z = float(coord_z) + 1.0
+                while float(coord_z) > 1:
+                    coord_z = float(coord_z) - 1
+                df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(float(coord_z), width=n_decimal)
 
-        # Split each string by space and create the DataFrame
-        df = pd.DataFrame([string.strip().split() for string in data])
+            row_list = df_positive_val.to_string(index=False, header=False).split('\n')
+            row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
+            row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
+            absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
 
-        # Optional: Rename the columns
-        df.columns = cif_columns
+            line_append_list = []
+            for idx_c, line in enumerate(absolute_correct_list):
+                line_new_line = str(line) + '\n'
+                line_append_list.append(line_new_line)
 
-        df_positive_val = df
-        for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
-            while float(coord_x) < 0:
-                coord_x = float(coord_x) + 1
-            df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(float(coord_x), width=n_decimal)
+            file_list = lines[:poscarcontcar_line_nr_start] + line_append_list
 
-        for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
-            while float(coord_y) < 0:
-                coord_y = float(coord_y) + 1
-            df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(float(coord_y), width=n_decimal)
+            poscarcontcar_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_CONTCAR_{var_name_out}"
+            destination_path = os.path.join(destination_directory, poscarcontcar_filename_positive)
+            
+            with open(destination_path, "w") as poscarcontcar_positive_file:
+                for item in file_list:
+                    poscarcontcar_positive_file.writelines(item)
 
-        for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
-            while float(coord_z) < 0:
-                coord_z = float(coord_z) + 1
-            df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(float(coord_z), width=n_decimal)
-
-        row_list = df_positive_val.to_string(index=False, header=False).split('\n')
-        row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
-        row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
-        absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
-
-        line_append_list = []
-        for idx_c, line in enumerate(absolute_correct_list):
-            line_new_line = str(line) + '\n'
-            line_append_list.append(line_new_line)
-
-        file_list = lines[:cif_line_nr_start] + line_append_list
-
-        
-        # print(cif_filename_positive)
-        
-        # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
-        cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
-        destination_path = os.path.join(destination_directory, cif_filename_positive)
-
-        with open(destination_path, 'w') as fp:
-            for item in file_list:
-                fp.write(item)
-
-        dataframe['subdir_orientated_positive_cif'][idx] = destination_path
-
-
-# def get_orientated_positive_lessthan1_cif(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal):
-#     dataframe['subdir_orientated_positive_lessthan1_cif'] = None
-#     for idx in range(dataframe["geometry"].size):
-#         filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
-#         filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
-
-#         with open(filename_to_transform_path, 'r') as file:
-#             lines = file.readlines()
-#         data = lines[cif_line_nr_start:]
-
-#         # Split each string by space and create the DataFrame
-#         df = pd.DataFrame([string.strip().split() for string in data])
-
-#         # Optional: Rename the columns
-#         df.columns = cif_columns
-
-#         df_positive_val = df
-#         for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
-#             while float(coord_x) < 0:
-#                 coord_x = float(coord_x) + 1
-#             while float(coord_x) > 1:
-#                 coord_x = float(coord_x) - 1
-#             df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(float(coord_x), width=n_decimal)
-
-#         for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
-#             while float(coord_y) < 0:
-#                 coord_y = float(coord_y) + 1
-#             while float(coord_y) > 1:
-#                 coord_y = float(coord_y) - 1
-#             df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(float(coord_y), width=n_decimal)
-
-#         for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
-#             while float(coord_z) < 0:
-#                 coord_z = float(coord_z) + 1
-#             while float(coord_z) > 1:
-#                 coord_z = float(coord_z) - 1
-#             df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(float(coord_z), width=n_decimal)
-
-#         row_list = df_positive_val.to_string(index=False, header=False).split('\n')
-#         row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
-#         row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
-#         absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
-
-#         line_append_list = []
-#         for idx_c, line in enumerate(absolute_correct_list):
-#             line_new_line = str(line) + '\n'
-#             line_append_list.append(line_new_line)
-
-#         file_list = lines[:cif_line_nr_start] + line_append_list
-
-        
-#         # print(cif_filename_positive)
-        
-#         # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
-#         cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
-#         destination_path = os.path.join(destination_directory, cif_filename_positive)
-
-#         with open(destination_path, 'w') as fp:
-#             for item in file_list:
-#                 fp.write(item)
-
-#         dataframe['subdir_orientated_positive_lessthan1_cif'][idx] = destination_path
-
-
-def get_CONTCAR_normal_elements(dataframe, destination_directory, filename, prefix = None):
-    for index in range(dataframe["geometry"].size):
-        # Generate the new filename
-        if prefix == None:
-            new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}"
-        else:
-            new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}_{prefix}"
-
-
-        # Get the source file path and destination file path
-        destination_path = os.path.join(destination_directory, new_filename)
-        
-        # # Define the pattern to search for
-        # pattern = '  Li_sv_GW/24a6a  P_GW/715c28f22  S_GW/357db9cfb  Cl_GW/3ef3b316\n              24               4              20               4'
-
-        # # Define the replacement string
-        # replacement = '   Li   P    S    Cl\n'
-
-        # Read CONTCAR file
-        with open(destination_path, 'r') as contcar_file:
-            contcar_lines = contcar_file.readlines()
-        
-        contcar_lines[5] = "   Li   P    S    Cl\n"
-        contcar_lines[6] = "    24     4    20     4\n"
-
-        # # Find the number of configurations
-        # # occurrences = int(contcar_lines[1])
-        # occurrences = contcar_lines.count(contcar_lines[0])
-
-        # Iterate through each line and replace if the pattern is found
-        # for i in range(len(contcar_lines)):
-        #     if pattern in contcar_lines[i]:
-        #         contcar_lines[i] = replacement
-
-        # # Print the modified lines
-        # for line in contcar_lines:
-        #     print(line.strip())  # .strip() is used to remove leading/trailing whitespaces
-
-        # # Loop through each configuration
-        # for occurrence in range(occurrences):
-        #     # Define the starting and ending lines for each configuration
-        #     # start_line = 8 + occurrence * (3 + sum([int(x) for x in contcar_lines[6].split()]))
-        #     # end_line = start_line + 3 + sum([int(x) for x in contcar_lines[6].split()])
-        #     start_line = (occurrence * line_length)
-        #     end_line = start_line + line_length
-        #     print(f"start_line: {start_line}, end_line: {end_line}")
-
-        #     # Extract configuration lines
-        #     config_lines = contcar_lines[start_line:end_line]
-
-        #     new_dir = f"{dir_XDATCAR}/{occurrence}"
-        #     os.makedirs(new_dir, exist_ok=True)
-
-        # Create a new CONTCAR file for each configuration
-        with open(destination_path, 'w') as contcar_file:
-            contcar_file.writelines(contcar_lines)
-
-
-def get_positive_lessthan1_poscarcontcar(dataframe, destination_directory, poscarcontcar_line_nr_start, poscarcontcar_line_nr_end, poscarcontcar_columns_type2, file_type, var_name_in, var_name_out, n_decimal):
-    col_subdir_positive_file = f"subdir_positive_{file_type}"
-    
-    dataframe[col_subdir_positive_file] = None
-    
-    for idx in range(dataframe["geometry"].size):
-        if var_name_in == None:
-            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{file_type}"
-        else:
-            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{file_type}_{var_name_in}"
-        filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
-
-        with open(filename_to_transform_path, 'r') as file:
-            lines = file.readlines()
-        data = lines[poscarcontcar_line_nr_start:poscarcontcar_line_nr_end]
-
-        # Split each string by space and create the DataFrame
-        df = pd.DataFrame([string.strip().split() for string in data])
-
-        # Optional: Rename the columns
-        df.columns = poscarcontcar_columns_type2
-
-        df_positive_val = df[['coord_x', 'coord_y', 'coord_z']]
-        for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
-            while float(coord_x) < 0.0:
-                coord_x = float(coord_x) + 1.0
-            while float(coord_x) > 1:
-                coord_x = float(coord_x) - 1
-            df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(float(coord_x), width=n_decimal)
-
-        for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
-            while float(coord_y) < 0.0:
-                coord_y = float(coord_y) + 1.0
-            while float(coord_y) > 1:
-                coord_y = float(coord_y) - 1
-            df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(float(coord_y), width=n_decimal)
-
-        for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
-            while float(coord_z) < 0.0:
-                coord_z = float(coord_z) + 1.0
-            while float(coord_z) > 1:
-                coord_z = float(coord_z) - 1
-            df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(float(coord_z), width=n_decimal)
-
-        row_list = df_positive_val.to_string(index=False, header=False).split('\n')
-        row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
-        row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
-        absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
-
-        line_append_list = []
-        for idx_c, line in enumerate(absolute_correct_list):
-            line_new_line = str(line) + '\n'
-            line_append_list.append(line_new_line)
-
-        file_list = lines[:poscarcontcar_line_nr_start] + line_append_list
-
-        poscarcontcar_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_CONTCAR_{var_name_out}"
-        destination_path = os.path.join(destination_directory, poscarcontcar_filename_positive)
-        
-        with open(destination_path, "w") as poscarcontcar_positive_file:
-            for item in file_list:
-                poscarcontcar_positive_file.writelines(item)
-
-        dataframe[col_subdir_positive_file][idx] = destination_path
+            dataframe[col_subdir_positive_file][idx] = destination_path
 
 
 def get_coor_dict_structure(structure):
@@ -3618,9 +3618,9 @@ def get_orientation(file_loc, direc_restructure_destination, file_restructure, p
         # file_loc_mask_1.to_csv(r'test_save_contcar_directory.txt', header=None, index=None, sep=' ', mode='a')
 
         # # just refreshing folder
-        # check_folder_existance(direc_restructure_destination)
+        # FileOperations.check_folder_existance(direc_restructure_destination)
 
-        copy_rename_files(file_loc_mask_1, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+        FileOperations.copy_rename_files(file_loc_mask_1, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
         file_loc_mask_1['verify_w_lib'] = None
         file_loc_mask_1['verify_w_linalg'] = None
@@ -3633,14 +3633,14 @@ def get_orientation(file_loc, direc_restructure_destination, file_restructure, p
         
         # for all elements
         var_lib = "trf_w_lib"
-        get_structure_with_library(file_loc_mask_1, direc_restructure_destination, file_restructure, structure_reference, var_lib, prefix=None)
+        Transformation.get_structure_with_library(file_loc_mask_1, direc_restructure_destination, file_restructure, structure_reference, var_lib, prefix=None)
 
         # for all elements
         var_linalg = "trf_w_linalg"
-        get_structure_with_linalg(file_loc_mask_1, direc_restructure_destination, file_restructure, structure_reference, var_linalg, prefix=None)
+        Transformation.get_structure_with_linalg(file_loc_mask_1, direc_restructure_destination, file_restructure, structure_reference, var_linalg, prefix=None)
 
         var_linalg_n_lib = "trf_w_linalg_n_lib"
-        get_structure_with_linalg_combinded_with_library(file_loc_mask_1, direc_restructure_destination, file_restructure, structure_reference, var_linalg_n_lib, prefix = None)
+        Transformation.get_structure_with_linalg_combinded_with_library(file_loc_mask_1, direc_restructure_destination, file_restructure, structure_reference, var_linalg_n_lib, prefix = None)
 
         # Now Processing with other folders that are with mask = 0 (not perfect system)
         #### copy the data of scaling and translation to the file_loc as initial data
@@ -4629,7 +4629,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 
     folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_perfect_poscar_48n24_wo_cif}/"
     path_folder_name_iter_type = direc+str(folder_name_iter_type)
-    check_folder_existance(path_folder_name_iter_type, empty_folder=False)
+    FileOperations.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
 
 
     if foldermapping_namestyle_all == True:
@@ -4742,13 +4742,13 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     file_loc = create_file_loc(direc_init_system, data_toten, file_new_system)
 
     # just refreshing folder
-    check_folder_existance(direc_restructure_destination, empty_folder=True)
+    FileOperations.check_folder_existance(direc_restructure_destination, empty_folder=True)
 
     # copy ref.cif inside _results/../.. 
-    copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_perfect_poscar_48n24, prefix=None)
+    FileOperations.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_perfect_poscar_48n24, prefix=None)
 
-    copy_rename_files(file_loc, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
-    get_positive_lessthan1_poscarcontcar(file_loc, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    FileOperations.copy_rename_files(file_loc, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
+    PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
 
     file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
     
@@ -4772,15 +4772,15 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     path_perfect_poscar_48n24 = modif_dx_dz_get_filepath(path_folder_name_iter_type, path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
 
     # just copy file
-    # copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+    # FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
     # !!! had to copy file_perfect_poscar_48n24 into Li1
-    # copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_48n24, prefix=None)
-    copy_rename_single_file(direc_restructure_destination, path_folder_name_iter_type, file_perfect_poscar_48n24, prefix=None)
+    # FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_48n24, prefix=None)
+    FileOperations.copy_rename_single_file(direc_restructure_destination, path_folder_name_iter_type, file_perfect_poscar_48n24, prefix=None)
 
-    # copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None,  savedir = True)
+    # FileOperations.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None,  savedir = True)
 
     # # var_c = "trf_w_linalg_orientated"
-    # # get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
+    # # Transformation.get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
 
 
     # # var_name_in = "trf_w_linalg_orientated"
@@ -4800,7 +4800,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     coor_structure_init_dict = get_coor_dict_structure(ref_structure_48n24)
     coor_structure_init_dict_expanded = get_coor_dict_structure(Structure.from_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif"))
 
-    # get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    # PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
     get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
 
     # if activate_radius == 3:
@@ -4845,11 +4845,11 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
         create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, activate_radius, var_savefilename = "mapLi")
         rewrite_cif_w_correct_Li_idx(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed")
         format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed", var_savefilename_new = "mapLi_reindexed")
-        # # # # delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed.cif")
+        # # # # FileOperations.delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed.cif")
 
         rewrite_cif_w_correct_Li_idx_weirdos_appended(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, activate_radius,var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
         format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
-        # # # delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed_weirdos_appended.cif")
+        # # # FileOperations.delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed_weirdos_appended.cif")
 
         create_cif_pymatgen(file_loc_important_cols, direc_restructure_destination, file_restructure = "CONTCAR_positive", var_name = "CONTCAR_positive_pymatgen")
 
@@ -5059,23 +5059,23 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 #     data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
 
 #     # just refreshing folder
-#     check_folder_existance(direc_restructure_destination)
+#     FileOperations.check_folder_existance(direc_restructure_destination)
 
 #     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
 #     path_perfect_poscar_48n24 = modif_dx_dz_cif_allvariables(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
 
 #     # just copy file
-#     # copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+#     # FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
 #     # !!! had to copy file_ori_ref_48n24 into Li1
-#     copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
+#     FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
 
 #     # file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-#     copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+#     FileOperations.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
 #     # # var_c = "trf_w_linalg_orientated"
-#     # # get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
+#     # # Transformation.get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
 
 
 #     # # var_name_in = "trf_w_linalg_orientated"
@@ -5090,7 +5090,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 #     ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
 
 #     coor_structure_init_dict = get_coor_dict_structure(ref_structure_48n24)
-#     get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+#     PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
 #     get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
 
 #     # if activate_radius == 3:
@@ -5212,10 +5212,10 @@ def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_rad
 
     folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_ori_ref_48n24}/"
     path_folder_name_iter_type = direc+str(folder_name_iter_type)
-    check_folder_existance(path_folder_name_iter_type, empty_folder=False)
+    FileOperations.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
 
     # copy ref.cif inside _results/../.. 
-    copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_ori_ref_48n24, prefix=None)
+    FileOperations.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_ori_ref_48n24, prefix=None)
 
     if activate_radius == 2:
         folder_name_destination_restructure = f"{path_folder_name_iter_type}restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}_optimizer/"
@@ -5246,24 +5246,24 @@ def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_rad
     data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
 
     # just refreshing folder
-    check_folder_existance(direc_restructure_destination, empty_folder=True)
+    FileOperations.check_folder_existance(direc_restructure_destination, empty_folder=True)
 
     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
     # path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
     path_perfect_poscar_48n24 = modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array, litype, var_optitype, modif_all_litype = False)
 
     # just copy file
-    # copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+    # FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
     # !!! had to copy file_ori_ref_48n24 into Li1
-    copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
+    FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
 
     # file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-    copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+    FileOperations.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
     # # var_c = "trf_w_linalg_orientated"
-    # # get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
+    # # Transformation.get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
 
 
     # # var_name_in = "trf_w_linalg_orientated"
@@ -5278,7 +5278,7 @@ def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_rad
     ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
 
     coor_structure_init_dict = get_coor_dict_structure(ref_structure_48n24)
-    get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
     get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
 
     if activate_radius == 2:
@@ -5441,23 +5441,23 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
         print("check the compatibility of column geometry and path between data_toten file and file_loc")
 
     # just refreshing folder
-    check_folder_existance(direc_restructure_destination, empty_folder=True)
+    FileOperations.check_folder_existance(direc_restructure_destination, empty_folder=True)
 
     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
     path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype, litype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
 
     # just copy file
-    # copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+    # FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
     # !!! had to copy file_ori_ref_48n24 into Li1
-    copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
+    FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
 
     file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-    copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+    FileOperations.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
     # # var_c = "trf_w_linalg_orientated"
-    # # get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
+    # # Transformation.get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
 
 
     # # var_name_in = "trf_w_linalg_orientated"
@@ -5472,7 +5472,7 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
     ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
 
     coor_structure_init_dict = get_coor_dict_structure(ref_structure_48n24)
-    get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
     get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
 
     if activate_radius == 2:
