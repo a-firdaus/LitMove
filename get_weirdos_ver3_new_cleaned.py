@@ -50,292 +50,340 @@ def replace(i):
         return np.nan
 
 
-class FileOperations:
-    @staticmethod
-    def splitall(path):
-        """
-        Splitting path into its individual components of each sub-/folder.
+class Operation:
+    class File:
+        @staticmethod
+        def splitall(path):
+            """
+            Splitting path into its individual components of each sub-/folder.
 
-        Args:
-            path (str): The input path to be split.
+            Args:
+                path (str): The input path to be split.
 
-        Returns:
-            list: A list containing the components of the path.
+            Returns:
+                list: A list containing the components of the path.
 
-        Source: 
-            https://www.oreilly.com/library/view/python-cookbook/0596001673/ch04s16.html
-        """
-        allparts = []
-        while 1:
-            parts = os.path.split(path)
-            if parts[0] == path:  # sentinel for absolute paths
-                allparts.insert(0, parts[0])
-                break
-            elif parts[1] == path: # sentinel for relative paths
-                allparts.insert(0, parts[1])
-                break
-            else:
-                path = parts[0]
-                allparts.insert(0, parts[1])
-        return allparts
-
-
-    @staticmethod
-    def copy_rename_single_file(destination_directory, source_directory, filename, prefix):
-        """
-        Copy a file from the source directory to the destination directory with an optional filename prefix.
-
-        Args:
-            destination_directory (str): The directory where the file should be copied.
-            source_directory (str): The directory from which the file should be copied.
-            filename (str): The name of the file to be copied.
-            prefix (str): An optional prefix to be added to the new filename.
-
-        Returns:
-            None
-        """
-        # Generate the new filename
-        if prefix == None:
-            new_filename = f"{filename}"
-        else:
-            new_filename = f"{filename}_{prefix}"
-        
-        # Get the source file path and destination file path
-        destination_path = os.path.join(destination_directory, new_filename)
-        
-        # Copy the file to the destination directory with the new name
-        source_path = os.path.join(source_directory, filename)
-        shutil.copy2(source_path, destination_path)
-        # print(f"File copied and renamed: {filename} -> {new_filename}")
+            Source: 
+                https://www.oreilly.com/library/view/python-cookbook/0596001673/ch04s16.html
+            """
+            allparts = []
+            while 1:
+                parts = os.path.split(path)
+                if parts[0] == path:  # sentinel for absolute paths
+                    allparts.insert(0, parts[0])
+                    break
+                elif parts[1] == path: # sentinel for relative paths
+                    allparts.insert(0, parts[1])
+                    break
+                else:
+                    path = parts[0]
+                    allparts.insert(0, parts[1])
+            return allparts
 
 
-    @staticmethod
-    def copy_rename_files(dataframe, destination_directory, filename, prefix, savedir):
-        """
-        Copy and rename multiple files based on the contents of a DataFrame.
+        @staticmethod
+        def copy_rename_single_file(destination_directory, source_directory, filename, prefix):
+            """
+            Copy a file from the source directory to the destination directory with an optional filename prefix.
 
-        Args:
-            dataframe (pd.DataFrame): DataFrame containing file information.
-            destination_directory (str): The directory where files should be copied.
-            filename (str): The base name of the files.
-            prefix (str): An optional prefix to be added to the new filenames.
-            savedir (bool): If True, save the new file paths to the DataFrame.
+            Args:
+                destination_directory (str): The directory where the file should be copied.
+                source_directory (str): The directory from which the file should be copied.
+                filename (str): The name of the file to be copied.
+                prefix (str): An optional prefix to be added to the new filename.
 
-        Returns:
-            None
-        """
-        if savedir == True:
-            col_subdir_copiedrenamed_files = f"subdir_{filename}"
-
-            dataframe[col_subdir_copiedrenamed_files] = None
-
-        elif savedir == False:
-            pass
-
-        for index in range(dataframe["geometry"].size):
+            Returns:
+                None
+            """
             # Generate the new filename
             if prefix == None:
-                new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}"
+                new_filename = f"{filename}"
             else:
-                new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}_{prefix}"
-
-
+                new_filename = f"{filename}_{prefix}"
+            
             # Get the source file path and destination file path
             destination_path = os.path.join(destination_directory, new_filename)
             
             # Copy the file to the destination directory with the new name
-            shutil.copy2(dataframe['subdir_new_system'][index], destination_path)
+            source_path = os.path.join(source_directory, filename)
+            shutil.copy2(source_path, destination_path)
             # print(f"File copied and renamed: {filename} -> {new_filename}")
-        
+
+
+        @staticmethod
+        def copy_rename_files(dataframe, destination_directory, filename, prefix, savedir):
+            """
+            Copy and rename multiple files based on the contents of a DataFrame.
+
+            Args:
+                dataframe (pd.DataFrame): DataFrame containing file information.
+                destination_directory (str): The directory where files should be copied.
+                filename (str): The base name of the files.
+                prefix (str): An optional prefix to be added to the new filenames.
+                savedir (bool): If True, save the new file paths to the DataFrame.
+
+            Returns:
+                None
+            """
             if savedir == True:
-                dataframe.at[int(index), col_subdir_copiedrenamed_files] = destination_path
+                col_subdir_copiedrenamed_files = f"subdir_{filename}"
+
+                dataframe[col_subdir_copiedrenamed_files] = None
+
             elif savedir == False:
                 pass
 
-
-    # @staticmethod
-    # def copy_rename_single_file_and_delete_elements(destination_directory, source_directory, filename, prefix, line_ranges, line_numbers_edit, new_contents):
-    #     # Generate the new filename
-    #     new_filename = f"{filename}_{prefix}"
-        
-    #     # Get the source file path and destination file path
-    #     destination_path = os.path.join(destination_directory, new_filename)
-        
-    #     # Copy the file to the destination directory with the new name
-    #     source_path = os.path.join(source_directory, filename)
-    #     shutil.copy2(source_path, destination_path)
-    #     print(f"File copied and renamed: {filename} -> {new_filename}")
-
-    #     FileOperations.delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
+            for index in range(dataframe["geometry"].size):
+                # Generate the new filename
+                if prefix == None:
+                    new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}"
+                else:
+                    new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}_{prefix}"
 
 
-    # @staticmethod
-    # def copy_rename_files_and_delete_elements(file_loc, destination_directory, filename, index, prefix, line_ranges, line_numbers_edit, new_contents):
-    #     # Generate the new filename
-    #     new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
-        
-    #     # Get the source file path and destination file path
-    #     destination_path = os.path.join(destination_directory, new_filename)
-        
-    #     # Copy the file to the destination directory with the new name
-    #     shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
-    #     print(f"File copied and renamed: {filename} -> {new_filename}")
-
-    #     FileOperations.delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
-
-
-    @staticmethod
-    def delete_lines(file_path, line_ranges):
-        """
-        Delete specified lines from a file.
-
-        Args:
-            file_path (str): The path to the file to be modified.
-            line_ranges (list): A list of tuples representing the ranges of lines to be deleted.
-
-        Returns:
-            None
-        """
-        # Read the file
-        with open(file_path, 'r') as file:
-            lines = file.readlines()
-
-        lines_to_delete = set()
-        for line_range in line_ranges:
-            start, end = line_range
-            if 1 <= start <= len(lines) and start <= end <= len(lines):
-                lines_to_delete.update(range(start - 1, end))
-
-        modified_lines = [line for i, line in enumerate(lines) if i not in lines_to_delete]
-
-        with open(file_path, 'w') as file:
-            file.writelines(modified_lines)
-
-        # print(f"Lines deleted successfully in file: {file_path}")
-
-
-    @staticmethod
-    def delete_elements(file_path, line_ranges, line_numbers_edit, new_contents):
-        """
-        Delete specified lines and edit others in a file.
-
-        Args:
-            file_path (str): The path to the file to be modified.
-            line_ranges (list): A list of tuples representing the ranges of lines to be deleted.
-            line_numbers_edit (list): A list of line numbers to be edited.
-            new_contents (list): A list of new contents for the edited lines.
-
-        Returns:
-            None
-        """
-        FileOperations.delete_lines(file_path, line_ranges)
-        FileOperations.edit_lines(file_path, line_numbers_edit, new_contents)
-
-
-    @staticmethod
-    def edit_lines(file_path, line_numbers, new_contents):
-        """
-        Edit specified lines in a file.
-
-        Args:
-            file_path (str): The path to the file to be modified.
-            line_numbers (list): A list of line numbers to be edited.
-            new_contents (list): A list of new contents for the edited lines.
-
-        Returns:
-            None
-        """
-        # Read the file
-        with open(file_path, 'r') as file:
-            lines = file.readlines()
-
-        # Modify the line content
-        for line_number, new_content in zip(line_numbers, new_contents):
-            if 1 <= line_number <= len(lines):
-                lines[line_number - 1] = new_content + '\n'
-
-            # Write the modified content back to the file
-            with open(file_path, 'w') as file:
-                file.writelines(lines)
-                # # print(f"Line edited successfully.")
-        # # else:
-        # # #     print(f"Invalid line number: {line_number}")
-
-
-    @staticmethod
-    def check_folder_existance(folder_name, empty_folder):
-        """
-        Check if a folder exists, create it if not, and optionally empty it.
-
-        Args:
-            folder_name (str): The name of the folder to check or create.
-            empty_folder (bool): If True, empty the folder if it already exists.
-
-        Returns:
-            None
-        """
-        # Check if the folder exists
-        if not os.path.exists(folder_name):
-            # Create the folder if it doesn't exist
-            os.makedirs(folder_name)
-            # print(f"Folder '{folder_name}' created.")
-        else:
-            if empty_folder == True:
-                FileOperations.empty_folder(folder_name)
-                # print(f"Folder '{folder_name}' already exists. Emptying it.")
-            elif empty_folder == False:
-                pass
-
-
-    @staticmethod
-    def empty_folder(folder_name):
-        """
-        Empty the contents of a folder.
-
-        Args:
-            folder_name (str): The name of the folder to be emptied.
-
-        Returns:
-            None
-        """
-        files_inside_folder = os.listdir(folder_name)
-        for i in files_inside_folder:
-            path_to_files = folder_name + i 
-            os.remove(path_to_files)
-
-
-    @staticmethod
-    def delete_files(dataframe, folder_name, file_name_w_format):
-        """
-        Delete files based on information in a DataFrame.
-
-        This method iterates over the rows of a DataFrame and constructs filenames
-        based on specified columns ('geometry' and 'path'). It then attempts to
-        delete each file from the specified folder.
-
-        Args:
-            dataframe (pd.DataFrame): A DataFrame containing information about files.
-            folder_name (str): The directory where the files are located.
-            file_name_w_format (str): The base name of the files with format information.
-
-        Returns:
-            None
-
-        Raises:
-            OSError: If an error occurs during file deletion, an exception is caught,
-                    and an error message is printed.
-        """
-        for idx in range(dataframe["geometry"].size):
-            filename_to_delete = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{file_name_w_format}"
-            filename_to_delete_path = os.path.join(folder_name, filename_to_delete)
+                # Get the source file path and destination file path
+                destination_path = os.path.join(destination_directory, new_filename)
+                
+                # Copy the file to the destination directory with the new name
+                shutil.copy2(dataframe['subdir_new_system'][index], destination_path)
+                # print(f"File copied and renamed: {filename} -> {new_filename}")
             
-            try:
-                # Attempt to delete the file
-                os.remove(filename_to_delete_path)
-                # print(f"{filename_to_delete_path} has been deleted.")
-            except OSError as e:
-                # Handle any errors that occur during file deletion
-                print(f"Error deleting {filename_to_delete_path}: {e}")
+                if savedir == True:
+                    dataframe.at[int(index), col_subdir_copiedrenamed_files] = destination_path
+                elif savedir == False:
+                    pass
+
+
+        # @staticmethod
+        # def copy_rename_single_file_and_delete_elements(destination_directory, source_directory, filename, prefix, line_ranges, line_numbers_edit, new_contents):
+        #     # Generate the new filename
+        #     new_filename = f"{filename}_{prefix}"
+            
+        #     # Get the source file path and destination file path
+        #     destination_path = os.path.join(destination_directory, new_filename)
+            
+        #     # Copy the file to the destination directory with the new name
+        #     source_path = os.path.join(source_directory, filename)
+        #     shutil.copy2(source_path, destination_path)
+        #     print(f"File copied and renamed: {filename} -> {new_filename}")
+
+        #     Operation.File.delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
+
+
+        # @staticmethod
+        # def copy_rename_files_and_delete_elements(file_loc, destination_directory, filename, index, prefix, line_ranges, line_numbers_edit, new_contents):
+        #     # Generate the new filename
+        #     new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
+            
+        #     # Get the source file path and destination file path
+        #     destination_path = os.path.join(destination_directory, new_filename)
+            
+        #     # Copy the file to the destination directory with the new name
+        #     shutil.copy2(file_loc['subdir_new_system'][index], destination_path)
+        #     print(f"File copied and renamed: {filename} -> {new_filename}")
+
+        #     Operation.File.delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
+
+
+        @staticmethod
+        def delete_lines(file_path, line_ranges):
+            """
+            Delete specified lines from a file.
+
+            Args:
+                file_path (str): The path to the file to be modified.
+                line_ranges (list): A list of tuples representing the ranges of lines to be deleted.
+
+            Returns:
+                None
+            """
+            # Read the file
+            with open(file_path, 'r') as file:
+                lines = file.readlines()
+
+            lines_to_delete = set()
+            for line_range in line_ranges:
+                start, end = line_range
+                if 1 <= start <= len(lines) and start <= end <= len(lines):
+                    lines_to_delete.update(range(start - 1, end))
+
+            modified_lines = [line for i, line in enumerate(lines) if i not in lines_to_delete]
+
+            with open(file_path, 'w') as file:
+                file.writelines(modified_lines)
+
+            # print(f"Lines deleted successfully in file: {file_path}")
+
+
+        @staticmethod
+        def delete_elements(file_path, line_ranges, line_numbers_edit, new_contents):
+            """
+            Delete specified lines and edit others in a file.
+
+            Args:
+                file_path (str): The path to the file to be modified.
+                line_ranges (list): A list of tuples representing the ranges of lines to be deleted.
+                line_numbers_edit (list): A list of line numbers to be edited.
+                new_contents (list): A list of new contents for the edited lines.
+
+            Returns:
+                None
+            """
+            Operation.File.delete_lines(file_path, line_ranges)
+            Operation.File.edit_lines(file_path, line_numbers_edit, new_contents)
+
+
+        @staticmethod
+        def edit_lines(file_path, line_numbers, new_contents):
+            """
+            Edit specified lines in a file.
+
+            Args:
+                file_path (str): The path to the file to be modified.
+                line_numbers (list): A list of line numbers to be edited.
+                new_contents (list): A list of new contents for the edited lines.
+
+            Returns:
+                None
+            """
+            # Read the file
+            with open(file_path, 'r') as file:
+                lines = file.readlines()
+
+            # Modify the line content
+            for line_number, new_content in zip(line_numbers, new_contents):
+                if 1 <= line_number <= len(lines):
+                    lines[line_number - 1] = new_content + '\n'
+
+                # Write the modified content back to the file
+                with open(file_path, 'w') as file:
+                    file.writelines(lines)
+                    # # print(f"Line edited successfully.")
+            # # else:
+            # # #     print(f"Invalid line number: {line_number}")
+
+
+        @staticmethod
+        def check_folder_existance(folder_name, empty_folder):
+            """
+            Check if a folder exists, create it if not, and optionally empty it.
+
+            Args:
+                folder_name (str): The name of the folder to check or create.
+                empty_folder (bool): If True, empty the folder if it already exists.
+
+            Returns:
+                None
+            """
+            # Check if the folder exists
+            if not os.path.exists(folder_name):
+                # Create the folder if it doesn't exist
+                os.makedirs(folder_name)
+                # print(f"Folder '{folder_name}' created.")
+            else:
+                if empty_folder == True:
+                    Operation.File.empty_folder(folder_name)
+                    # print(f"Folder '{folder_name}' already exists. Emptying it.")
+                elif empty_folder == False:
+                    pass
+
+
+        @staticmethod
+        def empty_folder(folder_name):
+            """
+            Empty the contents of a folder.
+
+            Args:
+                folder_name (str): The name of the folder to be emptied.
+
+            Returns:
+                None
+            """
+            files_inside_folder = os.listdir(folder_name)
+            for i in files_inside_folder:
+                path_to_files = folder_name + i 
+                os.remove(path_to_files)
+
+
+        @staticmethod
+        def delete_files(dataframe, folder_name, file_name_w_format):
+            """
+            Delete files based on information in a DataFrame.
+
+            This method iterates over the rows of a DataFrame and constructs filenames
+            based on specified columns ('geometry' and 'path'). It then attempts to
+            delete each file from the specified folder.
+
+            Args:
+                dataframe (pd.DataFrame): A DataFrame containing information about files.
+                folder_name (str): The directory where the files are located.
+                file_name_w_format (str): The base name of the files with format information.
+
+            Returns:
+                None
+
+            Raises:
+                OSError: If an error occurs during file deletion, an exception is caught,
+                        and an error message is printed.
+            """
+            for idx in range(dataframe["geometry"].size):
+                filename_to_delete = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{file_name_w_format}"
+                filename_to_delete_path = os.path.join(folder_name, filename_to_delete)
+                
+                try:
+                    # Attempt to delete the file
+                    os.remove(filename_to_delete_path)
+                    # print(f"{filename_to_delete_path} has been deleted.")
+                except OSError as e:
+                    # Handle any errors that occur during file deletion
+                    print(f"Error deleting {filename_to_delete_path}: {e}")
+
+
+    class Distance:
+        # def eucledian_distance(coor1, coor2):
+        #     distance = math.sqrt(sum((x1 - x2)**2 for x1, x2 in zip(coor1, coor2)))
+        #     return distance
+
+
+        def apply_pbc(value):
+            if abs(value) > 0.5:
+                return 1 - abs(value)
+            return value
+
+
+        def mic_eucledian_distance(coor1, coor2):
+            x_coor1, y_coor1, z_coor1 = coor1
+            x_coor2, y_coor2, z_coor2 = coor2
+            
+            delta_x = x_coor1 - x_coor2
+            delta_y = y_coor1 - y_coor2
+            delta_z = z_coor1 - z_coor2
+
+            distance = math.sqrt(sum([(Operation.Distance.apply_pbc(delta_x))**2, (Operation.Distance.apply_pbc(delta_y))**2, (Operation.Distance.apply_pbc(delta_z))**2]))
+            # distance = math.sqrt(sum([Operation.Distance.apply_pbc(delta_x)**2, Operation.Distance.apply_pbc(delta_y)**2, Operation.Distance.apply_pbc(delta_z)]**2))
+            # [Operation.Distance.apply_pbc(delta_x), Operation.Distance.apply_pbc(delta_y), Operation.Distance.apply_pbc(delta_z)]
+            # delta_coor = ((x1 - x2) for x1, x2 in zip(coor1, coor2))
+            # distance = math.sqrt(sum((x1 - x2)**2 for x1, x2 in zip(coor1, coor2)))
+            return distance
+
+
+        def apply_pbc_cartesian(value, length):
+            # angle is ignored
+            if abs(value) > 0.5 * length:
+                return length - abs(value)
+            return value
+
+
+        def mic_eucledian_distance_cartesian(coor1, coor2, a, b, c):
+            x_coor1, y_coor1, z_coor1 = coor1
+            x_coor2, y_coor2, z_coor2 = coor2
+            
+            delta_x = x_coor1 - x_coor2
+            delta_y = y_coor1 - y_coor2
+            delta_z = z_coor1 - z_coor2
+
+            distance = math.sqrt(sum([(Operation.Distance.apply_pbc_cartesian(delta_x, a))**2, (Operation.Distance.apply_pbc_cartesian(delta_y, b))**2, (Operation.Distance.apply_pbc_cartesian(delta_z, c))**2]))
+            return distance
 
 
 # class Transformation:
@@ -914,54 +962,8 @@ class ReadStructure:
             dataframe.at[idx, col_coor_structure_init_dict] = coor_structure_init_dict
 
 
-class MathOperation:
-    class Distance:
-        # def eucledian_distance(coor1, coor2):
-        #     distance = math.sqrt(sum((x1 - x2)**2 for x1, x2 in zip(coor1, coor2)))
-        #     return distance
-
-
-        def apply_pbc(value):
-            if abs(value) > 0.5:
-                return 1 - abs(value)
-            return value
-
-
-        def mic_eucledian_distance(coor1, coor2):
-            x_coor1, y_coor1, z_coor1 = coor1
-            x_coor2, y_coor2, z_coor2 = coor2
-            
-            delta_x = x_coor1 - x_coor2
-            delta_y = y_coor1 - y_coor2
-            delta_z = z_coor1 - z_coor2
-
-            distance = math.sqrt(sum([(MathOperation.Distance.apply_pbc(delta_x))**2, (MathOperation.Distance.apply_pbc(delta_y))**2, (MathOperation.Distance.apply_pbc(delta_z))**2]))
-            # distance = math.sqrt(sum([MathOperation.Distance.apply_pbc(delta_x)**2, MathOperation.Distance.apply_pbc(delta_y)**2, MathOperation.Distance.apply_pbc(delta_z)]**2))
-            # [MathOperation.Distance.apply_pbc(delta_x), MathOperation.Distance.apply_pbc(delta_y), MathOperation.Distance.apply_pbc(delta_z)]
-            # delta_coor = ((x1 - x2) for x1, x2 in zip(coor1, coor2))
-            # distance = math.sqrt(sum((x1 - x2)**2 for x1, x2 in zip(coor1, coor2)))
-            return distance
-
-
-        def apply_pbc_cartesian(value, length):
-            # angle is ignored
-            if abs(value) > 0.5 * length:
-                return length - abs(value)
-            return value
-
-
-        def mic_eucledian_distance_cartesian(coor1, coor2, a, b, c):
-            x_coor1, y_coor1, z_coor1 = coor1
-            x_coor2, y_coor2, z_coor2 = coor2
-            
-            delta_x = x_coor1 - x_coor2
-            delta_y = y_coor1 - y_coor2
-            delta_z = z_coor1 - z_coor2
-
-            distance = math.sqrt(sum([(MathOperation.Distance.apply_pbc_cartesian(delta_x, a))**2, (MathOperation.Distance.apply_pbc_cartesian(delta_y, b))**2, (MathOperation.Distance.apply_pbc_cartesian(delta_z, c))**2]))
-            return distance
-
-
+# class Mapping:
+#     class 
 # def get_duplicate_values_in_dict(dict):
 #     # dict is atom_mapping_el
 
@@ -1107,7 +1109,7 @@ def get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, el, max_mapping
             closest24 = None
 
             for idx24, coor24 in enumerate(coor_origin24_el_init):
-                distance = MathOperation.Distance.mic_eucledian_distance(coor120, coor24)
+                distance = Operation.Distance.mic_eucledian_distance(coor120, coor24)
 
                 if distance < max_mapping_radius:
                     counter = counter + 1
@@ -1261,7 +1263,7 @@ def get_flag_map_weirdos_48htype2_el(dataframe, coor_structure_init_dict, el, ma
                 closest24 = None
 
                 for idx24, coor24 in enumerate(coor_origin24_el_init):
-                    distance = MathOperation.Distance.mic_eucledian_distance(coor120, coor24)
+                    distance = Operation.Distance.mic_eucledian_distance(coor120, coor24)
                     
                     if distance < max_mapping_radius_48htype2:
                         counter = counter + 1
@@ -1400,7 +1402,7 @@ def get_flag_map_weirdos_48htype1_48htype2_el(dataframe, coor_structure_init_dic
                                                                                         # or without orientation
                                                                                         # dataframe['subdir_CONTCAR']
         
-        if len(coor_origin24_el_init) > 0: # need this for the MathOperation.Distance.mic_eucledian_distance()
+        if len(coor_origin24_el_init) > 0: # need this for the Operation.Distance.mic_eucledian_distance()
             coor_reduced120_el = coor_li48htype1_li48htype2_ref.copy()
             coor_weirdos_el = coor_origin24_el_init.copy()    
 
@@ -1411,7 +1413,7 @@ def get_flag_map_weirdos_48htype1_48htype2_el(dataframe, coor_structure_init_dic
                 closest24 = None
 
                 for idx24, coor24 in enumerate(coor_origin24_el_init):
-                    distance = MathOperation.Distance.mic_eucledian_distance(coor120, coor24)
+                    distance = Operation.Distance.mic_eucledian_distance(coor120, coor24)
                     
                     if distance < max_mapping_radius_48htype1_48htype2:
                         counter = counter + 1
@@ -1879,7 +1881,7 @@ def idx_correcting_mapped_el(dataframe, el, activate_radius):
             # atom_mapping_el_w_dist_idx24[tuple(coor120)] = []
 
             for idx24, coor24 in enumerate(coor_origin24_el_init):
-                distance = MathOperation.Distance.mic_eucledian_distance(coor120, coor24)
+                distance = Operation.Distance.mic_eucledian_distance(coor120, coor24)
 
                 # if distance != 0:
                 if distance < distance_prev:
@@ -2124,7 +2126,7 @@ def get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, el, lityp
                 for idx120, coor120 in enumerate(coor_origin120_el_init):
                     coorweirdo_dist_label_coor120_val_el = {}
             
-                    distance_weirdo = MathOperation.Distance.mic_eucledian_distance(coor120, coor_weirdo)
+                    distance_weirdo = Operation.Distance.mic_eucledian_distance(coor120, coor_weirdo)
 
                     coorweirdo_dist_label_coor120_val_el['dist'] = distance_weirdo
 
@@ -2516,7 +2518,7 @@ def reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new
         idx_P_new = amount_Li + i
         if lines[idx_line_P].strip().startswith("P"):
             new_label = f"P{idx_P_new}"
-            # file_operations_instance = FileOperations()
+            # file_operations_instance = Operation.File()
             # modified_line = file_operations_instance.replace(lines[idx_line_P].split()[1], new_label)
             modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
             new_text_P_S_Cl.append(modified_line)
@@ -2525,7 +2527,7 @@ def reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new
         idx_S_new = amount_Li + amount_P + i
         if lines[idx_line_S].strip().startswith("S"):
             new_label = f"S{idx_S_new}"
-            # file_operations_instance = FileOperations()
+            # file_operations_instance = Operation.File()
             # modified_line = file_operations_instance.replace(lines[idx_line_S].split()[1], new_label)            
             modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
             new_text_P_S_Cl.append(modified_line)
@@ -2534,7 +2536,7 @@ def reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new
         idx_Cl_new = amount_Li + amount_P + amount_S + i
         if lines[idx_line_Cl].strip().startswith("Cl"):
             new_label = f"Cl{idx_Cl_new}"
-            # file_operations_instance = FileOperations()
+            # file_operations_instance = Operation.File()
             # modified_line = file_operations_instance.replace(lines[idx_line_Cl].split()[1], new_label)     
             modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
             new_text_P_S_Cl.append(modified_line)
@@ -3080,7 +3082,7 @@ def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, am
                 idx_line = idx_Li_start + i
                 if lines[idx_line].strip().startswith("Li"):
                     new_label = f"Li{idx_without_weirdos[i]}"
-                    # file_operations_instance = FileOperations()
+                    # file_operations_instance = Operation.File()
                     # modified_line = lines[idx_line].file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
                     modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
                     new_text.append(modified_line)
@@ -3147,7 +3149,7 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
                 idx_line = idx_Li_start + i
                 if lines[idx_line].strip().startswith("Li"):
                     new_label = f"Li{idx_without_weirdos[i]}"
-                    # file_operations_instance = FileOperations()
+                    # file_operations_instance = Operation.File()
                     # modified_line = file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
                     modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
                     new_text.append(modified_line)
@@ -3188,7 +3190,7 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
                 idx_P_new = amount_Li + i
                 if lines[idx_line_P].strip().startswith("P"):
                     new_label = f"P{idx_P_new}"
-                    # file_operations_instance = FileOperations()
+                    # file_operations_instance = Operation.File()
                     # modified_line = file_operations_instance.replace(lines[idx_line_P].split()[1], new_label)     
                     modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
                     new_text_P_S_Cl.append(modified_line)
@@ -3197,7 +3199,7 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
                 idx_S_new = amount_Li + amount_P + i
                 if lines[idx_line_S].strip().startswith("S"):
                     new_label = f"S{idx_S_new}"
-                    # file_operations_instance = FileOperations()
+                    # file_operations_instance = Operation.File()
                     # modified_line = file_operations_instance.replace(lines[idx_line_S].split()[1], new_label)     
                     modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
                     new_text_P_S_Cl.append(modified_line)
@@ -3206,7 +3208,7 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
                 idx_Cl_new = amount_Li + amount_P + amount_S + i
                 if lines[idx_line_Cl].strip().startswith("Cl"):
                     new_label = f"Cl{idx_Cl_new}"
-                    # file_operations_instance = FileOperations()
+                    # file_operations_instance = Operation.File()
                     # modified_line = file_operations_instance.replace(lines[idx_line_Cl].split()[1], new_label)     
                     modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
                     new_text_P_S_Cl.append(modified_line)
@@ -3562,7 +3564,7 @@ def get_closest_neighbors_el_cartesian_coor(dataframe, max_neighbors_radius, el,
             distance_array = []
 
             for idx24_temp2, coor24_temp2 in enumerate(coor_cartesion_el):
-                distance = MathOperation.Distance.mic_eucledian_distance_cartesian(coor24_temp1, coor24_temp2, a, b, c)
+                distance = Operation.Distance.mic_eucledian_distance_cartesian(coor24_temp1, coor24_temp2, a, b, c)
                 
                 if distance < max_neighbors_radius:
                     distance_array.append(distance)
@@ -3609,9 +3611,9 @@ def get_orientation(file_loc, direc_restructure_destination, file_restructure, p
         # file_loc_mask_1.to_csv(r'test_save_contcar_directory.txt', header=None, index=None, sep=' ', mode='a')
 
         # # just refreshing folder
-        # FileOperations.check_folder_existance(direc_restructure_destination)
+        # Operation.File.check_folder_existance(direc_restructure_destination)
 
-        FileOperations.copy_rename_files(file_loc_mask_1, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+        Operation.File.copy_rename_files(file_loc_mask_1, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
         file_loc_mask_1['verify_w_lib'] = None
         file_loc_mask_1['verify_w_linalg'] = None
@@ -4620,7 +4622,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 
     folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_perfect_poscar_48n24_wo_cif}/"
     path_folder_name_iter_type = direc+str(folder_name_iter_type)
-    FileOperations.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
+    Operation.File.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
 
 
     if foldermapping_namestyle_all == True:
@@ -4733,12 +4735,12 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     file_loc = create_file_loc(direc_init_system, data_toten, file_new_system)
 
     # just refreshing folder
-    FileOperations.check_folder_existance(direc_restructure_destination, empty_folder=True)
+    Operation.File.check_folder_existance(direc_restructure_destination, empty_folder=True)
 
     # copy ref.cif inside _results/../.. 
-    FileOperations.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_perfect_poscar_48n24, prefix=None)
+    Operation.File.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_perfect_poscar_48n24, prefix=None)
 
-    FileOperations.copy_rename_files(file_loc, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
+    Operation.File.copy_rename_files(file_loc, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
     PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
 
     file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
@@ -4763,12 +4765,12 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     path_perfect_poscar_48n24 = modif_dx_dz_get_filepath(path_folder_name_iter_type, path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
 
     # just copy file
-    # FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+    # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
     # !!! had to copy file_perfect_poscar_48n24 into Li1
-    # FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_48n24, prefix=None)
-    FileOperations.copy_rename_single_file(direc_restructure_destination, path_folder_name_iter_type, file_perfect_poscar_48n24, prefix=None)
+    # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_48n24, prefix=None)
+    Operation.File.copy_rename_single_file(direc_restructure_destination, path_folder_name_iter_type, file_perfect_poscar_48n24, prefix=None)
 
-    # FileOperations.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None,  savedir = True)
+    # Operation.File.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None,  savedir = True)
 
     # # var_c = "trf_w_linalg_orientated"
     # # Transformation.get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
@@ -4836,11 +4838,11 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
         create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, activate_radius, var_savefilename = "mapLi")
         rewrite_cif_w_correct_Li_idx(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed")
         format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed", var_savefilename_new = "mapLi_reindexed")
-        # # # # FileOperations.delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed.cif")
+        # # # # Operation.File.delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed.cif")
 
         rewrite_cif_w_correct_Li_idx_weirdos_appended(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, activate_radius,var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
         format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
-        # # # FileOperations.delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed_weirdos_appended.cif")
+        # # # Operation.File.delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed_weirdos_appended.cif")
 
         create_cif_pymatgen(file_loc_important_cols, direc_restructure_destination, file_restructure = "CONTCAR_positive", var_name = "CONTCAR_positive_pymatgen")
 
@@ -5050,19 +5052,19 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 #     data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
 
 #     # just refreshing folder
-#     FileOperations.check_folder_existance(direc_restructure_destination)
+#     Operation.File.check_folder_existance(direc_restructure_destination)
 
 #     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
 #     path_perfect_poscar_48n24 = modif_dx_dz_cif_allvariables(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
 
 #     # just copy file
-#     # FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+#     # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
 #     # !!! had to copy file_ori_ref_48n24 into Li1
-#     FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
+#     Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
 
 #     # file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-#     FileOperations.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+#     Operation.File.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
 #     # # var_c = "trf_w_linalg_orientated"
@@ -5203,10 +5205,10 @@ def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_rad
 
     folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_ori_ref_48n24}/"
     path_folder_name_iter_type = direc+str(folder_name_iter_type)
-    FileOperations.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
+    Operation.File.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
 
     # copy ref.cif inside _results/../.. 
-    FileOperations.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_ori_ref_48n24, prefix=None)
+    Operation.File.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_ori_ref_48n24, prefix=None)
 
     if activate_radius == 2:
         folder_name_destination_restructure = f"{path_folder_name_iter_type}restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}_optimizer/"
@@ -5237,20 +5239,20 @@ def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_rad
     data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
 
     # just refreshing folder
-    FileOperations.check_folder_existance(direc_restructure_destination, empty_folder=True)
+    Operation.File.check_folder_existance(direc_restructure_destination, empty_folder=True)
 
     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
     # path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
     path_perfect_poscar_48n24 = modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array, litype, var_optitype, modif_all_litype = False)
 
     # just copy file
-    # FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+    # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
     # !!! had to copy file_ori_ref_48n24 into Li1
-    FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
+    Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
 
     # file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-    FileOperations.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+    Operation.File.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
     # # var_c = "trf_w_linalg_orientated"
@@ -5396,8 +5398,8 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
             filepath = subdir + os.sep
             # get directory of CONTCAR
             if os.path.basename(file) == file_new_system:
-                geometry_nr = FileOperations.splitall(subdir)[-2]
-                path_nr = FileOperations.splitall(subdir)[-1]
+                geometry_nr = Operation.File.splitall(subdir)[-2]
+                path_nr = Operation.File.splitall(subdir)[-1]
                 geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
                 geometry_ori = geometry
                 geometry.dropna(axis=1)
@@ -5432,19 +5434,19 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
         print("check the compatibility of column geometry and path between data_toten file and file_loc")
 
     # just refreshing folder
-    FileOperations.check_folder_existance(direc_restructure_destination, empty_folder=True)
+    Operation.File.check_folder_existance(direc_restructure_destination, empty_folder=True)
 
     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
     path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype, litype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
 
     # just copy file
-    # FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+    # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
     # !!! had to copy file_ori_ref_48n24 into Li1
-    FileOperations.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
+    Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
 
     file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-    FileOperations.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+    Operation.File.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
     # # var_c = "trf_w_linalg_orientated"
@@ -5845,8 +5847,8 @@ def create_file_loc(direc_init_system, data_toten, file_new_system):
             filepath = subdir + os.sep
             # get directory of CONTCAR
             if os.path.basename(file) == file_new_system:
-                geometry_nr = FileOperations.splitall(subdir)[-2]
-                path_nr = FileOperations.splitall(subdir)[-1]
+                geometry_nr = Operation.File.splitall(subdir)[-2]
+                path_nr = Operation.File.splitall(subdir)[-1]
                 geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
                 geometry_ori = geometry
                 # geometry = geometry.applymap(func=replace)
@@ -5909,8 +5911,8 @@ def create_file_loc_compact_demo(direc_init_system, data_toten, file_new_system)
             filepath = subdir + os.sep
             # get directory of CONTCAR
             if os.path.basename(file) == file_new_system:
-                geometry_nr = FileOperations.splitall(subdir)[-2]
-                path_nr = FileOperations.splitall(subdir)[-1]
+                geometry_nr = Operation.File.splitall(subdir)[-2]
+                path_nr = Operation.File.splitall(subdir)[-1]
                 geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
                 geometry_ori = geometry
                 geometry.dropna(axis=1)
@@ -6022,7 +6024,7 @@ def get_triads_movement(destination_directory, geo, var_filename, filename_ref_7
         ## get ratio of 24:48
         counter_48 = 0
         for Li_idx, val in idx_coor_Li_idx_centroid_triad.items():
-            # print(MathOperation.Distance.mic_eucledian_distance(val['coor'], val['centroid_triad']))
+            # print(Operation.Distance.mic_eucledian_distance(val['coor'], val['centroid_triad']))
             if val['structure'] == 48:
                 counter_48 = counter_48 + 1
         # print(f"path {i} has ratio of 48 of: {counter_48/len(idx_coor_Li_idx_centroid_triad)}")
@@ -6456,7 +6458,7 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
         if litype == 1:
             for j in coor_li48htype1_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
@@ -6464,14 +6466,14 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
         
         elif litype == 2:
             for j in coor_li48htype1_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype2_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
@@ -6479,21 +6481,21 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 3:
             for j in coor_li48htype1_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
@@ -6501,28 +6503,28 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 4:
             for j in coor_li48htype1_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
@@ -6530,35 +6532,35 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 5:
             for j in coor_li48htype1_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype5_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
 
@@ -6566,42 +6568,42 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 6:
             for j in coor_li48htype1_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype5_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype6_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype6'}
 
@@ -6609,49 +6611,49 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 7:
             for j in coor_li48htype1_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype5_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype6_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype6'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype7_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype7'}
 
@@ -6659,56 +6661,56 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
                 
         elif litype == 8:
             for j in coor_li48htype1_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype5_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype6_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype6'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype7_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype7'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype8_ref:
-                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
+                distance = Operation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype8'}
 
@@ -6948,7 +6950,7 @@ def get_complete_closest_tuple(dataframe, tuple_metainfo):
                         label_li_d = entry_d['type']
                         idx_cage_d = entry_d['idx_cage']
 
-                        distance = MathOperation.Distance.mic_eucledian_distance(coor_li_mapped_c, coor_tuple_d)
+                        distance = Operation.Distance.mic_eucledian_distance(coor_li_mapped_c, coor_tuple_d)
 
                         # distance_coors_all_val = {'coor_li_mapped': coor_li_mapped_c, 'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d}
 
@@ -7052,7 +7054,7 @@ def plot_movement(dataframe, to_plot):
             df_to_plot.at[idx, f"{j}"] = None  
 
             # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
-            # distance = MathOperation.Distance.mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
+            # distance = Operation.Distance.mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
 
             # dict_weighted[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
             
@@ -7415,7 +7417,7 @@ def get_df_movement(dataframe):
             df_to_plot.at[idx, f"{j}"] = type_movement
 
             # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
-            # distance = MathOperation.Distance.mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
+            # distance = Operation.Distance.mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
 
             # dict_weighted[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
             
@@ -7580,13 +7582,13 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
 
 #     for key_72, coor_72 in idx_coor_Li_dict_ref_72.items():
 #         for key_24, coor_24 in idx_coor_Li_dict_ref_24.items():
-#             distance = MathOperation.Distance.mic_eucledian_distance(coor_72, coor_24)
+#             distance = Operation.Distance.mic_eucledian_distance(coor_72, coor_24)
 #             if distance == 0:
 #                 idx_coor_Li_dict_ref_triad[key_24].append(coor_72)
 
 #     for key_72, coor_72 in idx_coor_Li_dict_ref_72.items():
 #         for key_24, coor_24 in idx_coor_Li_dict_ref_24.items():
-#             distance = MathOperation.Distance.mic_eucledian_distance(coor_72, coor_24)
+#             distance = Operation.Distance.mic_eucledian_distance(coor_72, coor_24)
 #             if distance <= 0.086399 and distance != 0:                      # to edit this number
 #                 idx_coor_Li_dict_ref_triad[key_24].append(coor_72)
 #     return idx_coor_Li_dict_ref_triad
@@ -7600,7 +7602,7 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
 #         #     idx_coor_Li_idx_centroid_triad_dict = {}    
 #         #     for key_triad, coor_triad in idx_coor_Li_dict_ref_triad.items():
 #         #         for coor_triad_component in coor_triad:
-#         #             distance = MathOperation.Distance.mic_eucledian_distance(coor_triad_component, coor)
+#         #             distance = Operation.Distance.mic_eucledian_distance(coor_triad_component, coor)
 #         #             distance_array.append(distance)  
 #         #     distance_array_sorted = sorted(set(distance_array))
 #         #     distance_array_sorted_top3 = distance_array_sorted[0:4]
@@ -7613,7 +7615,7 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
 #         idx_coor_Li_idx_centroid_triad_dict = {}    
 #         for key_triad, coor_triad in idx_coor_Li_dict_ref_triad.items():
 #             for coor_triad_component in coor_triad:
-#                 distance = MathOperation.Distance.mic_eucledian_distance(coor_triad_component, coor)
+#                 distance = Operation.Distance.mic_eucledian_distance(coor_triad_component, coor)
 #                 distance_array.append(distance)
 #                 if distance == 0:
 #                     idx_coor_Li_idx_centroid_triad_dict['coor'] = coor
@@ -7641,7 +7643,7 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
 #         idx_coor_Li_idx_centroid_triad_dict = {}    
 #         for key_triad, coor_triad in idx_coor_Li_dict_ref_triad.items():
 #             for coor_triad_component in coor_triad:
-#                 distance = MathOperation.Distance.mic_eucledian_distance(coor_triad_component, coor)
+#                 distance = Operation.Distance.mic_eucledian_distance(coor_triad_component, coor)
 #                 distance_array.append(distance)
 #                 if distance == 0:
 #                     idx_coor_Li_idx_centroid_triad_dict['coor'] = coor
@@ -7669,7 +7671,7 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
 #     for Li_idx_temp1, val_temp1 in idx_coor_Li_idx_centroid_triad.items():
 #         coors_Li_dist_structures_dict = {}
 #         for Li_idx_temp2, val_temp2 in idx_coor_Li_idx_centroid_triad.items():
-#             distance = MathOperation.Distance.mic_eucledian_distance(val_temp1['coor'], val_temp2['coor'])
+#             distance = Operation.Distance.mic_eucledian_distance(val_temp1['coor'], val_temp2['coor'])
 #             coors_Li_dist_structures_dict['coors'] = (val_temp1['coor'], val_temp2['coor'])
 #             coors_Li_dist_structures_dict['dist'] = distance
 #             coors_Li_dist_structures_dict['structures'] = (val_temp1['structure'], val_temp2['structure'])
@@ -7780,7 +7782,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
                 df_distance.at[index, f"{j}"] = None  
 
                 coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
-                distance = MathOperation.Distance.mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
+                distance = Operation.Distance.mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
 
                 dict_distance[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
                 df_distance.at[index, f"{j}"] = distance
@@ -7794,7 +7796,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
             for j in range(len(coor_Li)):
                 df_distance.at[index, f"{j}"] = None  
 
-                distance = MathOperation.Distance.mic_eucledian_distance(coor_Li_ref[j], coor_Li[j])
+                distance = Operation.Distance.mic_eucledian_distance(coor_Li_ref[j], coor_Li[j])
 
                 dict_distance[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref[j]}, coor_Li: {coor_Li[j]}'}
                 df_distance.at[index, f"{j}"] = distance
@@ -7808,7 +7810,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
             
     #         for k in range(len(coor_Li)):
 
-    #             distance_litoli = MathOperation.Distance.mic_eucledian_distance(coor_Li[j], coor_Li[k])
+    #             distance_litoli = Operation.Distance.mic_eucledian_distance(coor_Li[j], coor_Li[k])
 
     #             coors_Li_dist_structures_dict['coors'] = (coor_Li[j], coor_Li[k])
     #             coors_Li_dist_structures_dict['dist'] = distance_litoli
@@ -7830,7 +7832,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
     # #     # # for j in range(len(coor_Li)):
     # #     # #     # df_distance.at[i, f"{j}"] = None  
 
-    # #     # #     distance = MathOperation.Distance.mic_eucledian_distance(coor_Li_ref[j], coor_Li[j])
+    # #     # #     distance = Operation.Distance.mic_eucledian_distance(coor_Li_ref[j], coor_Li[j])
 
     # #     # #     df_distance.at[i, f"{j}"] = distance
 
