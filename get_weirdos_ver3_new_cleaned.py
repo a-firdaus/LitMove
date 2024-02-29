@@ -914,57 +914,52 @@ class ReadStructure:
             dataframe.at[idx, col_coor_structure_init_dict] = coor_structure_init_dict
 
 
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
+class MathOperation:
+    class Distance:
+        # def eucledian_distance(coor1, coor2):
+        #     distance = math.sqrt(sum((x1 - x2)**2 for x1, x2 in zip(coor1, coor2)))
+        #     return distance
 
 
-# def eucledian_distance(coor1, coor2):
-#     distance = math.sqrt(sum((x1 - x2)**2 for x1, x2 in zip(coor1, coor2)))
-#     return distance
+        def apply_pbc(value):
+            if abs(value) > 0.5:
+                return 1 - abs(value)
+            return value
 
 
-def apply_pbc(value):
-    if abs(value) > 0.5:
-        return 1 - abs(value)
-    return value
+        def mic_eucledian_distance(coor1, coor2):
+            x_coor1, y_coor1, z_coor1 = coor1
+            x_coor2, y_coor2, z_coor2 = coor2
+            
+            delta_x = x_coor1 - x_coor2
+            delta_y = y_coor1 - y_coor2
+            delta_z = z_coor1 - z_coor2
+
+            distance = math.sqrt(sum([(MathOperation.Distance.apply_pbc(delta_x))**2, (MathOperation.Distance.apply_pbc(delta_y))**2, (MathOperation.Distance.apply_pbc(delta_z))**2]))
+            # distance = math.sqrt(sum([MathOperation.Distance.apply_pbc(delta_x)**2, MathOperation.Distance.apply_pbc(delta_y)**2, MathOperation.Distance.apply_pbc(delta_z)]**2))
+            # [MathOperation.Distance.apply_pbc(delta_x), MathOperation.Distance.apply_pbc(delta_y), MathOperation.Distance.apply_pbc(delta_z)]
+            # delta_coor = ((x1 - x2) for x1, x2 in zip(coor1, coor2))
+            # distance = math.sqrt(sum((x1 - x2)**2 for x1, x2 in zip(coor1, coor2)))
+            return distance
 
 
-def mic_eucledian_distance(coor1, coor2):
-    x_coor1, y_coor1, z_coor1 = coor1
-    x_coor2, y_coor2, z_coor2 = coor2
-    
-    delta_x = x_coor1 - x_coor2
-    delta_y = y_coor1 - y_coor2
-    delta_z = z_coor1 - z_coor2
-
-    distance = math.sqrt(sum([(apply_pbc(delta_x))**2, (apply_pbc(delta_y))**2, (apply_pbc(delta_z))**2]))
-    # distance = math.sqrt(sum([apply_pbc(delta_x)**2, apply_pbc(delta_y)**2, apply_pbc(delta_z)]**2))
-    # [apply_pbc(delta_x), apply_pbc(delta_y), apply_pbc(delta_z)]
-    # delta_coor = ((x1 - x2) for x1, x2 in zip(coor1, coor2))
-    # distance = math.sqrt(sum((x1 - x2)**2 for x1, x2 in zip(coor1, coor2)))
-    return distance
+        def apply_pbc_cartesian(value, length):
+            # angle is ignored
+            if abs(value) > 0.5 * length:
+                return length - abs(value)
+            return value
 
 
-def apply_pbc_cartesian(value, length):
-    # angle is ignored
-    if abs(value) > 0.5 * length:
-        return length - abs(value)
-    return value
+        def mic_eucledian_distance_cartesian(coor1, coor2, a, b, c):
+            x_coor1, y_coor1, z_coor1 = coor1
+            x_coor2, y_coor2, z_coor2 = coor2
+            
+            delta_x = x_coor1 - x_coor2
+            delta_y = y_coor1 - y_coor2
+            delta_z = z_coor1 - z_coor2
 
-
-def mic_eucledian_distance_cartesian(coor1, coor2, a, b, c):
-    x_coor1, y_coor1, z_coor1 = coor1
-    x_coor2, y_coor2, z_coor2 = coor2
-    
-    delta_x = x_coor1 - x_coor2
-    delta_y = y_coor1 - y_coor2
-    delta_z = z_coor1 - z_coor2
-
-    distance = math.sqrt(sum([(apply_pbc_cartesian(delta_x, a))**2, (apply_pbc_cartesian(delta_y, b))**2, (apply_pbc_cartesian(delta_z, c))**2]))
-    return distance
+            distance = math.sqrt(sum([(MathOperation.Distance.apply_pbc_cartesian(delta_x, a))**2, (MathOperation.Distance.apply_pbc_cartesian(delta_y, b))**2, (MathOperation.Distance.apply_pbc_cartesian(delta_z, c))**2]))
+            return distance
 
 
 # def get_duplicate_values_in_dict(dict):
@@ -1112,7 +1107,7 @@ def get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, el, max_mapping
             closest24 = None
 
             for idx24, coor24 in enumerate(coor_origin24_el_init):
-                distance = mic_eucledian_distance(coor120, coor24)
+                distance = MathOperation.Distance.mic_eucledian_distance(coor120, coor24)
 
                 if distance < max_mapping_radius:
                     counter = counter + 1
@@ -1266,7 +1261,7 @@ def get_flag_map_weirdos_48htype2_el(dataframe, coor_structure_init_dict, el, ma
                 closest24 = None
 
                 for idx24, coor24 in enumerate(coor_origin24_el_init):
-                    distance = mic_eucledian_distance(coor120, coor24)
+                    distance = MathOperation.Distance.mic_eucledian_distance(coor120, coor24)
                     
                     if distance < max_mapping_radius_48htype2:
                         counter = counter + 1
@@ -1405,7 +1400,7 @@ def get_flag_map_weirdos_48htype1_48htype2_el(dataframe, coor_structure_init_dic
                                                                                         # or without orientation
                                                                                         # dataframe['subdir_CONTCAR']
         
-        if len(coor_origin24_el_init) > 0: # need this for the mic_eucledian_distance()
+        if len(coor_origin24_el_init) > 0: # need this for the MathOperation.Distance.mic_eucledian_distance()
             coor_reduced120_el = coor_li48htype1_li48htype2_ref.copy()
             coor_weirdos_el = coor_origin24_el_init.copy()    
 
@@ -1416,7 +1411,7 @@ def get_flag_map_weirdos_48htype1_48htype2_el(dataframe, coor_structure_init_dic
                 closest24 = None
 
                 for idx24, coor24 in enumerate(coor_origin24_el_init):
-                    distance = mic_eucledian_distance(coor120, coor24)
+                    distance = MathOperation.Distance.mic_eucledian_distance(coor120, coor24)
                     
                     if distance < max_mapping_radius_48htype1_48htype2:
                         counter = counter + 1
@@ -1884,7 +1879,7 @@ def idx_correcting_mapped_el(dataframe, el, activate_radius):
             # atom_mapping_el_w_dist_idx24[tuple(coor120)] = []
 
             for idx24, coor24 in enumerate(coor_origin24_el_init):
-                distance = mic_eucledian_distance(coor120, coor24)
+                distance = MathOperation.Distance.mic_eucledian_distance(coor120, coor24)
 
                 # if distance != 0:
                 if distance < distance_prev:
@@ -2129,7 +2124,7 @@ def get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, el, lityp
                 for idx120, coor120 in enumerate(coor_origin120_el_init):
                     coorweirdo_dist_label_coor120_val_el = {}
             
-                    distance_weirdo = mic_eucledian_distance(coor120, coor_weirdo)
+                    distance_weirdo = MathOperation.Distance.mic_eucledian_distance(coor120, coor_weirdo)
 
                     coorweirdo_dist_label_coor120_val_el['dist'] = distance_weirdo
 
@@ -3567,7 +3562,7 @@ def get_closest_neighbors_el_cartesian_coor(dataframe, max_neighbors_radius, el,
             distance_array = []
 
             for idx24_temp2, coor24_temp2 in enumerate(coor_cartesion_el):
-                distance = mic_eucledian_distance_cartesian(coor24_temp1, coor24_temp2, a, b, c)
+                distance = MathOperation.Distance.mic_eucledian_distance_cartesian(coor24_temp1, coor24_temp2, a, b, c)
                 
                 if distance < max_neighbors_radius:
                     distance_array.append(distance)
@@ -6027,7 +6022,7 @@ def get_triads_movement(destination_directory, geo, var_filename, filename_ref_7
         ## get ratio of 24:48
         counter_48 = 0
         for Li_idx, val in idx_coor_Li_idx_centroid_triad.items():
-            # print(mic_eucledian_distance(val['coor'], val['centroid_triad']))
+            # print(MathOperation.Distance.mic_eucledian_distance(val['coor'], val['centroid_triad']))
             if val['structure'] == 48:
                 counter_48 = counter_48 + 1
         # print(f"path {i} has ratio of 48 of: {counter_48/len(idx_coor_Li_idx_centroid_triad)}")
@@ -6461,7 +6456,7 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
         if litype == 1:
             for j in coor_li48htype1_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
@@ -6469,14 +6464,14 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
         
         elif litype == 2:
             for j in coor_li48htype1_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype2_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
@@ -6484,21 +6479,21 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 3:
             for j in coor_li48htype1_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
@@ -6506,28 +6501,28 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 4:
             for j in coor_li48htype1_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
@@ -6535,35 +6530,35 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 5:
             for j in coor_li48htype1_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype5_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
 
@@ -6571,42 +6566,42 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 6:
             for j in coor_li48htype1_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype5_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype6_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype6'}
 
@@ -6614,49 +6609,49 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 7:
             for j in coor_li48htype1_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype5_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype6_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype6'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype7_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype7'}
 
@@ -6664,56 +6659,56 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
                 
         elif litype == 8:
             for j in coor_li48htype1_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype5_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype6_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype6'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype7_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype7'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype8_ref:
-                distance = mic_eucledian_distance(i, j)
+                distance = MathOperation.Distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype8'}
 
@@ -6953,7 +6948,7 @@ def get_complete_closest_tuple(dataframe, tuple_metainfo):
                         label_li_d = entry_d['type']
                         idx_cage_d = entry_d['idx_cage']
 
-                        distance = mic_eucledian_distance(coor_li_mapped_c, coor_tuple_d)
+                        distance = MathOperation.Distance.mic_eucledian_distance(coor_li_mapped_c, coor_tuple_d)
 
                         # distance_coors_all_val = {'coor_li_mapped': coor_li_mapped_c, 'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d}
 
@@ -7057,7 +7052,7 @@ def plot_movement(dataframe, to_plot):
             df_to_plot.at[idx, f"{j}"] = None  
 
             # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
-            # distance = mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
+            # distance = MathOperation.Distance.mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
 
             # dict_weighted[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
             
@@ -7420,7 +7415,7 @@ def get_df_movement(dataframe):
             df_to_plot.at[idx, f"{j}"] = type_movement
 
             # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
-            # distance = mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
+            # distance = MathOperation.Distance.mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
 
             # dict_weighted[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
             
@@ -7585,13 +7580,13 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
 
 #     for key_72, coor_72 in idx_coor_Li_dict_ref_72.items():
 #         for key_24, coor_24 in idx_coor_Li_dict_ref_24.items():
-#             distance = mic_eucledian_distance(coor_72, coor_24)
+#             distance = MathOperation.Distance.mic_eucledian_distance(coor_72, coor_24)
 #             if distance == 0:
 #                 idx_coor_Li_dict_ref_triad[key_24].append(coor_72)
 
 #     for key_72, coor_72 in idx_coor_Li_dict_ref_72.items():
 #         for key_24, coor_24 in idx_coor_Li_dict_ref_24.items():
-#             distance = mic_eucledian_distance(coor_72, coor_24)
+#             distance = MathOperation.Distance.mic_eucledian_distance(coor_72, coor_24)
 #             if distance <= 0.086399 and distance != 0:                      # to edit this number
 #                 idx_coor_Li_dict_ref_triad[key_24].append(coor_72)
 #     return idx_coor_Li_dict_ref_triad
@@ -7605,7 +7600,7 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
 #         #     idx_coor_Li_idx_centroid_triad_dict = {}    
 #         #     for key_triad, coor_triad in idx_coor_Li_dict_ref_triad.items():
 #         #         for coor_triad_component in coor_triad:
-#         #             distance = mic_eucledian_distance(coor_triad_component, coor)
+#         #             distance = MathOperation.Distance.mic_eucledian_distance(coor_triad_component, coor)
 #         #             distance_array.append(distance)  
 #         #     distance_array_sorted = sorted(set(distance_array))
 #         #     distance_array_sorted_top3 = distance_array_sorted[0:4]
@@ -7618,7 +7613,7 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
 #         idx_coor_Li_idx_centroid_triad_dict = {}    
 #         for key_triad, coor_triad in idx_coor_Li_dict_ref_triad.items():
 #             for coor_triad_component in coor_triad:
-#                 distance = mic_eucledian_distance(coor_triad_component, coor)
+#                 distance = MathOperation.Distance.mic_eucledian_distance(coor_triad_component, coor)
 #                 distance_array.append(distance)
 #                 if distance == 0:
 #                     idx_coor_Li_idx_centroid_triad_dict['coor'] = coor
@@ -7646,7 +7641,7 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
 #         idx_coor_Li_idx_centroid_triad_dict = {}    
 #         for key_triad, coor_triad in idx_coor_Li_dict_ref_triad.items():
 #             for coor_triad_component in coor_triad:
-#                 distance = mic_eucledian_distance(coor_triad_component, coor)
+#                 distance = MathOperation.Distance.mic_eucledian_distance(coor_triad_component, coor)
 #                 distance_array.append(distance)
 #                 if distance == 0:
 #                     idx_coor_Li_idx_centroid_triad_dict['coor'] = coor
@@ -7674,7 +7669,7 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
 #     for Li_idx_temp1, val_temp1 in idx_coor_Li_idx_centroid_triad.items():
 #         coors_Li_dist_structures_dict = {}
 #         for Li_idx_temp2, val_temp2 in idx_coor_Li_idx_centroid_triad.items():
-#             distance = mic_eucledian_distance(val_temp1['coor'], val_temp2['coor'])
+#             distance = MathOperation.Distance.mic_eucledian_distance(val_temp1['coor'], val_temp2['coor'])
 #             coors_Li_dist_structures_dict['coors'] = (val_temp1['coor'], val_temp2['coor'])
 #             coors_Li_dist_structures_dict['dist'] = distance
 #             coors_Li_dist_structures_dict['structures'] = (val_temp1['structure'], val_temp2['structure'])
@@ -7785,7 +7780,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
                 df_distance.at[index, f"{j}"] = None  
 
                 coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
-                distance = mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
+                distance = MathOperation.Distance.mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
 
                 dict_distance[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
                 df_distance.at[index, f"{j}"] = distance
@@ -7799,7 +7794,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
             for j in range(len(coor_Li)):
                 df_distance.at[index, f"{j}"] = None  
 
-                distance = mic_eucledian_distance(coor_Li_ref[j], coor_Li[j])
+                distance = MathOperation.Distance.mic_eucledian_distance(coor_Li_ref[j], coor_Li[j])
 
                 dict_distance[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref[j]}, coor_Li: {coor_Li[j]}'}
                 df_distance.at[index, f"{j}"] = distance
@@ -7813,7 +7808,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
             
     #         for k in range(len(coor_Li)):
 
-    #             distance_litoli = mic_eucledian_distance(coor_Li[j], coor_Li[k])
+    #             distance_litoli = MathOperation.Distance.mic_eucledian_distance(coor_Li[j], coor_Li[k])
 
     #             coors_Li_dist_structures_dict['coors'] = (coor_Li[j], coor_Li[k])
     #             coors_Li_dist_structures_dict['dist'] = distance_litoli
@@ -7835,7 +7830,7 @@ def get_distance_litoli(dataframe, max_mapping_radius, destination_directory, id
     # #     # # for j in range(len(coor_Li)):
     # #     # #     # df_distance.at[i, f"{j}"] = None  
 
-    # #     # #     distance = mic_eucledian_distance(coor_Li_ref[j], coor_Li[j])
+    # #     # #     distance = MathOperation.Distance.mic_eucledian_distance(coor_Li_ref[j], coor_Li[j])
 
     # #     # #     df_distance.at[i, f"{j}"] = distance
 
