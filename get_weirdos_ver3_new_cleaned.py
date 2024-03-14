@@ -52,7 +52,6 @@ def replace(i):
 
 class Operation:
     class File:
-        @staticmethod
         def splitall(path):
             """
             Splitting path into its individual components of each sub-/folder.
@@ -81,7 +80,6 @@ class Operation:
             return allparts
 
 
-        @staticmethod
         def copy_rename_single_file(destination_directory, source_directory, filename, prefix):
             """
             Copy a file from the source directory to the destination directory with an optional filename prefix.
@@ -110,7 +108,6 @@ class Operation:
             # print(f"File copied and renamed: {filename} -> {new_filename}")
 
 
-        @staticmethod
         def copy_rename_files(dataframe, destination_directory, filename, prefix, savedir):
             """
             Copy and rename multiple files based on the contents of a DataFrame.
@@ -154,7 +151,6 @@ class Operation:
                     pass
 
 
-        # @staticmethod
         # def copy_rename_single_file_and_delete_elements(destination_directory, source_directory, filename, prefix, line_ranges, line_numbers_edit, new_contents):
         #     # Generate the new filename
         #     new_filename = f"{filename}_{prefix}"
@@ -170,7 +166,6 @@ class Operation:
         #     Operation.File.delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
 
 
-        # @staticmethod
         # def copy_rename_files_and_delete_elements(file_loc, destination_directory, filename, index, prefix, line_ranges, line_numbers_edit, new_contents):
         #     # Generate the new filename
         #     new_filename = f"{int(file_loc['geometry'][index])}_{int(file_loc['path'][index])}_{filename}_{prefix}"
@@ -185,7 +180,6 @@ class Operation:
         #     Operation.File.delete_elements(destination_path, line_ranges, line_numbers_edit, new_contents)
 
 
-        @staticmethod
         def delete_lines(file_path, line_ranges):
             """
             Delete specified lines from a file.
@@ -215,7 +209,6 @@ class Operation:
             # print(f"Lines deleted successfully in file: {file_path}")
 
 
-        @staticmethod
         def delete_elements(file_path, line_ranges, line_numbers_edit, new_contents):
             """
             Delete specified lines and edit others in a file.
@@ -233,7 +226,6 @@ class Operation:
             Operation.File.edit_lines(file_path, line_numbers_edit, new_contents)
 
 
-        @staticmethod
         def edit_lines(file_path, line_numbers, new_contents):
             """
             Edit specified lines in a file.
@@ -263,7 +255,6 @@ class Operation:
             # # #     print(f"Invalid line number: {line_number}")
 
 
-        @staticmethod
         def check_folder_existance(folder_name, empty_folder):
             """
             Check if a folder exists, create it if not, and optionally empty it.
@@ -288,7 +279,6 @@ class Operation:
                     pass
 
 
-        @staticmethod
         def empty_folder(folder_name):
             """
             Empty the contents of a folder.
@@ -305,17 +295,12 @@ class Operation:
                 os.remove(path_to_files)
 
 
-        @staticmethod
         def delete_files(dataframe, folder_name, file_name_w_format):
             """
-            Delete files based on information in a DataFrame.
-
-            This method iterates over the rows of a DataFrame and constructs filenames
-            based on specified columns ('geometry' and 'path'). It then attempts to
-            delete each file from the specified folder.
+            Delete files based in the specified folder.
 
             Args:
-                dataframe (pd.DataFrame): A DataFrame containing information about files.
+                dataframe (pd.DataFrame): A DataFrame containing information about files ('geometry' and 'path').
                 folder_name (str): The directory where the files are located.
                 file_name_w_format (str): The base name of the files with format information.
 
@@ -345,13 +330,36 @@ class Operation:
         #     return distance
 
 
-        def apply_pbc(value):
-            if abs(value) > 0.5:
-                return 1 - abs(value)
-            return value
+        def apply_pbc(distance_1D):
+            """
+            Apply Periodic Boundary Conditions to a given 1D distance.
+
+            Parameters:
+            - distance_1D (float): The value to apply the periodic boundary conditions to.
+
+            Returns:
+            - distance_1D (float): The adjusted value after applying the periodic boundary conditions, ensuring it 
+                    remains within the normalized range [0, 0.5].
+            """
+            while abs(distance_1D) > 0.5:
+                return 1 - abs(distance_1D)
+            return distance_1D
 
 
         def mic_eucledian_distance(coor1, coor2):
+            """
+            This function computes the minimum image convention (MIC) Euclidean distance 
+            between two points (coor1 and coor2),considering periodic boundary conditions. 
+            It ensures that the distance measured is the shortest possible path 
+            between these points in a periodic system.
+
+            Parameters:
+            - coor1 (tuple): The (x, y, z) coordinates of the first point.
+            - coor2 (tuple): The (x, y, z) coordinates of the second point.
+
+            Returns:
+            - distance (float): The minimum image convention Euclidean distance between the two points.
+            """
             x_coor1, y_coor1, z_coor1 = coor1
             x_coor2, y_coor2, z_coor2 = coor2
             
@@ -360,21 +368,48 @@ class Operation:
             delta_z = z_coor1 - z_coor2
 
             distance = math.sqrt(sum([(Operation.Distance.apply_pbc(delta_x))**2, (Operation.Distance.apply_pbc(delta_y))**2, (Operation.Distance.apply_pbc(delta_z))**2]))
-            # distance = math.sqrt(sum([Operation.Distance.apply_pbc(delta_x)**2, Operation.Distance.apply_pbc(delta_y)**2, Operation.Distance.apply_pbc(delta_z)]**2))
-            # [Operation.Distance.apply_pbc(delta_x), Operation.Distance.apply_pbc(delta_y), Operation.Distance.apply_pbc(delta_z)]
-            # delta_coor = ((x1 - x2) for x1, x2 in zip(coor1, coor2))
-            # distance = math.sqrt(sum((x1 - x2)**2 for x1, x2 in zip(coor1, coor2)))
             return distance
 
 
-        def apply_pbc_cartesian(value, length):
-            # angle is ignored
-            if abs(value) > 0.5 * length:
-                return length - abs(value)
-            return value
+        def apply_pbc_cartesian(distance_1D, length_1D):
+            """
+            Apply Periodic Boundary Conditions to a given 1D distance in a Cartesian system.
+
+            Parameters:
+            - distance_1D (float): The original distance along one axis (X, Y, or Z).
+            - length (float): The length of the domain along the same axis.
+
+            Returns:
+            - distance_1D (float): The adjusted distance considering PBC, ensuring it's the shortest possible
+            within the given domain length.
+
+            Notes:
+            - Angle is ignored in the calculation
+            """
+            if abs(distance_1D) > 0.5 * length_1D:
+                return length_1D - abs(distance_1D)
+            return distance_1D
 
 
         def mic_eucledian_distance_cartesian(coor1, coor2, a, b, c):
+            """
+            Calculates the minimum image convention (MIC) Euclidean distance between two points in 3D space
+            with periodic boundary conditions in a Cartesian coordinate system, 
+            considering the box dimensions a, b, and c along the x, y, and z axes, respectively.
+
+            Parameters:
+            - coor1 (tuple): Coordinates (x, y, z) of the first point.
+            - coor2 (tuple): Coordinates (x, y, z) of the second point.
+            - a (float): Length of the simulation box along the x-axis.
+            - b (float): Length of the simulation box along the y-axis.
+            - c (float): Length of the simulation box along the z-axis.
+
+            Returns:
+            - distance (float): The MIC Euclidean distance between the two points.
+
+            Notes:
+            - I'm actually confused with this function
+            """
             x_coor1, y_coor1, z_coor1 = coor1
             x_coor2, y_coor2, z_coor2 = coor2
             
@@ -388,90 +423,121 @@ class Operation:
 
     class Dict:
         def merge_dictionaries(dict1, dict2):
+            """
+            Merges two dictionaries into a single dictionary, combining the values of 
+            any duplicate keys into lists.
+
+            Parameters:
+            - dict1 (dict): The first input dictionary.
+            - dict2 (dict): The second input dictionary.
+
+            Returns:
+            - defaultdict(list): A dictionary where each key holds a list of values 
+            from both input dictionaries. If a key is present in both dict1 and dict2, 
+            both values will be in the list. Otherwise, the list will contain the 
+            single value from whichever dictionary the key originates from.
+            """
             merged_dict = defaultdict(list)
 
-            for d in (dict1, dict2): # you can list as many input dicts as you want here
+            for d in (dict1, dict2): # Extendable for more dictionaries
                 for key, value in d.items():
                     merged_dict[key].append(value)
             
             return merged_dict
 
 
-        def check_duplicate_values(dictionary):
-            # seen_values = set()
-            # duplicate_values = set()
+        def get_duplicate_values(dictionary):
+            """
+            Identifies and returns a list of duplicate values in the given dictionary. If a value appears
+            more than once across all values in the dictionary, it will be included in the return list.
+
+            Parameters:
+            - dictionary (dict): The dictionary whose values are to be checked for duplicates.
+
+            Returns:
+            - list: A list of values that appear more than once in the dictionary.
+
+            Note: 
+            This implementation is designed to work effectively with immutable value types (e.g.,
+            integers, strings, tuples). For mutable types like lists, it treats the value as seen only once
+            because lists cannot be used as dictionary keys or added to sets directly without conversion.
+            """
             seen_values = []
             duplicate_values = []
 
             for value in dictionary.values():
-                # value_tuple = tuple(value) 
-                # if value_tuple in seen_values:
                 if value in seen_values:
                     duplicate_values.append(value)
-                    # duplicate_values.add(value_tuple)
                 else:
                     seen_values.append(value)
-                    # seen_values.add(value_tuple)
 
             return duplicate_values
         
 
         class Mapping:
-            # def get_duplicate_values_in_dict(dict):
-            #     # dict is atom_mapping_el
-
-            #     seen_values = set()
-            #     duplicate_values = []
-
-            #     for value in dict.values():
-            #         if value in seen_values:
-            #             duplicate_values.append(value)
-            #         else:
-            #             seen_values.add(value)
-                
-            #     return duplicate_values
-
-
             def get_duplicate_closest24_w_data(dict):
+                """
+                Identifies and returns a list of duplicate values (closest24 with its data: coor)
+                """
                 duplicate_closest24 = {}
-                for coor120, values in dict.items():
+                for coorreference, values in dict.items():
                     for entry in values:
                         closest24 = entry["closest24"]
                         dist = entry["dist"]
 
                     if closest24 in duplicate_closest24:
-                        duplicate_closest24[closest24].append({"coor120": coor120, "dist": dist})
+                        duplicate_closest24[closest24].append({"coorreference": coorreference, "dist": dist})
                     else:
-                        duplicate_closest24[closest24] = [{"coor120": coor120, "dist": dist}]
+                        duplicate_closest24[closest24] = [{"coorreference": coorreference, "dist": dist}]
 
                 duplicate_closest24_w_data = {}
-                for closest24, coor120s_dists in duplicate_closest24.items():
-                    if len(coor120s_dists) > 1:
-                        duplicate_closest24_w_data[f"Duplicate closest24: {closest24}"] = [{"coor120s and dists": coor120s_dists}]
+                for closest24, coorreferences_dists in duplicate_closest24.items():
+                    if len(coorreferences_dists) > 1:
+                        duplicate_closest24_w_data[f"Duplicate closest24: {closest24}"] = [{"coorreferences and dists": coorreferences_dists}]
 
                 return duplicate_closest24_w_data
 
 
             def get_atom_mapping_el_w_dist_closestduplicate(dict):
+                """
+                Identifies and returns closest mapped atom with its distance
+                """
                 filtered_data = {}
-                for coor120, values in dict.items():
+                for coorreference, values in dict.items():
                     for entry in values:
                         closest24 = entry["closest24"]
                         dist = entry["dist"]
                         
                     if closest24 in filtered_data:
                         if dist < filtered_data[closest24]["dist"]:
-                            filtered_data[closest24] = {"coor120": coor120, "dist": dist}
+                            filtered_data[closest24] = {"coorreference": coorreference, "dist": dist}
                     else:
-                        filtered_data[closest24] = {"coor120": coor120, "dist": dist}
+                        filtered_data[closest24] = {"coorreference": coorreference, "dist": dist}
 
-                atom_mapping_el_w_dist_closestduplicate = {entry["coor120"]: {"closest24": key, "dist": entry["dist"]} for key, entry in filtered_data.items()}
+                atom_mapping_el_w_dist_closestduplicate = {entry["coorreference"]: {"closest24": key, "dist": entry["dist"]} for key, entry in filtered_data.items()}
                 return atom_mapping_el_w_dist_closestduplicate
 
 
 # class Transformation:
 class Transformation:
     def get_structure_with_library(dataframe, destination_directory, filename, structure_reference, var_name, prefix):
+        """
+        Generates transformed structures from input data and saves them as CIF files,
+        comparing each structure to a reference structure using StructureMatcher from pymatgen librabry.
+        The comparison result for each structure is stored in the 'verify_w_lib' column
+        of the DataFrame.
+        
+        Parameters:
+        - dataframe (pandas.DataFrame): DataFrame containing necessary data columns.
+        - destination_directory (str): Path to the directory where CIF files will be saved.
+        - filename (str): Base filename for the CIF files.
+        - structure_reference (pymatgen Structure): Reference structure to compare with.
+        - var_name (str): Variable name for the CIF files.
+        - prefix (str or None): Prefix to append to the filenames (optional).
+
+        Returns:
+        - None: The function saves CIF files but does not return any value.
+        """
         for idx in range(dataframe["geometry"].size):
             if prefix == None: 
                 filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
@@ -485,8 +551,7 @@ class Transformation:
             # first, we can verify these lattices are equivalent
             matcher_verify = matcher.fit(structure_reference, structure)  # returns True
             dataframe['verify_w_lib'][idx] = matcher_verify
-            # # df['verify_w_lib'][idx] = matcher_verify
-            # # # print(f"verify_w_lib: {matcher_verify}")
+            # # print(f"verify_w_lib: {matcher_verify}")
             if matcher_verify == False:
                 print(f"Matcher doesn't match.")
 
@@ -502,6 +567,10 @@ class Transformation:
 
     # corrected or at least attempted to
     def get_structure_with_linalg(dataframe, destination_directory, filename, structure_reference, var_name, prefix):
+        """
+        Note:
+        - will be checked later
+        """
         for idx in range(dataframe["geometry"].size):
             if prefix == None: 
                 filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
@@ -567,6 +636,10 @@ class Transformation:
 
     # for sanity check
     def get_structure_with_linalg_combinded_with_library(dataframe, destination_directory, filename, structure_reference, var_name, prefix):
+        """
+        Note:
+        - will be checked later
+        """
         for idx in range(dataframe["geometry"].size):
             if prefix == None: 
                 filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{filename}"
@@ -631,6 +704,10 @@ class Transformation:
 
 
     def get_structure_with_linalg_orientated(dataframe, destination_directory, filename, var_name):
+        """
+        Note:
+        - will be checked later
+        """
         ## POSCAR file is also created
         dataframe['subdir_orientated'] = None
         for idx in range(dataframe["geometry"].size):
@@ -671,200 +748,21 @@ class Transformation:
 
 
 class PreProcessingCONTCAR:
-    # # NOUSAGE
-    # def get_orientated_cif_positive(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out):
-    #     dataframe['subdir_orientated_positive'] = None
-    #     for idx in range(dataframe["geometry"].size):
-    #         # lines = []
-    #         # print(idx)
-    #         # print(idx)
-    #         filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
-    #         filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
-
-    #         with open(filename_to_transform_path, 'r') as file:
-    #             lines = file.readlines()
-    #         data = lines[cif_line_nr_start:]
-
-    #         # Split each string by space and create the DataFrame
-    #         df = pd.DataFrame([string.strip().split() for string in data])
-
-    #         # Optional: Rename the columns
-    #         df.columns = cif_columns
-
-    #         df_positive_val = df
-    #         for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
-    #             if float(coord_x) < 0:
-    #                 coord_x = float(coord_x) + 1
-    #                 df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(coord_x, width=8)
-    #             else:
-    #                 df_positive_val['coord_x'][idx_a] = coord_x
-
-    #         for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
-    #             if float(coord_y) < 0:
-    #                 coord_y = float(coord_y) + 1
-    #                 df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(coord_y, width=8)
-    #             else:
-    #                 df_positive_val['coord_y'][idx_a] = coord_y
-
-    #         for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
-    #             if float(coord_z) < 0:
-    #                 coord_z = float(coord_z) + 1
-    #                 df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(coord_z, width=8)
-    #             else:
-    #                 df_positive_val['coord_z'][idx_a] = coord_z
-
-    #         row_list = df_positive_val.to_string(index=False, header=False).split('\n')
-    #         row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
-    #         row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
-    #         absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
-
-    #         line_append_list = []
-    #         for idx_c, line in enumerate(absolute_correct_list):
-    #             line_new_line = str(line) + '\n'
-    #             line_append_list.append(line_new_line)
-
-    #         file_list = lines[:cif_line_nr_start] + line_append_list
-
-            
-    #         # print(cif_filename_positive)
-            
-    #         # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
-    #         cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
-    #         destination_path = os.path.join(destination_directory, cif_filename_positive)
-
-    #         with open(destination_path, 'w') as fp:
-    #             for item in file_list:
-    #                 fp.write(item)
-
-    #         dataframe['subdir_orientated_positive'][idx] = destination_path
-
-
-    # # NOUSAGE
-    # def get_orientated_positive_cif(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal):
-    #     ## Convert new cif file of orientated structure into only positive value
-    #     dataframe['subdir_orientated_positive_cif'] = None
-
-    #     for idx in range(dataframe["geometry"].size):
-    #         filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
-    #         filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
-
-    #         with open(filename_to_transform_path, 'r') as file:
-    #             lines = file.readlines()
-    #         data = lines[cif_line_nr_start:]
-
-    #         # Split each string by space and create the DataFrame
-    #         df = pd.DataFrame([string.strip().split() for string in data])
-
-    #         # Optional: Rename the columns
-    #         df.columns = cif_columns
-
-    #         df_positive_val = df
-    #         for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
-    #             while float(coord_x) < 0:
-    #                 coord_x = float(coord_x) + 1
-    #             df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(float(coord_x), width=n_decimal)
-
-    #         for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
-    #             while float(coord_y) < 0:
-    #                 coord_y = float(coord_y) + 1
-    #             df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(float(coord_y), width=n_decimal)
-
-    #         for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
-    #             while float(coord_z) < 0:
-    #                 coord_z = float(coord_z) + 1
-    #             df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(float(coord_z), width=n_decimal)
-
-    #         row_list = df_positive_val.to_string(index=False, header=False).split('\n')
-    #         row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
-    #         row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
-    #         absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
-
-    #         line_append_list = []
-    #         for idx_c, line in enumerate(absolute_correct_list):
-    #             line_new_line = str(line) + '\n'
-    #             line_append_list.append(line_new_line)
-
-    #         file_list = lines[:cif_line_nr_start] + line_append_list
-
-            
-    #         # print(cif_filename_positive)
-            
-    #         # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
-    #         cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
-    #         destination_path = os.path.join(destination_directory, cif_filename_positive)
-
-    #         with open(destination_path, 'w') as fp:
-    #             for item in file_list:
-    #                 fp.write(item)
-
-    #         dataframe['subdir_orientated_positive_cif'][idx] = destination_path
-
-
-    # def get_orientated_positive_lessthan1_cif(dataframe, destination_directory, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal):
-    #     dataframe['subdir_orientated_positive_lessthan1_cif'] = None
-    #     for idx in range(dataframe["geometry"].size):
-    #         filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_in}.cif"
-    #         filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
-
-    #         with open(filename_to_transform_path, 'r') as file:
-    #             lines = file.readlines()
-    #         data = lines[cif_line_nr_start:]
-
-    #         # Split each string by space and create the DataFrame
-    #         df = pd.DataFrame([string.strip().split() for string in data])
-
-    #         # Optional: Rename the columns
-    #         df.columns = cif_columns
-
-    #         df_positive_val = df
-    #         for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
-    #             while float(coord_x) < 0:
-    #                 coord_x = float(coord_x) + 1
-    #             while float(coord_x) > 1:
-    #                 coord_x = float(coord_x) - 1
-    #             df_positive_val['coord_x'][idx_a] = '{:.{width}f}'.format(float(coord_x), width=n_decimal)
-
-    #         for idx_a, coord_y in enumerate(df_positive_val['coord_y']):
-    #             while float(coord_y) < 0:
-    #                 coord_y = float(coord_y) + 1
-    #             while float(coord_y) > 1:
-    #                 coord_y = float(coord_y) - 1
-    #             df_positive_val['coord_y'][idx_a] = '{:.{width}f}'.format(float(coord_y), width=n_decimal)
-
-    #         for idx_a, coord_z in enumerate(df_positive_val['coord_z']):
-    #             while float(coord_z) < 0:
-    #                 coord_z = float(coord_z) + 1
-    #             while float(coord_z) > 1:
-    #                 coord_z = float(coord_z) - 1
-    #             df_positive_val['coord_z'][idx_a] = '{:.{width}f}'.format(float(coord_z), width=n_decimal)
-
-    #         row_list = df_positive_val.to_string(index=False, header=False).split('\n')
-    #         row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
-    #         row_list_w_beginning = ['  ' + row for row in row_list_space]       # 2 spaces in the beginning
-    #         absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
-
-    #         line_append_list = []
-    #         for idx_c, line in enumerate(absolute_correct_list):
-    #             line_new_line = str(line) + '\n'
-    #             line_append_list.append(line_new_line)
-
-    #         file_list = lines[:cif_line_nr_start] + line_append_list
-
-            
-    #         # print(cif_filename_positive)
-            
-    #         # print(f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}")
-    #         cif_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_name_out}.cif"
-    #         destination_path = os.path.join(destination_directory, cif_filename_positive)
-
-    #         with open(destination_path, 'w') as fp:
-    #             for item in file_list:
-    #                 fp.write(item)
-
-    #         dataframe['subdir_orientated_positive_lessthan1_cif'][idx] = destination_path
-
-
     def get_CONTCAR_normal_elements(dataframe, destination_directory, filename, prefix = None):
+        """
+        Modifies CONTCAR files to include standard elemental labels for each site configuration,
+        instead of '  Li_sv_GW/24a6a  P_GW/715c28f22  S_GW/357db9cfb  Cl_GW/3ef3b316\n'
+        from the result of NEB calculation.
+
+        Parameters:
+        - dataframe (pandas.DataFrame): DataFrame containing necessary data columns.
+        - destination_directory (str): Path to the directory where CONTCAR files are located.
+        - filename (str): Base filename for the CONTCAR files.
+        - prefix (str or None): Prefix to append to the filenames (optional).
+
+        Returns:
+        - None: The function modifies CONTCAR files but does not return any value.
+        """
         for index in range(dataframe["geometry"].size):
             # Generate the new filename
             if prefix == None:
@@ -872,15 +770,8 @@ class PreProcessingCONTCAR:
             else:
                 new_filename = f"{int(dataframe['geometry'][index])}_{int(dataframe['path'][index])}_{filename}_{prefix}"
 
-
             # Get the source file path and destination file path
             destination_path = os.path.join(destination_directory, new_filename)
-            
-            # # Define the pattern to search for
-            # pattern = '  Li_sv_GW/24a6a  P_GW/715c28f22  S_GW/357db9cfb  Cl_GW/3ef3b316\n              24               4              20               4'
-
-            # # Define the replacement string
-            # replacement = '   Li   P    S    Cl\n'
 
             # Read CONTCAR file
             with open(destination_path, 'r') as contcar_file:
@@ -889,40 +780,30 @@ class PreProcessingCONTCAR:
             contcar_lines[5] = "   Li   P    S    Cl\n"
             contcar_lines[6] = "    24     4    20     4\n"
 
-            # # Find the number of configurations
-            # # occurrences = int(contcar_lines[1])
-            # occurrences = contcar_lines.count(contcar_lines[0])
-
-            # Iterate through each line and replace if the pattern is found
-            # for i in range(len(contcar_lines)):
-            #     if pattern in contcar_lines[i]:
-            #         contcar_lines[i] = replacement
-
-            # # Print the modified lines
-            # for line in contcar_lines:
-            #     print(line.strip())  # .strip() is used to remove leading/trailing whitespaces
-
-            # # Loop through each configuration
-            # for occurrence in range(occurrences):
-            #     # Define the starting and ending lines for each configuration
-            #     # start_line = 8 + occurrence * (3 + sum([int(x) for x in contcar_lines[6].split()]))
-            #     # end_line = start_line + 3 + sum([int(x) for x in contcar_lines[6].split()])
-            #     start_line = (occurrence * line_length)
-            #     end_line = start_line + line_length
-            #     print(f"start_line: {start_line}, end_line: {end_line}")
-
-            #     # Extract configuration lines
-            #     config_lines = contcar_lines[start_line:end_line]
-
-            #     new_dir = f"{dir_XDATCAR}/{occurrence}"
-            #     os.makedirs(new_dir, exist_ok=True)
-
             # Create a new CONTCAR file for each configuration
             with open(destination_path, 'w') as contcar_file:
                 contcar_file.writelines(contcar_lines)
 
 
-    def get_positive_lessthan1_poscarcontcar(dataframe, destination_directory, poscarcontcar_line_nr_start, poscarcontcar_line_nr_end, poscarcontcar_columns_type2, file_type, var_name_in, var_name_out, n_decimal):
+    def get_positive_lessthan1_poscarorcontcar(dataframe, destination_directory, poscarorcontcar_line_nr_start, poscarorcontcar_line_nr_end, poscarorcontcar_columns_type2, file_type, var_name_in, var_name_out, n_decimal):
+        """
+        Creates positive POSCAR/CONTCAR files that have normalized value within the range [0, 1]
+        (based on specified data transformations).
+
+        Parameters:
+        - dataframe (pandas.DataFrame): DataFrame containing necessary data columns.
+        - destination_directory (str): Path to the directory where CONTCAR files will be saved.
+        - file_type (str): Type of files to be processed.
+        - poscarorcontcar_line_nr_start (int): Line number where relevant data starts in the CONTCAR file.
+        - poscarorcontcar_line_nr_end (int): Line number where relevant data ends in the CONTCAR file.
+        - poscarorcontcar_columns_type2 (list): Column names for the relevant data in the CONTCAR file.
+        - var_name_in (str or None): Variable name for input data (optional).
+        - var_name_out (str): Variable name for output data.
+        - n_decimal (int): Number of decimal places to round the coordinates to (default is 6).
+
+        Returns:
+        - None: The function modifies and saves CONTCAR files but does not return any value.
+        """
         col_subdir_positive_file = f"subdir_positive_{file_type}"
         
         dataframe[col_subdir_positive_file] = None
@@ -936,13 +817,13 @@ class PreProcessingCONTCAR:
 
             with open(filename_to_transform_path, 'r') as file:
                 lines = file.readlines()
-            data = lines[poscarcontcar_line_nr_start:poscarcontcar_line_nr_end]
+            data = lines[poscarorcontcar_line_nr_start:poscarorcontcar_line_nr_end]
 
             # Split each string by space and create the DataFrame
             df = pd.DataFrame([string.strip().split() for string in data])
 
             # Optional: Rename the columns
-            df.columns = poscarcontcar_columns_type2
+            df.columns = poscarorcontcar_columns_type2
 
             df_positive_val = df[['coord_x', 'coord_y', 'coord_z']]
             for idx_a, coord_x in enumerate(df_positive_val['coord_x']):
@@ -976,20 +857,31 @@ class PreProcessingCONTCAR:
                 line_new_line = str(line) + '\n'
                 line_append_list.append(line_new_line)
 
-            file_list = lines[:poscarcontcar_line_nr_start] + line_append_list
+            file_list = lines[:poscarorcontcar_line_nr_start] + line_append_list
 
-            poscarcontcar_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_CONTCAR_{var_name_out}"
-            destination_path = os.path.join(destination_directory, poscarcontcar_filename_positive)
+            poscarorcontcar_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_CONTCAR_{var_name_out}"
+            destination_path = os.path.join(destination_directory, poscarorcontcar_filename_positive)
             
-            with open(destination_path, "w") as poscarcontcar_positive_file:
+            with open(destination_path, "w") as poscarorcontcar_positive_file:
                 for item in file_list:
-                    poscarcontcar_positive_file.writelines(item)
+                    poscarorcontcar_positive_file.writelines(item)
 
             dataframe[col_subdir_positive_file][idx] = destination_path
 
 
 class ReadStructure:
-    def get_coor_dict_structure(structure):
+    def get_coor_structure_init_dict(structure):
+        """
+        Extracts fractional coordinates of different elements from a given structure
+        and organizes them into a dictionary.
+
+        Parameters:
+        - structure (pymatgen Structure): The input structure containing atomic coordinates.
+
+        Returns:
+        - dict: A dictionary where keys represent element symbols and values are lists
+        of fractional coordinates corresponding to each element in the structure.
+        """
         coor_origin_Li_init = []; coor_origin_P_init = []; coor_origin_S_init = []; coor_origin_Cl_init = []
         coor_structure_init_dict = {}
         
@@ -1011,13 +903,24 @@ class ReadStructure:
         return coor_structure_init_dict
 
 
-    def get_coor_structure24_dict_iterated(dataframe, mapping):
+    def get_coor_structure_init_dict_wholedataframe(dataframe, mapping):
+        """
+        Same like function get_coor_structure_init_dict() but goes over 
+        all structures stated in the DataFrame and save it in the corresponding column.
+
+        Parameters:
+        - dataframe (pandas.DataFrame): DataFrame containing structure file paths.
+        - mapping (str): Flag indicating whether the structures have undergone mapping.
+
+        Returns:
+        - None: The function updates the DataFrame with dictionaries of fractional coordinates
+        for each element in the respective structures.
+        """
         col_coor_structure_init_dict = "coor_structure_init_dict"
 
         dataframe[col_coor_structure_init_dict] = None
 
         for idx in range(dataframe["geometry"].size):
-            # print(f"idx: {idx}")
             coor_origin_Li_init = []; coor_origin_P_init = []; coor_origin_S_init = []; coor_origin_Cl_init = []
             coor_structure_init_dict = {}
 
@@ -1047,20 +950,46 @@ class ReadStructure:
 
 class Mapping:
     def get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, el, max_mapping_radius):
-        coor_origin120_el_init = coor_structure_init_dict[el]
+        """
+        This function does:
+        - Mapping to the closest reference by the radius given. 
+        - In the correct case, no multiple atom should belong to a same reference atom, otherwise flag stated "True". 
+        - Get weirdos that don't belong to any closest reference.
+
+        Parameters:
+        - dataframe (pandas.DataFrame): DataFrame containing necessary data columns.
+        - coor_structure_init_dict (dict): Dictionary containing initial fractional coordinates of elements.
+        - el (str): Element symbol for which mapping is performed.
+        - max_mapping_radius (float): Maximum mapping radius for identifying nearby atomic positions.
+
+        Returns:
+        - flag_el:                                      By default False. True if there's > 1 atom belong to a same reference. 
+        - coor_weirdos_el:                              Coordinate of weirdos
+        - sum_weirdos_el:                               Sum amount of weirdos
+        - duplicate_closest24_w_data_el:                Dictionary, whose key is coor24 
+                                                        and values are multiple coorreference it belongs to and dist.
+        - atom_mapping_el_w_dist_closestduplicate:      Dictionary, whose key is coorreference 
+                                                        and its value is THE CLOSEST coor24 and dist
+        - coor_reducedreference_el_closestduplicate:    List of coorreference based on atom_mapping_el_w_dist_closestduplicate, 
+                                                        so its the closest only.
+        - atom_mapping_el_closestduplicate:             Dictionary, key: coorreference, value: coor24
+        - sum_mapped_el_closestduplicate:               Sum amount of coor_reducedreference_el_closestduplicate
+        - sum_sanitycheck_el_closestduplicate:          sum_mapped_el_closestduplicate + sum_weirdos_el
+        """
+        coor_reference_el_init = coor_structure_init_dict[el]
         col_coor_structure_init_dict = "coor_structure_init_dict"
 
         # col_atom_mapping_el = f"atom_mapping_{el}"
         # col_atom_mapping_el_w_dist = f"atom_mapping_{el}_w_dist"
         # col_coor_weirdos_el_dict = f"coor_weirdos_{el}_dict"            # just added
-        # col_coor_reduced120_el = f"coor_reduced120_{el}"
+        # col_coor_reducedreference_el = f"coor_reducedreference_{el}"
         # col_sum_mapped_el = f"sum_mapped_{el}"
         # col_sum_sanitycheck_el = f"sum_sanitycheck_{el}"
         col_flag_el = f"flag_{el}"
         col_coor_weirdos_el = f"coor_weirdos_{el}"
         col_sum_weirdos_el = f"sum_weirdos_{el}"
         col_duplicate_closest24_w_data_el = f"duplicate_closest24_w_data_{el}"
-        col_coor_reduced120_el_closestduplicate = f"coor_reduced120_{el}_closestduplicate"
+        col_coor_reducedreference_el_closestduplicate = f"coor_reducedreference_{el}_closestduplicate"
         col_sum_mapped_el_closestduplicate = f"sum_mapped_{el}_closestduplicate"
         col_sum_sanitycheck_el_closestduplicate = f"sum_sanitycheck_{el}_closestduplicate"
         col_atom_mapping_el_closestduplicate = f"atom_mapping_{el}_closestduplicate"
@@ -1069,14 +998,14 @@ class Mapping:
         # dataframe[col_atom_mapping_el] = [{} for _ in range(len(dataframe.index))] 
         # dataframe[col_atom_mapping_el_w_dist] = [{} for _ in range(len(dataframe.index))]
         # dataframe[col_coor_weirdos_el_dict] = [{el: []} for _ in range(len(dataframe.index))]                       # just added
-        # dataframe[col_coor_reduced120_el] = [np.array([]) for _ in range(len(dataframe.index))]
+        # dataframe[col_coor_reducedreference_el] = [np.array([]) for _ in range(len(dataframe.index))]
         # dataframe[col_sum_mapped_el] = [0 for _ in range(len(dataframe.index))]
         # dataframe[col_sum_sanitycheck_el] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_flag_el] = "False"
         dataframe[col_coor_weirdos_el] = [np.array([]) for _ in range(len(dataframe.index))]
         dataframe[col_sum_weirdos_el] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_duplicate_closest24_w_data_el] = [{} for _ in range(len(dataframe.index))]
-        dataframe[col_coor_reduced120_el_closestduplicate] = [np.array([]) for _ in range(len(dataframe.index))]
+        dataframe[col_coor_reducedreference_el_closestduplicate] = [np.array([]) for _ in range(len(dataframe.index))]
         dataframe[col_sum_mapped_el_closestduplicate] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_sum_sanitycheck_el_closestduplicate] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_atom_mapping_el_closestduplicate] = [{} for _ in range(len(dataframe.index))] 
@@ -1092,10 +1021,10 @@ class Mapping:
                                                                                             # or without orientation
                                                                                             # dataframe['subdir_CONTCAR']
             
-            coor_reduced120_el = coor_origin120_el_init.copy()
+            coor_reducedreference_el = coor_reference_el_init.copy()
             coor_weirdos_el = coor_origin24_el_init.copy()    
 
-            for idx120, coor120 in enumerate(coor_origin120_el_init):        
+            for idxreference, coorreference in enumerate(coor_reference_el_init):        
                 counter = 0
                 atom_mapping_w_dist_dict = {}
                 atom_mapping_el_w_dist_closestduplicate = {}
@@ -1103,7 +1032,7 @@ class Mapping:
                 closest24 = None
 
                 for idx24, coor24 in enumerate(coor_origin24_el_init):
-                    distance = Operation.Distance.mic_eucledian_distance(coor120, coor24)
+                    distance = Operation.Distance.mic_eucledian_distance(coorreference, coor24)
 
                     if distance < max_mapping_radius:
                         counter = counter + 1
@@ -1114,43 +1043,43 @@ class Mapping:
                     if counter > 1:
                         dataframe.at[idx, col_flag_el] = "True"
 
-                        # if tuple(coor120) in atom_mapping_el_w_dist:
-                        #     atom_mapping_el_w_dist[tuple(coor120)].append(atom_mapping_w_dist_dict)
+                        # if tuple(coorreference) in atom_mapping_el_w_dist:
+                        #     atom_mapping_el_w_dist[tuple(coorreference)].append(atom_mapping_w_dist_dict)
                         # else:
-                        #     atom_mapping_el_w_dist.setdefault(tuple(coor120),[atom_mapping_w_dist_dict])
+                        #     atom_mapping_el_w_dist.setdefault(tuple(coorreference),[atom_mapping_w_dist_dict])
                         
                 
                 # if closest24 is not None:
-                #     if tuple(coor120) in atom_mapping_el:
-                #         atom_mapping_el[tuple(coor120)].append(closest24)
+                #     if tuple(coorreference) in atom_mapping_el:
+                #         atom_mapping_el[tuple(coorreference)].append(closest24)
                 #     else:
-                #         atom_mapping_el[tuple(coor120)] = tuple(closest24)
+                #         atom_mapping_el[tuple(coorreference)] = tuple(closest24)
 
                 if closest24 is not None:
                     atom_mapping_w_dist_dict['closest24'] = tuple(closest24)
                     atom_mapping_w_dist_dict['dist'] = distance_prev
                     
-                    if tuple(coor120) in atom_mapping_el_w_dist:
-                        new_entry = atom_mapping_el_w_dist[tuple(coor120)].copy()
+                    if tuple(coorreference) in atom_mapping_el_w_dist:
+                        new_entry = atom_mapping_el_w_dist[tuple(coorreference)].copy()
                         new_entry.append(atom_mapping_w_dist_dict)
-                        atom_mapping_el_w_dist[tuple(coor120)] = new_entry
+                        atom_mapping_el_w_dist[tuple(coorreference)] = new_entry
                     else:
-                        atom_mapping_el_w_dist[tuple(coor120)] = [atom_mapping_w_dist_dict.copy()]
+                        atom_mapping_el_w_dist[tuple(coorreference)] = [atom_mapping_w_dist_dict.copy()]
     
                     coor_weirdos_el = [arr for arr in coor_weirdos_el if not np.array_equal(arr, closest24)]
 
                 if counter == 0:
-                    coor_reduced120_el = [arr for arr in coor_reduced120_el if not np.array_equal(arr, coor120)]
+                    coor_reducedreference_el = [arr for arr in coor_reducedreference_el if not np.array_equal(arr, coorreference)]
 
             duplicate_closest24_w_data = Operation.Dict.Mapping.get_duplicate_closest24_w_data(atom_mapping_el_w_dist)
 
-            # get the new reduced coor120, based on the closest distance if it has multiple close coor120 within the radius
+            # get the new reduced coorreference, based on the closest distance if it has multiple close coorreference within the radius
             if len(duplicate_closest24_w_data) > 0:
                 atom_mapping_el_w_dist_closestduplicate = Operation.Dict.Mapping.get_atom_mapping_el_w_dist_closestduplicate(atom_mapping_el_w_dist)
-                coor_reduced120_el_closestduplicate = [list(key) for key in atom_mapping_el_w_dist_closestduplicate.keys()]
+                coor_reducedreference_el_closestduplicate = [list(key) for key in atom_mapping_el_w_dist_closestduplicate.keys()]
             else:
                 atom_mapping_el_w_dist_closestduplicate = atom_mapping_el_w_dist.copy()
-                coor_reduced120_el_closestduplicate = coor_reduced120_el.copy()
+                coor_reducedreference_el_closestduplicate = coor_reducedreference_el.copy()
             
             # if atom_mapping_el_w_dist_closestduplicate != {}:
             #    for key, values in atom_mapping_el_w_dist_closestduplicate.items():
@@ -1174,27 +1103,32 @@ class Mapping:
             # coor_weirdos_el_dict[el] = coor_weirdos_el
 
             sum_weirdos_el = len(coor_weirdos_el)
-            # sum_mapped_el = len(coor_reduced120_el)
-            sum_mapped_el_closestduplicate = len(coor_reduced120_el_closestduplicate)
+            # sum_mapped_el = len(coor_reducedreference_el)
+            sum_mapped_el_closestduplicate = len(coor_reducedreference_el_closestduplicate)
+            sum_sanitycheck_el_closestduplicate = sum_mapped_el_closestduplicate + sum_weirdos_el
+
+            if sum_sanitycheck_el_closestduplicate != 24:
+                print(f'sum of mapped atom and weirdos are not 24 at idx: {idx}')
+                sys.exit()
 
             # dataframe.at[idx, col_atom_mapping_el] = atom_mapping_el
             # dataframe.at[idx, col_atom_mapping_el_w_dist] = atom_mapping_el_w_dist
             # dataframe.at[idx, col_coor_weirdos_el_dict] = coor_weirdos_el_dict          # just added
-            # dataframe.at[idx, col_coor_reduced120_el] = np.array(coor_reduced120_el)
+            # dataframe.at[idx, col_coor_reducedreference_el] = np.array(coor_reducedreference_el)
             # dataframe.at[idx, col_sum_mapped_el] = sum_mapped_el
             # dataframe.at[idx, col_sum_sanitycheck_el] = sum_weirdos_el + sum_mapped_el
             dataframe.at[idx, col_coor_weirdos_el] = coor_weirdos_el
             dataframe.at[idx, col_sum_weirdos_el] = sum_weirdos_el
             dataframe.at[idx, col_duplicate_closest24_w_data_el] = duplicate_closest24_w_data
-            dataframe.at[idx, col_coor_reduced120_el_closestduplicate] = np.array(coor_reduced120_el_closestduplicate)
-            dataframe.at[idx, col_sum_mapped_el_closestduplicate] = sum_mapped_el_closestduplicate
-            dataframe.at[idx, col_sum_sanitycheck_el_closestduplicate] = sum_mapped_el_closestduplicate + sum_weirdos_el
-            dataframe.at[idx, col_atom_mapping_el_closestduplicate] = atom_mapping_el_closestduplicate
             dataframe.at[idx, col_atom_mapping_el_w_dist_closestduplicate] = atom_mapping_el_w_dist_closestduplicate
+            dataframe.at[idx, col_coor_reducedreference_el_closestduplicate] = np.array(coor_reducedreference_el_closestduplicate)
+            dataframe.at[idx, col_atom_mapping_el_closestduplicate] = atom_mapping_el_closestduplicate
+            dataframe.at[idx, col_sum_mapped_el_closestduplicate] = sum_mapped_el_closestduplicate
+            dataframe.at[idx, col_sum_sanitycheck_el_closestduplicate] = sum_sanitycheck_el_closestduplicate
 
 
     def get_flag_map_weirdos_48htype2_el(dataframe, coor_structure_init_dict, el, max_mapping_radius_48htype2, activate_radius):
-        coor_origin120_el_init = coor_structure_init_dict[el]         
+        coor_reference_el_init = coor_structure_init_dict[el]         
         if activate_radius == 3:              
             col_coor_structure_48htype2_init_el = f"coor_weirdos_48htype1_48htype2_{el}"               # here is the difference
         elif activate_radius == 2:
@@ -1204,14 +1138,14 @@ class Mapping:
 
         # col_atom_mapping_48htype2_el = f"atom_mapping_48htype2_{el}"
         # col_atom_mapping_48htype2_el_w_dist = f"atom_mapping_48htype2_{el}_w_dist"
-        # col_coor_reduced120_48htype2_el = f"coor_reduced120_48htype2_{el}"
+        # col_coor_reducedreference_48htype2_el = f"coor_reducedreference_48htype2_{el}"
         # col_sum_mapped_48htype2_el = f"sum_mapped_48htype2_{el}"
         # col_sum_sanitycheck_48htype2_el = f"sum_sanitycheck_48htype2_{el}"
         col_flag_48htype2_el = f"flag_48htype2_{el}"
         col_coor_weirdos_48htype2_el = f"coor_weirdos_48htype2_{el}"
         col_sum_weirdos_48htype2_el = f"sum_weirdos_48htype2_{el}"
         col_duplicate_closest24_w_data_48htype2_el = f"duplicate_closest24_w_data_48htype2_{el}"
-        col_coor_reduced120_48htype2_el_closestduplicate = f"coor_reduced120_48htype2_{el}_closestduplicate"
+        col_coor_reducedreference_48htype2_el_closestduplicate = f"coor_reducedreference_48htype2_{el}_closestduplicate"
         col_sum_mapped_48htype2_el_closestduplicate = f"sum_mapped_48htype2_{el}_closestduplicate"
         col_sum_sanitycheck_48htype2_el_closestduplicate = f"sum_sanitycheck_48htype2_{el}_closestduplicate"
         col_atom_mapping_48htype2_el_closestduplicate = f"atom_mapping_48htype2_{el}_closestduplicate"
@@ -1219,22 +1153,22 @@ class Mapping:
 
         # dataframe[col_atom_mapping_48htype2_el] = [{} for _ in range(len(dataframe.index))]
         # dataframe[col_atom_mapping_48htype2_el_w_dist] = [{} for _ in range(len(dataframe.index))]
-        # dataframe[col_coor_reduced120_48htype2_el] = [np.array([]) for _ in range(len(dataframe.index))]
+        # dataframe[col_coor_reducedreference_48htype2_el] = [np.array([]) for _ in range(len(dataframe.index))]
         # dataframe[col_sum_mapped_48htype2_el] = [0 for _ in range(len(dataframe.index))]
         # dataframe[col_sum_sanitycheck_48htype2_el] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_flag_48htype2_el] = "False"
         dataframe[col_coor_weirdos_48htype2_el] = [np.array([]) for _ in range(len(dataframe.index))]
         dataframe[col_sum_weirdos_48htype2_el] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_duplicate_closest24_w_data_48htype2_el] = [{} for _ in range(len(dataframe.index))]
-        dataframe[col_coor_reduced120_48htype2_el_closestduplicate] = [np.array([]) for _ in range(len(dataframe.index))]
+        dataframe[col_coor_reducedreference_48htype2_el_closestduplicate] = [np.array([]) for _ in range(len(dataframe.index))]
         dataframe[col_sum_mapped_48htype2_el_closestduplicate] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_sum_sanitycheck_48htype2_el_closestduplicate] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_atom_mapping_48htype2_el_closestduplicate] = [{} for _ in range(len(dataframe.index))]
         dataframe[col_atom_mapping_48htype2_el_w_dist_closestduplicate] = [{} for _ in range(len(dataframe.index))]
 
-        coor_li48htype1_ref = coor_origin120_el_init[0:48]
-        coor_li48htype2_ref = coor_origin120_el_init[48:96]
-        coor_li24g_ref = coor_origin120_el_init[96:120]
+        coor_li48htype1_ref = coor_reference_el_init[0:48]
+        coor_li48htype2_ref = coor_reference_el_init[48:96]
+        coor_li24g_ref = coor_reference_el_init[96:120]
 
         for idx in range(dataframe["geometry"].size):
             atom_mapping_el_w_dist = {} 
@@ -1247,17 +1181,17 @@ class Mapping:
                                                                                             # dataframe['subdir_CONTCAR']
             
             if len(coor_origin24_el_init) > 0:
-                coor_reduced120_el = coor_li48htype2_ref.copy()
+                coor_reducedreference_el = coor_li48htype2_ref.copy()
                 coor_weirdos_el = coor_origin24_el_init.copy()    
 
-                for idx120, coor120 in enumerate(coor_li48htype2_ref):        
+                for idxreference, coorreference in enumerate(coor_li48htype2_ref):        
                     counter = 0
                     atom_mapping_w_dist_dict = {}
                     distance_prev = float("inf")
                     closest24 = None
 
                     for idx24, coor24 in enumerate(coor_origin24_el_init):
-                        distance = Operation.Distance.mic_eucledian_distance(coor120, coor24)
+                        distance = Operation.Distance.mic_eucledian_distance(coorreference, coor24)
                         
                         if distance < max_mapping_radius_48htype2:
                             counter = counter + 1
@@ -1272,27 +1206,27 @@ class Mapping:
                         atom_mapping_w_dist_dict['closest24'] = tuple(closest24)
                         atom_mapping_w_dist_dict['dist'] = distance_prev
 
-                        # if tuple(coor120) in atom_mapping_el_w_dist:
-                        #     atom_mapping_el_w_dist[tuple(coor120)].append(atom_mapping_w_dist_dict)
+                        # if tuple(coorreference) in atom_mapping_el_w_dist:
+                        #     atom_mapping_el_w_dist[tuple(coorreference)].append(atom_mapping_w_dist_dict)
                         # else:
-                        #     atom_mapping_el_w_dist[tuple(coor120)] = atom_mapping_w_dist_dict
+                        #     atom_mapping_el_w_dist[tuple(coorreference)] = atom_mapping_w_dist_dict
                             
-                        # if tuple(coor120) in atom_mapping_el:
-                        #     atom_mapping_el[tuple(coor120)].append(closest24)
+                        # if tuple(coorreference) in atom_mapping_el:
+                        #     atom_mapping_el[tuple(coorreference)].append(closest24)
                         # else:
-                        #     atom_mapping_el[tuple(coor120)] = tuple(closest24)
+                        #     atom_mapping_el[tuple(coorreference)] = tuple(closest24)
 
-                        if tuple(coor120) in atom_mapping_el_w_dist:
-                            new_entry = atom_mapping_el_w_dist[tuple(coor120)].copy()
+                        if tuple(coorreference) in atom_mapping_el_w_dist:
+                            new_entry = atom_mapping_el_w_dist[tuple(coorreference)].copy()
                             new_entry.append(atom_mapping_w_dist_dict)
-                            atom_mapping_el_w_dist[tuple(coor120)] = new_entry
+                            atom_mapping_el_w_dist[tuple(coorreference)] = new_entry
                         else:
-                            atom_mapping_el_w_dist[tuple(coor120)] = [atom_mapping_w_dist_dict.copy()]
+                            atom_mapping_el_w_dist[tuple(coorreference)] = [atom_mapping_w_dist_dict.copy()]
 
                         coor_weirdos_el = [arr for arr in coor_weirdos_el if not np.array_equal(arr, closest24)]
 
                     if counter == 0:
-                        coor_reduced120_el = [arr for arr in coor_reduced120_el if not np.array_equal(arr, coor120)]
+                        coor_reducedreference_el = [arr for arr in coor_reducedreference_el if not np.array_equal(arr, coorreference)]
 
                 duplicate_closest24_w_data = Operation.Dict.Mapping.get_duplicate_closest24_w_data(atom_mapping_el_w_dist)
 
@@ -1300,10 +1234,10 @@ class Mapping:
                 # if duplicate_closest24_w_data != {}:
                 if len(duplicate_closest24_w_data) > 0:
                     atom_mapping_el_w_dist_closestduplicate = Operation.Dict.Mapping.get_atom_mapping_el_w_dist_closestduplicate(atom_mapping_el_w_dist)
-                    coor_reduced120_el_closestduplicate = [list(key) for key in atom_mapping_el_w_dist_closestduplicate.keys()]
+                    coor_reducedreference_el_closestduplicate = [list(key) for key in atom_mapping_el_w_dist_closestduplicate.keys()]
                 else:
                     atom_mapping_el_w_dist_closestduplicate = atom_mapping_el_w_dist.copy()
-                    coor_reduced120_el_closestduplicate = coor_reduced120_el.copy()
+                    coor_reducedreference_el_closestduplicate = coor_reducedreference_el.copy()
 
                 
                 # if atom_mapping_el_w_dist_closestduplicate != {}:
@@ -1325,18 +1259,18 @@ class Mapping:
                         atom_mapping_el_closestduplicate[key] = closest24_values
 
                 sum_weirdos_el = len(coor_weirdos_el)
-                # sum_mapped_el = len(coor_reduced120_el)
-                sum_mapped_el_closestduplicate = len(coor_reduced120_el_closestduplicate)
+                # sum_mapped_el = len(coor_reducedreference_el)
+                sum_mapped_el_closestduplicate = len(coor_reducedreference_el_closestduplicate)
 
                 # dataframe.at[idx, col_atom_mapping_48htype2_el] = atom_mapping_el
                 # dataframe.at[idx, col_atom_mapping_48htype2_el_w_dist] = atom_mapping_el_w_dist
-                # dataframe.at[idx, col_coor_reduced120_48htype2_el] = np.array(coor_reduced120_el)
+                # dataframe.at[idx, col_coor_reducedreference_48htype2_el] = np.array(coor_reducedreference_el)
                 # dataframe.at[idx, col_sum_mapped_48htype2_el] = sum_mapped_el
                 # dataframe.at[idx, col_sum_sanitycheck_48htype2_el] = sum_mapped_el + sum_weirdos_el 
                 dataframe.at[idx, col_coor_weirdos_48htype2_el] = coor_weirdos_el
                 dataframe.at[idx, col_sum_weirdos_48htype2_el] = sum_weirdos_el
                 dataframe.at[idx, col_duplicate_closest24_w_data_48htype2_el] = duplicate_closest24_w_data
-                dataframe.at[idx, col_coor_reduced120_48htype2_el_closestduplicate] = np.array(coor_reduced120_el_closestduplicate)
+                dataframe.at[idx, col_coor_reducedreference_48htype2_el_closestduplicate] = np.array(coor_reducedreference_el_closestduplicate)
                 dataframe.at[idx, col_sum_mapped_48htype2_el_closestduplicate] = sum_mapped_el_closestduplicate
                 dataframe.at[idx, col_sum_sanitycheck_48htype2_el_closestduplicate] = sum_mapped_el_closestduplicate + sum_weirdos_el
                 dataframe.at[idx, col_atom_mapping_48htype2_el_closestduplicate] = atom_mapping_el_closestduplicate
@@ -1349,27 +1283,27 @@ class Mapping:
 
 
     def get_flag_map_weirdos_48htype1_48htype2_el(dataframe, coor_structure_init_dict, el, max_mapping_radius_48htype1_48htype2):
-        coor_origin120_el_init = coor_structure_init_dict[el]                       
+        coor_reference_el_init = coor_structure_init_dict[el]                       
         col_coor_structure_48htype1_48htype2_init_el = f"coor_weirdos_{el}"               # here is the difference
 
         # col_atom_mapping_48htype1_48htype2_el = f"atom_mapping_48htype1_48htype2_{el}"
         # col_atom_mapping_48htype1_48htype2_el_w_dist = f"atom_mapping_48htype1_48htype2_{el}_w_dist"
         # col_coor_weirdos_48htype1_48htype2_el_dict = f"coor_weirdos_48htype1_48htype2_{el}_dict"            # just added
-        # col_coor_reduced120_48htype1_48htype2_el = f"coor_reduced120_48htype1_48htype2_{el}"
+        # col_coor_reducedreference_48htype1_48htype2_el = f"coor_reducedreference_48htype1_48htype2_{el}"
         # col_sum_mapped_48htype1_48htype2_el = f"sum_mapped_48htype1_48htype2_{el}"
         # col_sum_sanitycheck_48htype1_48htype2_el = f"sum_sanitycheck_48htype1_48htype2_{el}"
         col_flag_48htype1_48htype2_el = f"flag_48htype1_48htype2_{el}"
         col_coor_weirdos_48htype1_48htype2_el = f"coor_weirdos_48htype1_48htype2_{el}"
         col_sum_weirdos_48htype1_48htype2_el = f"sum_weirdos_48htype1_48htype2_{el}"
         col_duplicate_closest24_w_data_48htype1_48htype2_el = f"duplicate_closest24_w_data_48htype1_48htype2_{el}"
-        col_coor_reduced120_48htype1_48htype2_el_closestduplicate = f"coor_reduced120_48htype1_48htype2_{el}_closestduplicate"
+        col_coor_reducedreference_48htype1_48htype2_el_closestduplicate = f"coor_reducedreference_48htype1_48htype2_{el}_closestduplicate"
         col_sum_mapped_48htype1_48htype2_el_closestduplicate = f"sum_mapped_48htype1_48htype2_{el}_closestduplicate"
         col_sum_sanitycheck_48htype1_48htype2_el_closestduplicate = f"sum_sanitycheck_48htype1_48htype2_{el}_closestduplicate"
         col_atom_mapping_48htype1_48htype2_el_closestduplicate = f"atom_mapping_48htype1_48htype2_{el}_closestduplicate"
 
         # dataframe[col_atom_mapping_48htype1_48htype2_el] = [{} for _ in range(len(dataframe.index))]
         # dataframe[col_atom_mapping_48htype1_48htype2_el_w_dist] = [{} for _ in range(len(dataframe.index))]
-        # dataframe[col_coor_reduced120_48htype1_48htype2_el] = [np.array([]) for _ in range(len(dataframe.index))]
+        # dataframe[col_coor_reducedreference_48htype1_48htype2_el] = [np.array([]) for _ in range(len(dataframe.index))]
         # dataframe[col_coor_weirdos_48htype1_48htype2_el_dict] = [{el: []} for _ in range(len(dataframe.index))]
         # dataframe[col_sum_mapped_48htype1_48htype2_el] = [0 for _ in range(len(dataframe.index))]
         # dataframe[col_sum_sanitycheck_48htype1_48htype2_el] = [0 for _ in range(len(dataframe.index))]
@@ -1377,13 +1311,13 @@ class Mapping:
         dataframe[col_coor_weirdos_48htype1_48htype2_el] = [np.array([]) for _ in range(len(dataframe.index))]
         dataframe[col_sum_weirdos_48htype1_48htype2_el] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_duplicate_closest24_w_data_48htype1_48htype2_el] = [{} for _ in range(len(dataframe.index))]
-        dataframe[col_coor_reduced120_48htype1_48htype2_el_closestduplicate] = [np.array([]) for _ in range(len(dataframe.index))]
+        dataframe[col_coor_reducedreference_48htype1_48htype2_el_closestduplicate] = [np.array([]) for _ in range(len(dataframe.index))]
         dataframe[col_sum_mapped_48htype1_48htype2_el_closestduplicate] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_sum_sanitycheck_48htype1_48htype2_el_closestduplicate] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_atom_mapping_48htype1_48htype2_el_closestduplicate] = [{} for _ in range(len(dataframe.index))] 
 
-        coor_li48htype1_li48htype2_ref = coor_origin120_el_init[0:96]
-        coor_li24g_ref = coor_origin120_el_init[96:120]
+        coor_li48htype1_li48htype2_ref = coor_reference_el_init[0:96]
+        coor_li24g_ref = coor_reference_el_init[96:120]
 
         for idx in range(dataframe["geometry"].size):
             atom_mapping_el_w_dist = {} 
@@ -1397,17 +1331,17 @@ class Mapping:
                                                                                             # dataframe['subdir_CONTCAR']
             
             if len(coor_origin24_el_init) > 0: # need this for the Operation.Distance.mic_eucledian_distance()
-                coor_reduced120_el = coor_li48htype1_li48htype2_ref.copy()
+                coor_reducedreference_el = coor_li48htype1_li48htype2_ref.copy()
                 coor_weirdos_el = coor_origin24_el_init.copy()    
 
-                for idx120, coor120 in enumerate(coor_li48htype1_li48htype2_ref):        
+                for idxreference, coorreference in enumerate(coor_li48htype1_li48htype2_ref):        
                     counter = 0
                     atom_mapping_w_dist_dict = {}
                     distance_prev = float("inf")
                     closest24 = None
 
                     for idx24, coor24 in enumerate(coor_origin24_el_init):
-                        distance = Operation.Distance.mic_eucledian_distance(coor120, coor24)
+                        distance = Operation.Distance.mic_eucledian_distance(coorreference, coor24)
                         
                         if distance < max_mapping_radius_48htype1_48htype2:
                             counter = counter + 1
@@ -1422,27 +1356,27 @@ class Mapping:
                         atom_mapping_w_dist_dict['closest24'] = tuple(closest24)
                         atom_mapping_w_dist_dict['dist'] = distance_prev
 
-                        # if tuple(coor120) in atom_mapping_el_w_dist:
-                        #     atom_mapping_el_w_dist[tuple(coor120)].append(atom_mapping_w_dist_dict)
+                        # if tuple(coorreference) in atom_mapping_el_w_dist:
+                        #     atom_mapping_el_w_dist[tuple(coorreference)].append(atom_mapping_w_dist_dict)
                         # else:
-                        #     atom_mapping_el_w_dist[tuple(coor120)] = atom_mapping_w_dist_dict
+                        #     atom_mapping_el_w_dist[tuple(coorreference)] = atom_mapping_w_dist_dict
                             
-                        # if tuple(coor120) in atom_mapping_el:
-                        #     atom_mapping_el[tuple(coor120)].append(closest24)
+                        # if tuple(coorreference) in atom_mapping_el:
+                        #     atom_mapping_el[tuple(coorreference)].append(closest24)
                         # else:
-                        #     atom_mapping_el[tuple(coor120)] = tuple(closest24)
+                        #     atom_mapping_el[tuple(coorreference)] = tuple(closest24)
 
-                        if tuple(coor120) in atom_mapping_el_w_dist:
-                            new_entry = atom_mapping_el_w_dist[tuple(coor120)].copy()
+                        if tuple(coorreference) in atom_mapping_el_w_dist:
+                            new_entry = atom_mapping_el_w_dist[tuple(coorreference)].copy()
                             new_entry.append(atom_mapping_w_dist_dict)
-                            atom_mapping_el_w_dist[tuple(coor120)] = new_entry
+                            atom_mapping_el_w_dist[tuple(coorreference)] = new_entry
                         else:
-                            atom_mapping_el_w_dist[tuple(coor120)] = [atom_mapping_w_dist_dict.copy()]
+                            atom_mapping_el_w_dist[tuple(coorreference)] = [atom_mapping_w_dist_dict.copy()]
         
                         coor_weirdos_el = [arr for arr in coor_weirdos_el if not np.array_equal(arr, closest24)]
 
                     if counter == 0:
-                        coor_reduced120_el = [arr for arr in coor_reduced120_el if not np.array_equal(arr, coor120)]
+                        coor_reducedreference_el = [arr for arr in coor_reducedreference_el if not np.array_equal(arr, coorreference)]
 
                 duplicate_closest24_w_data = Operation.Dict.Mapping.get_duplicate_closest24_w_data(atom_mapping_el_w_dist)
 
@@ -1450,10 +1384,10 @@ class Mapping:
                 # if duplicate_closest24_w_data != {}:
                 if len(duplicate_closest24_w_data) > 0:
                     atom_mapping_el_w_dist_closestduplicate = Operation.Dict.Mapping.get_atom_mapping_el_w_dist_closestduplicate(atom_mapping_el_w_dist)
-                    coor_reduced120_el_closestduplicate = [list(key) for key in atom_mapping_el_w_dist_closestduplicate.keys()]
+                    coor_reducedreference_el_closestduplicate = [list(key) for key in atom_mapping_el_w_dist_closestduplicate.keys()]
                 else:
                     atom_mapping_el_w_dist_closestduplicate = atom_mapping_el_w_dist.copy()
-                    coor_reduced120_el_closestduplicate = coor_reduced120_el.copy()
+                    coor_reducedreference_el_closestduplicate = coor_reducedreference_el.copy()
 
                 # if atom_mapping_el_w_dist_closestduplicate != {}:
                 #    for key, values in atom_mapping_el_w_dist_closestduplicate.items():
@@ -1477,19 +1411,19 @@ class Mapping:
                 # coor_weirdos_el_dict[el] = coor_weirdos_el
 
                 sum_weirdos_el = len(coor_weirdos_el)
-                # sum_mapped_el = len(coor_reduced120_el)
-                sum_mapped_el_closestduplicate = len(coor_reduced120_el_closestduplicate)
+                # sum_mapped_el = len(coor_reducedreference_el)
+                sum_mapped_el_closestduplicate = len(coor_reducedreference_el_closestduplicate)
 
                 # dataframe.at[idx, col_atom_mapping_48htype1_48htype2_el] = atom_mapping_el
                 # dataframe.at[idx, col_atom_mapping_48htype1_48htype2_el_w_dist] = atom_mapping_el_w_dist
                 # dataframe.at[idx, col_coor_weirdos_48htype1_48htype2_el_dict] = coor_weirdos_el_dict
-                # dataframe.at[idx, col_coor_reduced120_48htype1_48htype2_el] = np.array(coor_reduced120_el)
+                # dataframe.at[idx, col_coor_reducedreference_48htype1_48htype2_el] = np.array(coor_reducedreference_el)
                 # dataframe.at[idx, col_sum_mapped_48htype1_48htype2_el] = sum_mapped_el
                 # dataframe.at[idx, col_sum_sanitycheck_48htype1_48htype2_el] = sum_mapped_el + sum_weirdos_el 
                 dataframe.at[idx, col_coor_weirdos_48htype1_48htype2_el] = coor_weirdos_el
                 dataframe.at[idx, col_sum_weirdos_48htype1_48htype2_el] = sum_weirdos_el
                 dataframe.at[idx, col_duplicate_closest24_w_data_48htype1_48htype2_el] = duplicate_closest24_w_data
-                dataframe.at[idx, col_coor_reduced120_48htype1_48htype2_el_closestduplicate] = np.array(coor_reduced120_el_closestduplicate)
+                dataframe.at[idx, col_coor_reducedreference_48htype1_48htype2_el_closestduplicate] = np.array(coor_reducedreference_el_closestduplicate)
                 dataframe.at[idx, col_sum_mapped_48htype1_48htype2_el_closestduplicate] = sum_mapped_el_closestduplicate
                 dataframe.at[idx, col_sum_sanitycheck_48htype1_48htype2_el_closestduplicate] = sum_mapped_el_closestduplicate + sum_weirdos_el
                 dataframe.at[idx, col_atom_mapping_48htype1_48htype2_el_closestduplicate] = atom_mapping_el_closestduplicate
@@ -1505,36 +1439,36 @@ class Mapping:
         # col_coor_weirdos_el = f"coor_weirdos_{el}"
         # col_coor_weirdos_el_dict = f"coor_weirdos_{el}_dict"            # just added
         # col_atom_mapping_el_w_dist = f"atom_mapping_{el}_w_dist"
-        # col_coor_reduced120_el = f"coor_reduced120_{el}_closestduplicate"
+        # col_coor_reducedreference_el = f"coor_reducedreference_{el}_closestduplicate"
         col_atom_mapping_el_closestduplicate = f"atom_mapping_{el}_closestduplicate"
-        col_coor_reduced120_el_closestduplicate = f"coor_reduced120_{el}_closestduplicate"
+        col_coor_reducedreference_el_closestduplicate = f"coor_reducedreference_{el}_closestduplicate"
 
 
         # # col_flag_48htype1_48htype2_el = f"flag_48htype1_48htype2_{el}"
         # col_atom_mapping_48htype1_48htype2_el_w_dist = f"atom_mapping_48htype1_48htype2_{el}_w_dist"
-        # col_coor_reduced120_48htype1_48htype2_el = f"coor_reduced120_48htype1_48htype2_{el}_closestduplicate"
+        # col_coor_reducedreference_48htype1_48htype2_el = f"coor_reducedreference_48htype1_48htype2_{el}_closestduplicate"
         col_sum_weirdos_48htype1_48htype2_el = f"sum_weirdos_48htype1_48htype2_{el}"
         col_atom_mapping_48htype1_48htype2_el_closestduplicate = f"atom_mapping_48htype1_48htype2_{el}_closestduplicate"
-        col_coor_reduced120_48htype1_48htype2_el_closestduplicate = f"coor_reduced120_48htype1_48htype2_{el}_closestduplicate"
+        col_coor_reducedreference_48htype1_48htype2_el_closestduplicate = f"coor_reducedreference_48htype1_48htype2_{el}_closestduplicate"
 
 
         col_flag_48htypesmerged_level1_el = f"flag_48htypesmerged_level1_{el}"
         col_atom_mapping_48htypesmerged_level1_el = f"atom_mapping_48htypesmerged_level1_{el}"
         # col_atom_mapping_48htypesmerged_level1_el_w_dist = f"atom_mapping_48htypesmerged_level1_{el}_w_dist"
-        col_coor_reduced120_48htypesmerged_level1_el = f"coor_reduced120_48htypesmerged_level1_{el}"
+        col_coor_reducedreference_48htypesmerged_level1_el = f"coor_reducedreference_48htypesmerged_level1_{el}"
         col_sum_mapped_48htypesmerged_level1_el = f"sum_mapped_48htypesmerged_level1_{el}"
         col_sum_sanitycheck_48htypesmerged_level1_el = f"sum_sanitycheck_48htypesmerged_level1_{el}"
-        col_ndim_coor_reduced120_level1_el_closestduplicate = f"ndim_coor_reduced120_level1_{el}_closestduplicate"
-        col_ndim_coor_reduced120_48htype2_level1_el_closestduplicate = f"ndim_coor_reduced120_48htype2_level1_{el}_closestduplicate"
+        col_ndim_coor_reducedreference_level1_el_closestduplicate = f"ndim_coor_reducedreference_level1_{el}_closestduplicate"
+        col_ndim_coor_reducedreference_48htype2_level1_el_closestduplicate = f"ndim_coor_reducedreference_48htype2_level1_{el}_closestduplicate"
 
         dataframe[col_flag_48htypesmerged_level1_el] = "False"
         dataframe[col_atom_mapping_48htypesmerged_level1_el] = [{} for _ in range(len(dataframe.index))]
         # dataframe[col_atom_mapping_48htypesmerged_level1_el_w_dist] = [{} for _ in range(len(dataframe.index))]
-        dataframe[col_coor_reduced120_48htypesmerged_level1_el] = [np.array([]) for _ in range(len(dataframe.index))]
+        dataframe[col_coor_reducedreference_48htypesmerged_level1_el] = [np.array([]) for _ in range(len(dataframe.index))]
         dataframe[col_sum_mapped_48htypesmerged_level1_el] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_sum_sanitycheck_48htypesmerged_level1_el] = [0 for _ in range(len(dataframe.index))]
-        dataframe[col_ndim_coor_reduced120_level1_el_closestduplicate] = None
-        dataframe[col_ndim_coor_reduced120_48htype2_level1_el_closestduplicate] = None
+        dataframe[col_ndim_coor_reducedreference_level1_el_closestduplicate] = None
+        dataframe[col_ndim_coor_reducedreference_48htype2_level1_el_closestduplicate] = None
 
         for idx in range(dataframe["geometry"].size):
             # print(f"idx_48htypesmerged: {idx}")
@@ -1542,112 +1476,112 @@ class Mapping:
             atom_mapping_48htype1_48htype2_el_closestduplicate = dataframe.at[idx, col_atom_mapping_48htype1_48htype2_el_closestduplicate]
             # atom_mapping_el_w_dist = dataframe.at[idx, col_atom_mapping_el_w_dist]
             # atom_mapping_48htype1_48htype2_el_w_dist = dataframe.at[idx, col_atom_mapping_48htype1_48htype2_el_w_dist]
-            # coor_reduced120_el = dataframe.at[idx, col_coor_reduced120_el]
-            # coor_reduced120_48htype1_48htype2_el = dataframe.at[idx, col_coor_reduced120_48htype1_48htype2_el]
+            # coor_reducedreference_el = dataframe.at[idx, col_coor_reducedreference_el]
+            # coor_reducedreference_48htype1_48htype2_el = dataframe.at[idx, col_coor_reducedreference_48htype1_48htype2_el]
             # _closestduplicate
-            coor_reduced120_el_closestduplicate = dataframe.at[idx, col_coor_reduced120_el_closestduplicate]
-            coor_reduced120_48htype1_48htype2_el_closestduplicate = dataframe.at[idx, col_coor_reduced120_48htype1_48htype2_el_closestduplicate]
+            coor_reducedreference_el_closestduplicate = dataframe.at[idx, col_coor_reducedreference_el_closestduplicate]
+            coor_reducedreference_48htype1_48htype2_el_closestduplicate = dataframe.at[idx, col_coor_reducedreference_48htype1_48htype2_el_closestduplicate]
             # # these are just copying
             # coor_weirdos_48htypesmerged_level1_el = dataframe.at[idx, col_coor_weirdos_48htype1_48htype2_el]
             sum_weirdos_48htypesmerged_level1_el = dataframe.at[idx, col_sum_weirdos_48htype1_48htype2_el]
             # duplicate_closest24_w_data_48htypesmerged = dataframe.at[idx, col_duplicate_closest24_w_data_48htype1_48htype2_el]
             
             # # _closestduplicate
-            # coor_reduced120_48htypesmerged_level1_el_closestduplicate = dataframe.at[idx, col_coor_reduced120_48htype1_48htype2_el_closestduplicate]
-            # coor_reduced120_48htypesmerged_level1_el = []
+            # coor_reducedreference_48htypesmerged_level1_el_closestduplicate = dataframe.at[idx, col_coor_reducedreference_48htype1_48htype2_el_closestduplicate]
+            # coor_reducedreference_48htypesmerged_level1_el = []
 
             atom_mapping_48htypesmerged_level1_el = Operation.Dict.merge_dictionaries(atom_mapping_el_closestduplicate, atom_mapping_48htype1_48htype2_el_closestduplicate)
-            duplicate_coor24s = Operation.Dict.check_duplicate_values(atom_mapping_48htypesmerged_level1_el)
+            duplicate_coor24s = Operation.Dict.get_duplicate_values(atom_mapping_48htypesmerged_level1_el)
             if len(duplicate_coor24s) > 1:        
                 dataframe.at[idx, col_flag_48htypesmerged_level1_el] = "True"        
-            # for coor120 in atom_mapping_48htypesmerged_level1_el:
-            #     values24 = atom_mapping_48htypesmerged_level1_el[coor120]   # get value for the key
+            # for coorreference in atom_mapping_48htypesmerged_level1_el:
+            #     values24 = atom_mapping_48htypesmerged_level1_el[coorreference]   # get value for the key
             #     if len(values24) > 1:        
             #         dataframe.at[idx, col_flag_48htypesmerged_level1_el] = "True"
             
             # atom_mapping_48htypesmerged_level1_el_w_dist = Operation.Dict.merge_dictionaries(atom_mapping_el_w_dist, atom_mapping_48htype1_48htype2_el_w_dist)
 
-            # # if coor_reduced120_48htype1_48htype2_el != None:
-            # # if coor_reduced120_48htype1_48htype2_el.size > 0:
-            # if coor_reduced120_48htype1_48htype2_el.ndim == 2:
-            #     coor_reduced120_48htypesmerged_level1_el = np.concatenate((coor_reduced120_el, coor_reduced120_48htype1_48htype2_el), axis=0)
-            # elif coor_reduced120_48htype1_48htype2_el.ndim == 1:
-            #     coor_reduced120_48htypesmerged_level1_el = np.array(coor_reduced120_el.copy())
+            # # if coor_reducedreference_48htype1_48htype2_el != None:
+            # # if coor_reducedreference_48htype1_48htype2_el.size > 0:
+            # if coor_reducedreference_48htype1_48htype2_el.ndim == 2:
+            #     coor_reducedreference_48htypesmerged_level1_el = np.concatenate((coor_reducedreference_el, coor_reducedreference_48htype1_48htype2_el), axis=0)
+            # elif coor_reducedreference_48htype1_48htype2_el.ndim == 1:
+            #     coor_reducedreference_48htypesmerged_level1_el = np.array(coor_reducedreference_el.copy())
             # else:
             #     break
 
             ## we use _closestduplicate here since it's the corrected one wrt distance
-            # if coor_reduced120_48htype1_48htype2_el_closestduplicate != None:
-            # if coor_reduced120_48htype1_48htype2_el_closestduplicate.size > 0:
-            # # # if coor_reduced120_48htype1_48htype2_el_closestduplicate.ndim == 2:
-            # # #     if coor_reduced120_el_closestduplicate.ndim == 2:
-            # # #         coor_reduced120_48htypesmerged_level1_el_closestduplicate = np.concatenate((coor_reduced120_el_closestduplicate, coor_reduced120_48htype1_48htype2_el_closestduplicate), axis=0)
+            # if coor_reducedreference_48htype1_48htype2_el_closestduplicate != None:
+            # if coor_reducedreference_48htype1_48htype2_el_closestduplicate.size > 0:
+            # # # if coor_reducedreference_48htype1_48htype2_el_closestduplicate.ndim == 2:
+            # # #     if coor_reducedreference_el_closestduplicate.ndim == 2:
+            # # #         coor_reducedreference_48htypesmerged_level1_el_closestduplicate = np.concatenate((coor_reducedreference_el_closestduplicate, coor_reducedreference_48htype1_48htype2_el_closestduplicate), axis=0)
             # # #     else:
-            # # #         print(f"coor_reduced120_el_closestduplicate has no correct dimension at idx: {idx}, dimension: {coor_reduced120_el_closestduplicate.ndim}")
+            # # #         print(f"coor_reducedreference_el_closestduplicate has no correct dimension at idx: {idx}, dimension: {coor_reducedreference_el_closestduplicate.ndim}")
             # # #         pass
-            # # #         # print(f"coor_reduced120_el_closestduplicate: \n {coor_reduced120_el_closestduplicate}")
-            # # # elif coor_reduced120_48htype1_48htype2_el_closestduplicate.ndim == 1:
-            # # #     coor_reduced120_48htypesmerged_level1_el_closestduplicate = np.array(coor_reduced120_el_closestduplicate.copy())
+            # # #         # print(f"coor_reducedreference_el_closestduplicate: \n {coor_reducedreference_el_closestduplicate}")
+            # # # elif coor_reducedreference_48htype1_48htype2_el_closestduplicate.ndim == 1:
+            # # #     coor_reducedreference_48htypesmerged_level1_el_closestduplicate = np.array(coor_reducedreference_el_closestduplicate.copy())
             # # # else:
-            # # #     print(f"coor_reduced120_48htype1_48htype2_el_closestduplicate has no correct dimension at idx: {idx}, dimension: {coor_reduced120_48htypesmerged_level1_el_closestduplicate.ndim}")
+            # # #     print(f"coor_reducedreference_48htype1_48htype2_el_closestduplicate has no correct dimension at idx: {idx}, dimension: {coor_reducedreference_48htypesmerged_level1_el_closestduplicate.ndim}")
             # # #     # break
 
-            if coor_reduced120_48htype1_48htype2_el_closestduplicate.ndim == coor_reduced120_el_closestduplicate.ndim:
-                coor_reduced120_48htypesmerged_level1_el = np.concatenate((coor_reduced120_el_closestduplicate, coor_reduced120_48htype1_48htype2_el_closestduplicate), axis=0)
+            if coor_reducedreference_48htype1_48htype2_el_closestduplicate.ndim == coor_reducedreference_el_closestduplicate.ndim:
+                coor_reducedreference_48htypesmerged_level1_el = np.concatenate((coor_reducedreference_el_closestduplicate, coor_reducedreference_48htype1_48htype2_el_closestduplicate), axis=0)
                 # else:
-                #     print(f"coor_reduced120_el_closestduplicate has no correct dimension at idx: {idx}")
+                #     print(f"coor_reducedreference_el_closestduplicate has no correct dimension at idx: {idx}")
                 #     continue
-                    # print(f"coor_reduced120_el_closestduplicate: \n {coor_reduced120_el_closestduplicate}")
-            elif coor_reduced120_48htype1_48htype2_el_closestduplicate.ndim == 1:
-                coor_reduced120_48htypesmerged_level1_el = np.array(coor_reduced120_el_closestduplicate.copy())
-            elif coor_reduced120_el_closestduplicate.ndim == 1:
-                coor_reduced120_48htypesmerged_level1_el = np.array(coor_reduced120_48htype1_48htype2_el_closestduplicate.copy())
+                    # print(f"coor_reducedreference_el_closestduplicate: \n {coor_reducedreference_el_closestduplicate}")
+            elif coor_reducedreference_48htype1_48htype2_el_closestduplicate.ndim == 1:
+                coor_reducedreference_48htypesmerged_level1_el = np.array(coor_reducedreference_el_closestduplicate.copy())
+            elif coor_reducedreference_el_closestduplicate.ndim == 1:
+                coor_reducedreference_48htypesmerged_level1_el = np.array(coor_reducedreference_48htype1_48htype2_el_closestduplicate.copy())
             else:
-                print(f"coor_reduced120_48htype1_48htype2_el_closestduplicate or coor_reduced120_el_closestduplicate has no correct dimension at idx: {idx}")
+                print(f"coor_reducedreference_48htype1_48htype2_el_closestduplicate or coor_reducedreference_el_closestduplicate has no correct dimension at idx: {idx}")
                 # break
 
             # sum_mapped_48htypesmerged_level1_el = len(atom_mapping_48htypesmerged_level1_el)
-            sum_mapped_48htypesmerged_level1_el = len(coor_reduced120_48htypesmerged_level1_el)
+            sum_mapped_48htypesmerged_level1_el = len(coor_reducedreference_48htypesmerged_level1_el)
 
-            ndim_coor_reduced120_el_closestduplicate = coor_reduced120_el_closestduplicate.ndim
-            ndim_coor_reduced120_48htype1_48htype2_el_closestduplicate = coor_reduced120_48htype1_48htype2_el_closestduplicate.ndim
+            ndim_coor_reducedreference_el_closestduplicate = coor_reducedreference_el_closestduplicate.ndim
+            ndim_coor_reducedreference_48htype1_48htype2_el_closestduplicate = coor_reducedreference_48htype1_48htype2_el_closestduplicate.ndim
 
             dataframe.at[idx, col_atom_mapping_48htypesmerged_level1_el] = atom_mapping_48htypesmerged_level1_el
             # dataframe.at[idx, col_atom_mapping_48htypesmerged_level1_el_w_dist] = atom_mapping_48htypesmerged_level1_el_w_dist
             # dataframe.at[idx, col_coor_weirdos_48htypesmerged_level1_el] = coor_weirdos_48htypesmerged_level1_el        # these are just copying
-            # dataframe.at[idx, col_coor_reduced120_48htypesmerged_level1_el] = coor_reduced120_48htypesmerged_level1_el  
+            # dataframe.at[idx, col_coor_reducedreference_48htypesmerged_level1_el] = coor_reducedreference_48htypesmerged_level1_el  
             # dataframe.at[idx, col_sum_weirdos_48htypesmerged_level1_el] = sum_weirdos_48htypesmerged_level1_el          # these are just copying
             # dataframe.at[idx, col_sum_mapped_48htypesmerged_level1_el] = sum_mapped_48htypesmerged_level1_el
             # dataframe.at[idx, col_sum_sanitycheck_48htypesmerged_level1_el] = sum_weirdos_48htypesmerged_level1_el + sum_mapped_48htypesmerged_level1_el
             # dataframe.at[idx, col_duplicate_closest24_w_data_48htypesmerged_level1_el] = duplicate_closest24_w_data_48htypesmerged     # these are just copying
-            dataframe.at[idx, col_coor_reduced120_48htypesmerged_level1_el] = coor_reduced120_48htypesmerged_level1_el
+            dataframe.at[idx, col_coor_reducedreference_48htypesmerged_level1_el] = coor_reducedreference_48htypesmerged_level1_el
             dataframe.at[idx, col_sum_mapped_48htypesmerged_level1_el] = sum_mapped_48htypesmerged_level1_el 
             dataframe.at[idx, col_sum_sanitycheck_48htypesmerged_level1_el] = sum_mapped_48htypesmerged_level1_el + sum_weirdos_48htypesmerged_level1_el
 
-            dataframe.at[idx, col_ndim_coor_reduced120_level1_el_closestduplicate] = ndim_coor_reduced120_el_closestduplicate
-            dataframe.at[idx, col_ndim_coor_reduced120_48htype2_level1_el_closestduplicate] = ndim_coor_reduced120_48htype1_48htype2_el_closestduplicate
+            dataframe.at[idx, col_ndim_coor_reducedreference_level1_el_closestduplicate] = ndim_coor_reducedreference_el_closestduplicate
+            dataframe.at[idx, col_ndim_coor_reducedreference_48htype2_level1_el_closestduplicate] = ndim_coor_reducedreference_48htype1_48htype2_el_closestduplicate
 
 
     def get_flag_map_48htypesmerged_el(dataframe, el, activate_radius):
         if activate_radius == 3:
             # # col_flag_48htype1_48htype2_el = f"flag_48htype1_48htype2_{el}"
             # col_atom_mapping_el_w_dist = f"atom_mapping_48htype1_48htype2_{el}_w_dist"
-            # col_coor_reduced120_el = f"coor_reduced120_48htype1_48htype2_{el}"
+            # col_coor_reducedreference_el = f"coor_reducedreference_48htype1_48htype2_{el}"
             # col_atom_mapping_el_closestduplicate = f"atom_mapping_48htype1_48htype2_{el}_closestduplicate"
-            # col_coor_reduced120_el_closestduplicate = f"coor_reduced120_48htype1_48htype2_{el}_closestduplicate"
+            # col_coor_reducedreference_el_closestduplicate = f"coor_reducedreference_48htype1_48htype2_{el}_closestduplicate"
             # # col_flag_48htypesmerged_level1_el = f"flag_48htypesmerged_level1_{el}"
             col_atom_mapping_el_closestduplicate = f"atom_mapping_48htypesmerged_level1_{el}"
             # col_atom_mapping_el_w_dist = f"atom_mapping_48htypesmerged_level1_{el}_w_dist"
-            col_coor_reduced120_el_closestduplicate = f"coor_reduced120_48htypesmerged_level1_{el}"
+            col_coor_reducedreference_el_closestduplicate = f"coor_reducedreference_48htypesmerged_level1_{el}"
 
         elif activate_radius == 2:
             # # col_flag_el = f"flag_{el}"
             # col_coor_weirdos_el = f"coor_weirdos_{el}"
             # col_coor_weirdos_el_dict = f"coor_weirdos_{el}_dict"            # just added
             # col_atom_mapping_el_w_dist = f"atom_mapping_{el}_w_dist"
-            # col_coor_reduced120_el = f"coor_reduced120_{el}"
+            # col_coor_reducedreference_el = f"coor_reducedreference_{el}"
             col_atom_mapping_el_closestduplicate = f"atom_mapping_{el}_closestduplicate"
-            col_coor_reduced120_el_closestduplicate = f"coor_reduced120_{el}_closestduplicate"
+            col_coor_reducedreference_el_closestduplicate = f"coor_reducedreference_{el}_closestduplicate"
             col_atom_mapping_el_w_dist_closestduplicate = f"atom_mapping_{el}_w_dist_closestduplicate"
             col_sum_weirdos_el = f"sum_weirdos_{el}"
             col_sum_mapped_el = f"sum_mapped_{el}"
@@ -1659,10 +1593,10 @@ class Mapping:
             print("activate_radius is not correct")
 
         # # col_flag_48htype2_el = f"flag_48htype2_{el}"
-        # col_coor_reduced120_48htype2_el = f"coor_reduced120_48htype2_{el}"
+        # col_coor_reducedreference_48htype2_el = f"coor_reducedreference_48htype2_{el}"
         col_atom_mapping_48htype2_el_closestduplicate = f"atom_mapping_48htype2_{el}_closestduplicate"
         col_sum_weirdos_48htype2_el = f"sum_weirdos_48htype2_{el}"
-        col_coor_reduced120_48htype2_el_closestduplicate = f"coor_reduced120_48htype2_{el}_closestduplicate"
+        col_coor_reducedreference_48htype2_el_closestduplicate = f"coor_reducedreference_48htype2_{el}_closestduplicate"
         col_atom_mapping_48htype2_el_w_dist_closestduplicate = f"atom_mapping_48htype2_{el}_w_dist_closestduplicate"
         # col_atom_mapping_48htype2_el_w_dist = f"atom_mapping_48htype2_{el}_w_dist"
         # col_coor_weirdos_48htype2_el = f"coor_weirdos_48htype2_{el}"
@@ -1672,7 +1606,7 @@ class Mapping:
         # col_sum_mapped_48htype2_el_closestduplicate = f"sum_mapped_48htype2_{el}_closestduplicate"
         # cocommand:cellOutput.enableScrolling?23798be1-d942-4554-a3c6-774194ee7e7el_sum_sanitycheck_48htype2_el_closestduplicate = f"sum_sanitycheck_48htype2_{el}_closestduplicate"
 
-        # col_coor_reduced120_48htypesmerged_el = f"coor_reduced120_48htypesmerged_{el}"
+        # col_coor_reducedreference_48htypesmerged_el = f"coor_reducedreference_48htypesmerged_{el}"
         # col_sum_mapped_48htypesmerged_el = f"sum_mapped_48htypesmerged_{el}"
         # col_sum_sanitycheck_48htypesmerged_el = f"sum_sanitycheck_48htypesmerged_{el}"
         col_flag_48htypesmerged_el = f"flag_48htypesmerged_{el}"
@@ -1680,14 +1614,14 @@ class Mapping:
         # col_coor_weirdos_48htypesmerged_el = f"coor_weirdos_48htypesmerged_{el}"
         # col_sum_weirdos_48htypesmerged_el = f"sum_weirdos_48htypesmerged_{el}"
         # col_duplicate_closest24_w_data_48htypesmerged_el = f"duplicate_closest24_w_data_48htypesmerged_{el}"
-        col_coor_reduced120_48htypesmerged_el = f"coor_reduced120_48htypesmerged_{el}"
+        col_coor_reducedreference_48htypesmerged_el = f"coor_reducedreference_48htypesmerged_{el}"
         col_sum_mapped_48htypesmerged_el = f"sum_mapped_48htypesmerged_{el}"
         col_sum_sanitycheck_48htypesmerged_el = f"sum_sanitycheck_48htypesmerged_{el}"
-        col_ndim_coor_reduced120_el_closestduplicate = f"ndim_coor_reduced120_{el}_closestduplicate"
-        col_ndim_coor_reduced120_48htype2_el_closestduplicate = f"ndim_coor_reduced120_48htype2_{el}_closestduplicate"
+        col_ndim_coor_reducedreference_el_closestduplicate = f"ndim_coor_reducedreference_{el}_closestduplicate"
+        col_ndim_coor_reducedreference_48htype2_el_closestduplicate = f"ndim_coor_reducedreference_48htype2_{el}_closestduplicate"
         col_atom_mapping_48htypesmerged_el_w_dist = f"atom_mapping_48htypesmerged_{el}_w_dist"
 
-        # dataframe[col_coor_reduced120_48htypesmerged_el] = [np.array([]) for _ in range(len(dataframe.index))]
+        # dataframe[col_coor_reducedreference_48htypesmerged_el] = [np.array([]) for _ in range(len(dataframe.index))]
         # dataframe[col_sum_mapped_48htypesmerged_el] = [0 for _ in range(len(dataframe.index))]
         # dataframe[col_sum_sanitycheck_48htypesmerged_el] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_flag_48htypesmerged_el] = "False"
@@ -1696,11 +1630,11 @@ class Mapping:
         # dataframe[col_coor_weirdos_48htypesmerged_el] = [np.array([]) for _ in range(len(dataframe.index))]
         # dataframe[col_sum_weirdos_48htypesmerged_el] = [0 for _ in range(len(dataframe.index))]
         # dataframe[col_duplicate_closest24_w_data_48htypesmerged_el] = [{} for _ in range(len(dataframe.index))]
-        dataframe[col_coor_reduced120_48htypesmerged_el] = [np.array([]) for _ in range(len(dataframe.index))]
+        dataframe[col_coor_reducedreference_48htypesmerged_el] = [np.array([]) for _ in range(len(dataframe.index))]
         dataframe[col_sum_mapped_48htypesmerged_el] = [0 for _ in range(len(dataframe.index))]
         dataframe[col_sum_sanitycheck_48htypesmerged_el] = [0 for _ in range(len(dataframe.index))]
-        dataframe[col_ndim_coor_reduced120_el_closestduplicate] = None
-        dataframe[col_ndim_coor_reduced120_48htype2_el_closestduplicate] = None
+        dataframe[col_ndim_coor_reducedreference_el_closestduplicate] = None
+        dataframe[col_ndim_coor_reducedreference_48htype2_el_closestduplicate] = None
         dataframe[col_atom_mapping_48htypesmerged_el_w_dist] = [{} for _ in range(len(dataframe.index))]
 
         for idx in range(dataframe["geometry"].size):
@@ -1709,11 +1643,11 @@ class Mapping:
             # atom_mapping_48htype2_el_w_dist = dataframe.at[idx, col_atom_mapping_48htype2_el_w_dist]
             atom_mapping_el_closestduplicate = dataframe.at[idx, col_atom_mapping_el_closestduplicate]
             atom_mapping_48htype2_el_closestduplicate = dataframe.at[idx, col_atom_mapping_48htype2_el_closestduplicate]
-            # coor_reduced120_el = dataframe.at[idx, col_coor_reduced120_el]
-            # coor_reduced120_48htype2_el = dataframe.at[idx, col_coor_reduced120_48htype2_el]
+            # coor_reducedreference_el = dataframe.at[idx, col_coor_reducedreference_el]
+            # coor_reducedreference_48htype2_el = dataframe.at[idx, col_coor_reducedreference_48htype2_el]
             # _closestduplicate
-            coor_reduced120_el_closestduplicate = dataframe.at[idx, col_coor_reduced120_el_closestduplicate]
-            coor_reduced120_48htype2_el_closestduplicate = dataframe.at[idx, col_coor_reduced120_48htype2_el_closestduplicate]
+            coor_reducedreference_el_closestduplicate = dataframe.at[idx, col_coor_reducedreference_el_closestduplicate]
+            coor_reducedreference_48htype2_el_closestduplicate = dataframe.at[idx, col_coor_reducedreference_48htype2_el_closestduplicate]
             atom_mapping_el_w_dist_closestduplicate = dataframe.at[idx, col_atom_mapping_el_w_dist_closestduplicate]
             atom_mapping_48htype2_el_w_dist_closestduplicate = dataframe.at[idx, col_atom_mapping_48htype2_el_w_dist_closestduplicate]
             # these are just copying
@@ -1722,83 +1656,84 @@ class Mapping:
             # duplicate_closest24_w_data_48htypesmerged = dataframe.at[idx, col_duplicate_closest24_w_data_48htype2_el]
             
             # # _closestduplicate
-            # coor_reduced120_48htypesmerged_el_closestduplicate = dataframe.at[idx, col_coor_reduced120_48htype2_el_closestduplicate]
-            coor_reduced120_48htypesmerged_el = []
+            # coor_reducedreference_48htypesmerged_el_closestduplicate = dataframe.at[idx, col_coor_reducedreference_48htype2_el_closestduplicate]
+            coor_reducedreference_48htypesmerged_el = []
 
             atom_mapping_48htypesmerged_el = Operation.Dict.merge_dictionaries(atom_mapping_el_closestduplicate, atom_mapping_48htype2_el_closestduplicate)
-            duplicate_coor24s = Operation.Dict.check_duplicate_values(atom_mapping_48htypesmerged_el)
+            duplicate_coor24s = Operation.Dict.get_duplicate_values(atom_mapping_48htypesmerged_el)
             if len(duplicate_coor24s) > 1:        
                 dataframe.at[idx, col_flag_48htypesmerged_el] = "True"        
-            # for coor120 in atom_mapping_48htypesmerged_el:
-            #     values24 = atom_mapping_48htypesmerged_el[coor120]   # get value for the key
+            # for coorreference in atom_mapping_48htypesmerged_el:
+            #     values24 = atom_mapping_48htypesmerged_el[coorreference]   # get value for the key
             #     if len(values24) > 1:        
             #         dataframe.at[idx, col_flag_48htypesmerged_el] = "True"
             
             # atom_mapping_48htypesmerged_el_w_dist = Operation.Dict.merge_dictionaries(atom_mapping_el_w_dist, atom_mapping_48htype2_el_w_dist)
 
-            # # if coor_reduced120_48htype2_el != None:
-            # # if coor_reduced120_48htype2_el.size > 0:
-            # if coor_reduced120_48htype2_el.ndim == 2:
-            #     coor_reduced120_48htypesmerged_el = np.concatenate((coor_reduced120_el, coor_reduced120_48htype2_el), axis=0)
-            # elif coor_reduced120_48htype2_el.ndim == 1:
-            #     coor_reduced120_48htypesmerged_el = np.array(coor_reduced120_el.copy())
+            # # if coor_reducedreference_48htype2_el != None:
+            # # if coor_reducedreference_48htype2_el.size > 0:
+            # if coor_reducedreference_48htype2_el.ndim == 2:
+            #     coor_reducedreference_48htypesmerged_el = np.concatenate((coor_reducedreference_el, coor_reducedreference_48htype2_el), axis=0)
+            # elif coor_reducedreference_48htype2_el.ndim == 1:
+            #     coor_reducedreference_48htypesmerged_el = np.array(coor_reducedreference_el.copy())
             # else:
             #     break
 
             ## we use _closestduplicate here since it's the corrected one wrt distance
-            # if coor_reduced120_48htype2_el_closestduplicate != None:
-            # if coor_reduced120_48htype2_el_closestduplicate.size > 0:
-            # # # if coor_reduced120_48htype2_el_closestduplicate.ndim == 2:
-            # # #     if coor_reduced120_el_closestduplicate.ndim == 2:
-            # # #         coor_reduced120_48htypesmerged_el_closestduplicate = np.concatenate((coor_reduced120_el_closestduplicate, coor_reduced120_48htype2_el_closestduplicate), axis=0)
+            # if coor_reducedreference_48htype2_el_closestduplicate != None:
+            # if coor_reducedreference_48htype2_el_closestduplicate.size > 0:
+            # # # if coor_reducedreference_48htype2_el_closestduplicate.ndim == 2:
+            # # #     if coor_reducedreference_el_closestduplicate.ndim == 2:
+            # # #         coor_reducedreference_48htypesmerged_el_closestduplicate = np.concatenate((coor_reducedreference_el_closestduplicate, coor_reducedreference_48htype2_el_closestduplicate), axis=0)
             # # #     else:
-            # # #         print(f"coor_reduced120_el_closestduplicate has no correct dimension at idx: {idx}, dimension: {coor_reduced120_el_closestduplicate.ndim}")
+            # # #         print(f"coor_reducedreference_el_closestduplicate has no correct dimension at idx: {idx}, dimension: {coor_reducedreference_el_closestduplicate.ndim}")
             # # #         pass
-            # # #         # print(f"coor_reduced120_el_closestduplicate: \n {coor_reduced120_el_closestduplicate}")
-            # # # elif coor_reduced120_48htype2_el_closestduplicate.ndim == 1:
-            # # #     coor_reduced120_48htypesmerged_el_closestduplicate = np.array(coor_reduced120_el_closestduplicate.copy())
+            # # #         # print(f"coor_reducedreference_el_closestduplicate: \n {coor_reducedreference_el_closestduplicate}")
+            # # # elif coor_reducedreference_48htype2_el_closestduplicate.ndim == 1:
+            # # #     coor_reducedreference_48htypesmerged_el_closestduplicate = np.array(coor_reducedreference_el_closestduplicate.copy())
             # # # else:
-            # # #     print(f"coor_reduced120_48htype2_el_closestduplicate has no correct dimension at idx: {idx}, dimension: {coor_reduced120_48htypesmerged_el_closestduplicate.ndim}")
+            # # #     print(f"coor_reducedreference_48htype2_el_closestduplicate has no correct dimension at idx: {idx}, dimension: {coor_reducedreference_48htypesmerged_el_closestduplicate.ndim}")
             # # #     # break
 
-            if coor_reduced120_48htype2_el_closestduplicate.ndim == coor_reduced120_el_closestduplicate.ndim:
-                coor_reduced120_48htypesmerged_el = np.concatenate((coor_reduced120_el_closestduplicate, coor_reduced120_48htype2_el_closestduplicate), axis=0)
+            if coor_reducedreference_48htype2_el_closestduplicate.ndim == coor_reducedreference_el_closestduplicate.ndim:
+                coor_reducedreference_48htypesmerged_el = np.concatenate((coor_reducedreference_el_closestduplicate, coor_reducedreference_48htype2_el_closestduplicate), axis=0)
                 # else:
-                #     print(f"coor_reduced120_el_closestduplicate has no correct dimension at idx: {idx}")
+                #     print(f"coor_reducedreference_el_closestduplicate has no correct dimension at idx: {idx}")
                 #     continue
-                    # print(f"coor_reduced120_el_closestduplicate: \n {coor_reduced120_el_closestduplicate}")
-            elif coor_reduced120_48htype2_el_closestduplicate.ndim == 1:
-                coor_reduced120_48htypesmerged_el = np.array(coor_reduced120_el_closestduplicate.copy())
-            elif coor_reduced120_el_closestduplicate.ndim == 1:
-                coor_reduced120_48htypesmerged_el = np.array(coor_reduced120_48htype2_el_closestduplicate.copy())
+                    # print(f"coor_reducedreference_el_closestduplicate: \n {coor_reducedreference_el_closestduplicate}")
+            elif coor_reducedreference_48htype2_el_closestduplicate.ndim == 1:
+                coor_reducedreference_48htypesmerged_el = np.array(coor_reducedreference_el_closestduplicate.copy())
+            elif coor_reducedreference_el_closestduplicate.ndim == 1:
+                coor_reducedreference_48htypesmerged_el = np.array(coor_reducedreference_48htype2_el_closestduplicate.copy())
             else:
-                print(f"coor_reduced120_48htype2_el_closestduplicate or coor_reduced120_el_closestduplicate has no correct dimension at idx: {idx}")
+                print(f"coor_reducedreference_48htype2_el_closestduplicate or coor_reducedreference_el_closestduplicate has no correct dimension at idx: {idx}")
                 # break
 
             # sum_mapped_48htypesmerged_el = len(atom_mapping_48htypesmerged_el)
-            sum_mapped_48htypesmerged_el = len(coor_reduced120_48htypesmerged_el)
+            sum_mapped_48htypesmerged_el = len(coor_reducedreference_48htypesmerged_el)
 
-            ndim_coor_reduced120_el_closestduplicate = coor_reduced120_el_closestduplicate.ndim
-            ndim_coor_reduced120_48htype2_el_closestduplicate = coor_reduced120_48htype2_el_closestduplicate.ndim
+            ndim_coor_reducedreference_el_closestduplicate = coor_reducedreference_el_closestduplicate.ndim
+            ndim_coor_reducedreference_48htype2_el_closestduplicate = coor_reducedreference_48htype2_el_closestduplicate.ndim
 
             atom_mapping_48htypesmerged_el_w_dist = atom_mapping_el_w_dist_closestduplicate | atom_mapping_48htype2_el_w_dist_closestduplicate
 
             # dataframe.at[idx, col_coor_weirdos_48htypesmerged_el] = coor_weirdos_48htypesmerged_el        # these are just copying
-            # dataframe.at[idx, col_coor_reduced120_48htypesmerged_el] = coor_reduced120_48htypesmerged_el  
+            # dataframe.at[idx, col_coor_reducedreference_48htypesmerged_el] = coor_reducedreference_48htypesmerged_el  
             # dataframe.at[idx, col_sum_weirdos_48htypesmerged_el] = sum_weirdos_48htypesmerged_el          # these are just copying
             # dataframe.at[idx, col_sum_mapped_48htypesmerged_el] = sum_mapped_48htypesmerged_el
             # dataframe.at[idx, col_sum_sanitycheck_48htypesmerged_el] = sum_weirdos_48htypesmerged_el + sum_mapped_48htypesmerged_el
             # dataframe.at[idx, col_duplicate_closest24_w_data_48htypesmerged_el] = duplicate_closest24_w_data_48htypesmerged     # these are just copying
             # dataframe.at[idx, col_atom_mapping_48htypesmerged_el_w_dist] = atom_mapping_48htypesmerged_el_w_dist
             dataframe.at[idx, col_atom_mapping_48htypesmerged_el] = atom_mapping_48htypesmerged_el
-            dataframe.at[idx, col_coor_reduced120_48htypesmerged_el] = coor_reduced120_48htypesmerged_el
+            dataframe.at[idx, col_coor_reducedreference_48htypesmerged_el] = coor_reducedreference_48htypesmerged_el
             dataframe.at[idx, col_sum_mapped_48htypesmerged_el] = sum_mapped_48htypesmerged_el 
             dataframe.at[idx, col_sum_sanitycheck_48htypesmerged_el] = sum_mapped_48htypesmerged_el + sum_weirdos_48htypesmerged_el
-            dataframe.at[idx, col_ndim_coor_reduced120_el_closestduplicate] = ndim_coor_reduced120_el_closestduplicate
-            dataframe.at[idx, col_ndim_coor_reduced120_48htype2_el_closestduplicate] = ndim_coor_reduced120_48htype2_el_closestduplicate
+            dataframe.at[idx, col_ndim_coor_reducedreference_el_closestduplicate] = ndim_coor_reducedreference_el_closestduplicate
+            dataframe.at[idx, col_ndim_coor_reducedreference_48htype2_el_closestduplicate] = ndim_coor_reducedreference_48htype2_el_closestduplicate
             dataframe.at[idx, col_atom_mapping_48htypesmerged_el_w_dist] = atom_mapping_48htypesmerged_el_w_dist
 
 
+# class AtomIndexing:
 def get_idx_weirdos_el(dataframe, el, activate_radius):
     col_coor_structure_init_dict = "coor_structure_init_dict"
 
@@ -1844,38 +1779,38 @@ def idx_correcting_mapped_el(dataframe, el, activate_radius):
     col_coor_structure_init_dict = "coor_structure_init_dict"
 
     if activate_radius == 2 or activate_radius == 3:
-        col_coor_reduced120_el = f"coor_reduced120_48htypesmerged_{el}"
+        col_coor_reducedreference_el = f"coor_reducedreference_48htypesmerged_{el}"
     elif activate_radius == 1:
-        col_coor_reduced120_el = f"coor_reduced120_{el}_closestduplicate"
+        col_coor_reducedreference_el = f"coor_reducedreference_{el}_closestduplicate"
 
     col_idx_correcting_el = f"idx_correcting_{el}"
     # col_atom_mapping_el_w_dist_idx24 = f"atom_mapping_{el}_w_dist_idx24"
-    # col_coor_reduced120_closestduplicate_el = f"coor_reduced120_closestduplicate_{el}"
-    col_coor_reduced120_sorted_el = f"coor_reduced120_sorted_{el}"
+    # col_coor_reducedreference_closestduplicate_el = f"coor_reducedreference_closestduplicate_{el}"
+    col_coor_reducedreference_sorted_el = f"coor_reducedreference_sorted_{el}"
 
     dataframe[col_idx_correcting_el] = [np.array([]) for _ in range(len(dataframe.index))]
     # dataframe[col_atom_mapping_el_w_dist_idx24] = [{} for _ in range(len(dataframe.index))]
-    # dataframe[col_coor_reduced120_closestduplicate_el] = None
-    dataframe[col_coor_reduced120_sorted_el] = [np.array([]) for _ in range(len(dataframe.index))]
+    # dataframe[col_coor_reducedreference_closestduplicate_el] = None
+    dataframe[col_coor_reducedreference_sorted_el] = [np.array([]) for _ in range(len(dataframe.index))]
 
     for idx in range(dataframe["geometry"].size):
         coor_origin24_el_init = dataframe.at[idx, col_coor_structure_init_dict][el] 
-        coor_reduced120_el = dataframe.at[idx, col_coor_reduced120_el]
+        coor_reducedreference_el = dataframe.at[idx, col_coor_reducedreference_el]
 
         idx_correcting_el = []
         # atom_mapping_el_w_dist_idx24 = {} 
         idx_coor_el = {}
 
-        for idx120, coor120 in enumerate(coor_reduced120_el):
+        for idxreference, coorreference in enumerate(coor_reducedreference_el):
             distance_prev = float("inf")
             closest24 = None
             idx_closest24 = None
             # atom_mapping_w_dist_idx24_dict = {}
 
-            # atom_mapping_el_w_dist_idx24[tuple(coor120)] = []
+            # atom_mapping_el_w_dist_idx24[tuple(coorreference)] = []
 
             for idx24, coor24 in enumerate(coor_origin24_el_init):
-                distance = Operation.Distance.mic_eucledian_distance(coor120, coor24)
+                distance = Operation.Distance.mic_eucledian_distance(coorreference, coor24)
 
                 # if distance != 0:
                 if distance < distance_prev:
@@ -1890,37 +1825,37 @@ def idx_correcting_mapped_el(dataframe, el, activate_radius):
             #     atom_mapping_w_dist_idx24_dict['dist'] = distance_prev
             #     atom_mapping_w_dist_idx24_dict['idx_closest24'] = idx_closest24
 
-            #     # if tuple(coor120) in atom_mapping_el_w_dist_idx24:
-            #     #     atom_mapping_el_w_dist_idx24[tuple(coor120)].append(atom_mapping_w_dist_idx24_dict)
+            #     # if tuple(coorreference) in atom_mapping_el_w_dist_idx24:
+            #     #     atom_mapping_el_w_dist_idx24[tuple(coorreference)].append(atom_mapping_w_dist_idx24_dict)
             #     # else:
-            #     #     atom_mapping_el_w_dist_idx24[tuple(coor120)] = atom_mapping_w_dist_idx24_dict
+            #     #     atom_mapping_el_w_dist_idx24[tuple(coorreference)] = atom_mapping_w_dist_idx24_dict
     
-            #     if tuple(coor120) in atom_mapping_el_w_dist_idx24:
-            #         new_entry = atom_mapping_el_w_dist_idx24[tuple(coor120)].copy()
+            #     if tuple(coorreference) in atom_mapping_el_w_dist_idx24:
+            #         new_entry = atom_mapping_el_w_dist_idx24[tuple(coorreference)].copy()
             #         new_entry.append(atom_mapping_w_dist_idx24_dict)
-            #         atom_mapping_el_w_dist_idx24[tuple(coor120)] = new_entry
+            #         atom_mapping_el_w_dist_idx24[tuple(coorreference)] = new_entry
             #     else:
-            #         atom_mapping_el_w_dist_idx24[tuple(coor120)] = [atom_mapping_w_dist_idx24_dict.copy()]
+            #         atom_mapping_el_w_dist_idx24[tuple(coorreference)] = [atom_mapping_w_dist_idx24_dict.copy()]
 
-        # coor_reduced120_closestduplicate_el = [coor_reduced120_el[i] for i in idx_correcting_el]
-        # # coor_reduced120_closestduplicate_el_closestduplicate = [coor_reduced120_el_closestduplicate[i] for i in idx_correcting_el]
+        # coor_reducedreference_closestduplicate_el = [coor_reducedreference_el[i] for i in idx_correcting_el]
+        # # coor_reducedreference_closestduplicate_el_closestduplicate = [coor_reducedreference_el_closestduplicate[i] for i in idx_correcting_el]
 
         for i in range(len(idx_correcting_el)):
-            idx_coor_el[idx_correcting_el[i]] = coor_reduced120_el[i]
+            idx_coor_el[idx_correcting_el[i]] = coor_reducedreference_el[i]
 
         sorted_idx_coor_el = {key: val for key, val in sorted(idx_coor_el.items())}
         sorted_coor = list(sorted_idx_coor_el.values())
 
         dataframe.at[idx, col_idx_correcting_el] = idx_correcting_el
         # dataframe.at[idx, col_atom_mapping_el_w_dist_idx24] = atom_mapping_el_w_dist_idx24
-        # dataframe.at[idx, col_coor_reduced120_closestduplicate_el] = coor_reduced120_closestduplicate_el
-        # # dataframe.at[idx, col_coor_reduced120_closestduplicate_el_closestduplicate] = coor_reduced120_closestduplicate_el_closestduplicate
-        dataframe.at[idx, col_coor_reduced120_sorted_el] = sorted_coor
+        # dataframe.at[idx, col_coor_reducedreference_closestduplicate_el] = coor_reducedreference_closestduplicate_el
+        # # dataframe.at[idx, col_coor_reducedreference_closestduplicate_el_closestduplicate] = coor_reducedreference_closestduplicate_el_closestduplicate
+        dataframe.at[idx, col_coor_reducedreference_sorted_el] = sorted_coor
 
 
 def get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, el, litype):
-    # to do: add idx of weirdo and coor120
-    coor_origin120_el_init = coor_structure_init_dict[el]
+    # to do: add idx of weirdo and coorreference
+    coor_reference_el_init = coor_structure_init_dict[el]
     col_idx_coor_weirdos_el = f"idx_coor_weirdos_{el}"
 
     col_top3_sorted_idxweirdo_dist_label_el = f'top3_sorted_idxweirdo_dist_label_{el}'
@@ -2017,11 +1952,11 @@ def get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, el, lityp
 
 
     # dataframe[col_top3_dist_weirdos_array_el] = None
-    # dataframe[col_top3_coorweirdo_dist_label_coor120_idxweirdo_idx120_el] = [{} for _ in range(len(dataframe.index))]
-    # dataframe[col_dist_weirdos_atom120_el] = [np.array([]) for _ in range(len(dataframe.index))]
+    # dataframe[col_top3_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el] = [{} for _ in range(len(dataframe.index))]
+    # dataframe[col_dist_weirdos_atomreference_el] = [np.array([]) for _ in range(len(dataframe.index))]
     # dataframe[col_dist_weirdos_el] = [np.array([]) for _ in range(len(dataframe.index))]
-    # dataframe[col_coorweirdo_dist_label_coor120_idxweirdo_idx120_el] = [{} for _ in range(len(dataframe.index))]
-    # dataframe[col_sorted_coorweirdo_dist_label_coor120_idxweirdo_idx120_el] = [{} for _ in range(len(dataframe.index))]
+    # dataframe[col_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el] = [{} for _ in range(len(dataframe.index))]
+    # dataframe[col_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el] = [{} for _ in range(len(dataframe.index))]
     dataframe[col_top3_sorted_idxweirdo_dist_label_el] = [{} for _ in range(len(dataframe.index))]
     dataframe[col_top3_sorted_idxweirdo_dist_el] = [{} for _ in range(len(dataframe.index))]
     dataframe[col_top3_sorted_idxweirdo_label_el] = [{} for _ in range(len(dataframe.index))]
@@ -2031,73 +1966,73 @@ def get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, el, lityp
     dataframe[col_top1_sorted_idxweirdo_coor_el] = [{} for _ in range(len(dataframe.index))]
     dataframe[col_top1_sorted_idxweirdo_file_el] = [{} for _ in range(len(dataframe.index))]
     
-    coor_li24g_ref      = coor_origin120_el_init[0:24]
+    coor_li24g_ref      = coor_reference_el_init[0:24]
     if litype == 1:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
         coordinate_lists    = [coor_li48htype1_ref]
         labels              = ["48htype1"]
     elif litype == 2:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref]
         labels              = ["48htype1", "48htype2"]
     elif litype == 3:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref, coor_li48htype3_ref]
         labels              = ["48htype1", "48htype2", "48htype3"]
     elif litype == 4:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref, coor_li48htype3_ref, coor_li48htype4_ref]
         labels              = ["48htype1", "48htype2", "48htype3", "48htype4"]
     elif litype == 5:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
-        coor_li48htype5_ref = coor_origin120_el_init[216:264]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
+        coor_li48htype5_ref = coor_reference_el_init[216:264]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref, coor_li48htype3_ref, coor_li48htype4_ref, coor_li48htype5_ref]
         labels              = ["48htype1", "48htype2", "48htype3", "48htype4", "48htype5"]
     elif litype == 6:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
-        coor_li48htype5_ref = coor_origin120_el_init[216:264]
-        coor_li48htype6_ref = coor_origin120_el_init[264:312]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
+        coor_li48htype5_ref = coor_reference_el_init[216:264]
+        coor_li48htype6_ref = coor_reference_el_init[264:312]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref, coor_li48htype3_ref, coor_li48htype4_ref, coor_li48htype5_ref, coor_li48htype6_ref]
         labels              = ["48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "48htype6"]
     elif litype == 7:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
-        coor_li48htype5_ref = coor_origin120_el_init[216:264]
-        coor_li48htype6_ref = coor_origin120_el_init[264:312]
-        coor_li48htype7_ref = coor_origin120_el_init[312:360]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
+        coor_li48htype5_ref = coor_reference_el_init[216:264]
+        coor_li48htype6_ref = coor_reference_el_init[264:312]
+        coor_li48htype7_ref = coor_reference_el_init[312:360]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref, coor_li48htype3_ref, coor_li48htype4_ref, coor_li48htype5_ref, coor_li48htype6_ref, coor_li48htype7_ref]
         labels              = ["48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "48htype6", "48htype7"]
     elif litype == 8:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
-        coor_li48htype5_ref = coor_origin120_el_init[216:264]
-        coor_li48htype6_ref = coor_origin120_el_init[264:312]
-        coor_li48htype7_ref = coor_origin120_el_init[312:360]
-        coor_li48htype8_ref = coor_origin120_el_init[360:408]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
+        coor_li48htype5_ref = coor_reference_el_init[216:264]
+        coor_li48htype6_ref = coor_reference_el_init[264:312]
+        coor_li48htype7_ref = coor_reference_el_init[312:360]
+        coor_li48htype8_ref = coor_reference_el_init[360:408]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref, coor_li48htype3_ref, coor_li48htype4_ref, coor_li48htype5_ref, coor_li48htype6_ref, coor_li48htype7_ref, coor_li48htype8_ref]
         labels              = ["48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "48htype6", "48htype7", "48htype8"]
 
 
     for idx in range(dataframe["geometry"].size):
-        dist_weirdos_atom120_el = []
+        dist_weirdos_atomreference_el = []
         dist_weirdos_el = []
-        coorweirdo_dist_label_coor120_idxweirdo_idx120_el = {}
+        coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el = {}
         top3_sorted_idxweirdo_dist_label_el = {}
         top3_sorted_idxweirdo_dist_el = {}
         top3_sorted_idxweirdo_label_el = {}
@@ -2115,68 +2050,68 @@ def get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, el, lityp
                 coor_weirdo = idx_coor_weirdos_el[idx_weirdo]
                 distance_weirdo_prev = float('inf')
 
-                coorweirdo_dist_label_coor120_idxweirdo_idx120_el[idx_weirdo] = []
+                coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el[idx_weirdo] = []
                 
-                for idx120, coor120 in enumerate(coor_origin120_el_init):
-                    coorweirdo_dist_label_coor120_val_el = {}
+                for idxreference, coorreference in enumerate(coor_reference_el_init):
+                    coorweirdo_dist_label_coorreference_val_el = {}
             
-                    distance_weirdo = Operation.Distance.mic_eucledian_distance(coor120, coor_weirdo)
+                    distance_weirdo = Operation.Distance.mic_eucledian_distance(coorreference, coor_weirdo)
 
-                    coorweirdo_dist_label_coor120_val_el['dist'] = distance_weirdo
+                    coorweirdo_dist_label_coorreference_val_el['dist'] = distance_weirdo
 
                     for idx_24g_temp, coor_li24g_ref_temp in enumerate(coor_li24g_ref):
-                        if (coor120 == coor_li24g_ref_temp).all():
-                            coorweirdo_dist_label_coor120_val_el["coor"] = tuple(coor_weirdo)
-                            coorweirdo_dist_label_coor120_val_el["label"] = "24g"
-                            coorweirdo_dist_label_coor120_val_el["coor120"] = tuple(coor120)
-                            coorweirdo_dist_label_coor120_val_el["file"] = f"{int(dataframe.at[idx, 'geometry'])}_{int(dataframe.at[idx, 'path'])}"
-                            if idx_weirdo in coorweirdo_dist_label_coor120_idxweirdo_idx120_el:
-                                coorweirdo_dist_label_coor120_idxweirdo_idx120_el[idx_weirdo].append(coorweirdo_dist_label_coor120_val_el)
+                        if (coorreference == coor_li24g_ref_temp).all():
+                            coorweirdo_dist_label_coorreference_val_el["coor"] = tuple(coor_weirdo)
+                            coorweirdo_dist_label_coorreference_val_el["label"] = "24g"
+                            coorweirdo_dist_label_coorreference_val_el["coorreference"] = tuple(coorreference)
+                            coorweirdo_dist_label_coorreference_val_el["file"] = f"{int(dataframe.at[idx, 'geometry'])}_{int(dataframe.at[idx, 'path'])}"
+                            if idx_weirdo in coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el:
+                                coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el[idx_weirdo].append(coorweirdo_dist_label_coorreference_val_el)
                             else:
-                                coorweirdo_dist_label_coor120_idxweirdo_idx120_el[idx_weirdo] = coorweirdo_dist_label_coor120_val_el
+                                coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el[idx_weirdo] = coorweirdo_dist_label_coorreference_val_el
 
                     for i in range(1, litype + 1):
                         for j, coor_ref_temp in enumerate(coordinate_lists[i - 1]):
-                            if (coor120 == coor_ref_temp).all():
-                                coorweirdo_dist_label_coor120_val_el["coor"] = tuple(coor_weirdo)
-                                coorweirdo_dist_label_coor120_val_el["label"] = labels[i - 1]
-                                coorweirdo_dist_label_coor120_val_el["coor120"] = tuple(coor120)
-                                coorweirdo_dist_label_coor120_val_el["file"] = f"{int(dataframe.at[idx, 'geometry'])}_{int(dataframe.at[idx, 'path'])}"
+                            if (coorreference == coor_ref_temp).all():
+                                coorweirdo_dist_label_coorreference_val_el["coor"] = tuple(coor_weirdo)
+                                coorweirdo_dist_label_coorreference_val_el["label"] = labels[i - 1]
+                                coorweirdo_dist_label_coorreference_val_el["coorreference"] = tuple(coorreference)
+                                coorweirdo_dist_label_coorreference_val_el["file"] = f"{int(dataframe.at[idx, 'geometry'])}_{int(dataframe.at[idx, 'path'])}"
 
-                                if idx_weirdo in coorweirdo_dist_label_coor120_idxweirdo_idx120_el:
-                                    coorweirdo_dist_label_coor120_idxweirdo_idx120_el[idx_weirdo].append(coorweirdo_dist_label_coor120_val_el)
+                                if idx_weirdo in coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el:
+                                    coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el[idx_weirdo].append(coorweirdo_dist_label_coorreference_val_el)
                                 else:
-                                    coorweirdo_dist_label_coor120_idxweirdo_idx120_el[idx_weirdo] = [coorweirdo_dist_label_coor120_val_el]
+                                    coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el[idx_weirdo] = [coorweirdo_dist_label_coorreference_val_el]
 
                     if distance_weirdo < distance_weirdo_prev:
                         distance_weirdo_prev = distance_weirdo
-                        closest120 = coor120
+                        closestreference = coorreference
 
-                dist_weirdos_atom120_el_array = [distance_weirdo, tuple(coor_weirdo), tuple(closest120)]
+                dist_weirdos_atomreference_el_array = [distance_weirdo, tuple(coor_weirdo), tuple(closestreference)]
                 dist_weirdos_el_array = [distance_weirdo]
-                dist_weirdos_atom120_el.append(dist_weirdos_atom120_el_array)
+                dist_weirdos_atomreference_el.append(dist_weirdos_atomreference_el_array)
                 dist_weirdos_el.append(dist_weirdos_el_array)
                 # float_dist_weirdos_el = np.append(float_dist_weirdos_el, [distance_weirdo_prev])
 
                 # sorted_dist_weirdos_array_el = sorted(set(dist_weirdos_array_el))
                 # top3_dist_weirdos_array_el = sorted_dist_weirdos_array_el[0:3]
 
-                # coorweirdo_dist_label_coor120_idxweirdo_idx120_el['top3_dist'] = top3_dist_weirdos_array_el
+                # coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el['top3_dist'] = top3_dist_weirdos_array_el
 
                 # if tuple(coor_weirdo) in top3_dist_weirdos_el:
-                #     top3_dist_weirdos_el[tuple(coor_weirdo)].append(coorweirdo_dist_label_coor120_idxweirdo_idx120_el)
+                #     top3_dist_weirdos_el[tuple(coor_weirdo)].append(coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el)
                 # else:
-                #     top3_dist_weirdos_el[tuple(coor_weirdo)] = coorweirdo_dist_label_coor120_idxweirdo_idx120_el
+                #     top3_dist_weirdos_el[tuple(coor_weirdo)] = coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el
 
-                # for key_temp1, val_temp1 in coorweirdo_dist_label_coor120_idxweirdo_idx120_el.items():
-                #     sorted_coorweirdo_dist_label_coor120_idxweirdo_idx120_el = {key_temp1: sorted(val_temp1, key=lambda x: x['dist'])}
-                sorted_coorweirdo_dist_label_coor120_idxweirdo_idx120_el = {
+                # for key_temp1, val_temp1 in coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el.items():
+                #     sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el = {key_temp1: sorted(val_temp1, key=lambda x: x['dist'])}
+                sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el = {
                                                                     k: sorted(v, key=lambda x: x['dist'])
-                                                                    for k, v in coorweirdo_dist_label_coor120_idxweirdo_idx120_el.items()
+                                                                    for k, v in coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el.items()
                                                                 }
                 
-                top3_sorted_coorweirdo_dist_label_coor120_el = {k: v[0:3] for k, v in sorted_coorweirdo_dist_label_coor120_idxweirdo_idx120_el.items()}
-                for key, values_list in top3_sorted_coorweirdo_dist_label_coor120_el.items():
+                top3_sorted_coorweirdo_dist_label_coorreference_el = {k: v[0:3] for k, v in sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el.items()}
+                for key, values_list in top3_sorted_coorweirdo_dist_label_coorreference_el.items():
                     selected_values = [{'dist': entry['dist'], "label": entry["label"]} for entry in values_list]
                     top3_sorted_idxweirdo_dist_label_el[key] = selected_values
                     selected_dists = [entry['dist'] for entry in values_list]
@@ -2184,8 +2119,8 @@ def get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, el, lityp
                     selected_types = [entry["label"] for entry in values_list]
                     top3_sorted_idxweirdo_label_el[key] = selected_types
 
-                top1_sorted_coorweirdo_dist_label_coor120_el = {k: v[0:1] for k, v in sorted_coorweirdo_dist_label_coor120_idxweirdo_idx120_el.items()}
-                for key, values_list in top1_sorted_coorweirdo_dist_label_coor120_el.items():
+                top1_sorted_coorweirdo_dist_label_coorreference_el = {k: v[0:1] for k, v in sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el.items()}
+                for key, values_list in top1_sorted_coorweirdo_dist_label_coorreference_el.items():
                     top1_selected_values = [{'dist': entry['dist'], "label": entry["label"]} for entry in values_list]
                     top1_sorted_idxweirdo_dist_label_el[key] = top1_selected_values
                     selected_types = [entry["label"] for entry in values_list]
@@ -2209,11 +2144,11 @@ def get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, el, lityp
                         if value in type_counts:
                             type_counts[value] += 1
 
-            # # dataframe.at[idx, col_dist_weirdos_atom120_el] = sorted(dist_weirdos_atom120_el, coor_weirdo=lambda x: x[0]) 
-            # dataframe.at[idx, col_dist_weirdos_el] = np.array([coor120[0] for index, coor120 in enumerate(dist_weirdos_atom120_el)])
+            # # dataframe.at[idx, col_dist_weirdos_atomreference_el] = sorted(dist_weirdos_atomreference_el, coor_weirdo=lambda x: x[0]) 
+            # dataframe.at[idx, col_dist_weirdos_el] = np.array([coorreference[0] for index, coorreference in enumerate(dist_weirdos_atomreference_el)])
             # # dataframe.at[idx, col_dist_weirdos_el] = sorted(dist_weirdos_el, coor_weirdo=lambda x: x[0]) 
-            # dataframe.at[idx, col_coorweirdo_dist_label_coor120_idxweirdo_idx120_el] = coorweirdo_dist_label_coor120_idxweirdo_idx120_el
-            # dataframe.at[idx, col_sorted_coorweirdo_dist_label_coor120_idxweirdo_idx120_el] = sorted_coorweirdo_dist_label_coor120_idxweirdo_idx120_el
+            # dataframe.at[idx, col_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el] = coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el
+            # dataframe.at[idx, col_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el] = sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el
             dataframe.at[idx, col_top3_sorted_idxweirdo_dist_label_el] = top3_sorted_idxweirdo_dist_label_el
             dataframe.at[idx, col_top3_sorted_idxweirdo_dist_el] = top3_sorted_idxweirdo_dist_el
             dataframe.at[idx, col_top3_sorted_idxweirdo_label_el] = top3_sorted_idxweirdo_label_el
@@ -2269,19 +2204,19 @@ def get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, el, lityp
                 dataframe.at[idx, col_sum_closest_48htype7_el] = type_counts['48htype7']
                 dataframe.at[idx, col_sum_closest_48htype8_el] = type_counts['48htype8']
 
-            # dataframe.at[idx, col_top3_coorweirdo_dist_label_coor120_idxweirdo_idx120_el] = top3_dist_weirdos_el
-            # print(coorweirdo_dist_label_coor120_idxweirdo_idx120_el)
+            # dataframe.at[idx, col_top3_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el] = top3_dist_weirdos_el
+            # print(coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el)
         # else:
-        #     dataframe.at[idx, col_dist_weirdos_atom120_el] = {}
-        #     # dataframe.at[idx, col_dist_weirdos_el] = np.array([coor120[0] for index, coor120 in enumerate(dist_weirdos_atom120_el)])
+        #     dataframe.at[idx, col_dist_weirdos_atomreference_el] = {}
+        #     # dataframe.at[idx, col_dist_weirdos_el] = np.array([coorreference[0] for index, coorreference in enumerate(dist_weirdos_atomreference_el)])
         #     dataframe.at[idx, col_dist_weirdos_el] = []
-        #     dataframe.at[idx, col_top3_coorweirdo_dist_label_coor120_idxweirdo_idx120_el] = []
+        #     dataframe.at[idx, col_top3_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_el] = []
 
 
 def get_label_mapping(dataframe, coor_structure_init_dict, el, activate_radius, litype):
     # TO DO: split into elementwise
 
-    coor_origin120_el_init = coor_structure_init_dict[el]
+    coor_reference_el_init = coor_structure_init_dict[el]
 
     if activate_radius == 1:
         col_atom_mapping_el_w_dist = f"atom_mapping_{el}_w_dist_closestduplicate"
@@ -2292,65 +2227,65 @@ def get_label_mapping(dataframe, coor_structure_init_dict, el, activate_radius, 
 
     dataframe[col_atom_mapping_el_w_dist_label] = [{} for _ in range(len(dataframe.index))]
 
-    coor_li24g_ref      = coor_origin120_el_init[0:24]
+    coor_li24g_ref      = coor_reference_el_init[0:24]
     if litype == 1:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
         coordinate_lists    = [coor_li48htype1_ref]
         labels              = ["48htype1"]
     elif litype == 2:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref]
         labels              = ["48htype1", "48htype2"]
     elif litype == 3:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref, coor_li48htype3_ref]
         labels              = ["48htype1", "48htype2", "48htype3"]
     elif litype == 4:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref, coor_li48htype3_ref, coor_li48htype4_ref]
         labels              = ["48htype1", "48htype2", "48htype3", "48htype4"]
     elif litype == 5:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
-        coor_li48htype5_ref = coor_origin120_el_init[216:264]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
+        coor_li48htype5_ref = coor_reference_el_init[216:264]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref, coor_li48htype3_ref, coor_li48htype4_ref, coor_li48htype5_ref]
         labels              = ["48htype1", "48htype2", "48htype3", "48htype4", "48htype5"]
     elif litype == 6:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
-        coor_li48htype5_ref = coor_origin120_el_init[216:264]
-        coor_li48htype6_ref = coor_origin120_el_init[264:312]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
+        coor_li48htype5_ref = coor_reference_el_init[216:264]
+        coor_li48htype6_ref = coor_reference_el_init[264:312]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref, coor_li48htype3_ref, coor_li48htype4_ref, coor_li48htype5_ref, coor_li48htype6_ref]
         labels              = ["48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "48htype6"]
     elif litype == 7:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
-        coor_li48htype5_ref = coor_origin120_el_init[216:264]
-        coor_li48htype6_ref = coor_origin120_el_init[264:312]
-        coor_li48htype7_ref = coor_origin120_el_init[312:360]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
+        coor_li48htype5_ref = coor_reference_el_init[216:264]
+        coor_li48htype6_ref = coor_reference_el_init[264:312]
+        coor_li48htype7_ref = coor_reference_el_init[312:360]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref, coor_li48htype3_ref, coor_li48htype4_ref, coor_li48htype5_ref, coor_li48htype6_ref, coor_li48htype7_ref]
         labels              = ["48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "48htype6", "48htype7"]
     elif litype == 8:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
-        coor_li48htype5_ref = coor_origin120_el_init[216:264]
-        coor_li48htype6_ref = coor_origin120_el_init[264:312]
-        coor_li48htype7_ref = coor_origin120_el_init[312:360]
-        coor_li48htype8_ref = coor_origin120_el_init[360:408]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
+        coor_li48htype5_ref = coor_reference_el_init[216:264]
+        coor_li48htype6_ref = coor_reference_el_init[264:312]
+        coor_li48htype7_ref = coor_reference_el_init[312:360]
+        coor_li48htype8_ref = coor_reference_el_init[360:408]
         coordinate_lists    = [coor_li48htype1_ref, coor_li48htype2_ref, coor_li48htype3_ref, coor_li48htype4_ref, coor_li48htype5_ref, coor_li48htype6_ref, coor_li48htype7_ref, coor_li48htype8_ref]
         labels              = ["48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "48htype6", "48htype7", "48htype8"]
     
@@ -2359,8 +2294,8 @@ def get_label_mapping(dataframe, coor_structure_init_dict, el, activate_radius, 
 
         atom_mapping_el_w_dist_label = {}
 
-        for coor120 in atom_mapping_el_w_dist.keys():
-            value = atom_mapping_el_w_dist[tuple(coor120)]
+        for coorreference in atom_mapping_el_w_dist.keys():
+            value = atom_mapping_el_w_dist[tuple(coorreference)]
 
             if isinstance(value, list):
                 # Handle the case where the value is a list
@@ -2370,64 +2305,64 @@ def get_label_mapping(dataframe, coor_structure_init_dict, el, activate_radius, 
                 atom_mapping_el_w_dist_label_val = {'closest24': value['closest24'], 'dist': value['dist']}
 
             # # atom_mapping_el_w_dist_label_val = {}
-            # # atom_mapping_el_w_dist_label[tuple(coor120)] = []
-            # atom_mapping_el_w_dist_label_val = {'closest24': atom_mapping_el_w_dist[tuple(coor120)][0]['closest24'], 'dist': atom_mapping_el_w_dist[tuple(coor120)][0]['dist']}
+            # # atom_mapping_el_w_dist_label[tuple(coorreference)] = []
+            # atom_mapping_el_w_dist_label_val = {'closest24': atom_mapping_el_w_dist[tuple(coorreference)][0]['closest24'], 'dist': atom_mapping_el_w_dist[tuple(coorreference)][0]['dist']}
 
             for idx_li24g_temp, coor_li24g_ref_temp in enumerate(coor_li24g_ref):
-                if (coor120 == coor_li24g_ref_temp).all():
+                if (coorreference == coor_li24g_ref_temp).all():
                     atom_mapping_el_w_dist_label_val["label"] = "24g"
 
-                    atom_mapping_el_w_dist_label[tuple(coor120)] = atom_mapping_el_w_dist_label_val
-                    # atom_mapping_el_w_dist_label[tuple(coor120)].append(atom_mapping_el_w_dist_label_val)
+                    atom_mapping_el_w_dist_label[tuple(coorreference)] = atom_mapping_el_w_dist_label_val
+                    # atom_mapping_el_w_dist_label[tuple(coorreference)].append(atom_mapping_el_w_dist_label_val)
 
             for i in range(1, litype+1):
                 coor_li48htype_ref = locals()[f"coor_li48htype{i}_ref"]
                 label = f"48htype{i}"
 
                 for idx_temp, coor_ref_temp in enumerate(coor_li48htype_ref):
-                    if (coor120 == coor_ref_temp).all():
+                    if (coorreference == coor_ref_temp).all():
                         atom_mapping_el_w_dist_label_val["label"] = label
-                        atom_mapping_el_w_dist_label[tuple(coor120)] = atom_mapping_el_w_dist_label_val
-                        # atom_mapping_el_w_dist_label[tuple(coor120)].append(atom_mapping_el_w_dist_label_val)
+                        atom_mapping_el_w_dist_label[tuple(coorreference)] = atom_mapping_el_w_dist_label_val
+                        # atom_mapping_el_w_dist_label[tuple(coorreference)].append(atom_mapping_el_w_dist_label_val)
 
 
             # # for idx_li48htype1_temp, coor_li48htype1_ref_temp in enumerate(coor_li48htype1_ref):
-            # #     if (coor120 == coor_li48htype1_ref_temp).all():
+            # #     if (coorreference == coor_li48htype1_ref_temp).all():
             # #         atom_mapping_el_w_dist_label_val["label"] = "48htype1"
 
-            # #         atom_mapping_el_w_dist[tuple(coor120)].append(atom_mapping_el_w_dist_label_val)
+            # #         atom_mapping_el_w_dist[tuple(coorreference)].append(atom_mapping_el_w_dist_label_val)
 
             # # for idx_li48htype2_temp, coor_li48htype2_ref_temp in enumerate(coor_li48htype2_ref):
-            # #     if (coor120 == coor_li48htype2_ref_temp).all():
+            # #     if (coorreference == coor_li48htype2_ref_temp).all():
             # #         atom_mapping_el_w_dist_label_val["label"] = "48htype2"
 
-            # #         atom_mapping_el_w_dist[tuple(coor120)].append(atom_mapping_el_w_dist_label_val)
+            # #         atom_mapping_el_w_dist[tuple(coorreference)].append(atom_mapping_el_w_dist_label_val)
 
             # # for idx_li24g_temp, coor_li24g_ref_temp in enumerate(coor_li24g_ref):
-            # #     if (coor120 == coor_li24g_ref_temp).all():
+            # #     if (coorreference == coor_li24g_ref_temp).all():
             # #         atom_mapping_el_w_dist_label_val["label"] = "24g"
 
-            # #         atom_mapping_el_w_dist[tuple(coor120)].append(atom_mapping_el_w_dist_label_val)
+            # #         atom_mapping_el_w_dist[tuple(coorreference)].append(atom_mapping_el_w_dist_label_val)
 
             # # if litype == 3:
             # #     for idx_li48htype3_temp, coor_li48htype3_ref_temp in enumerate(coor_li48htype3_ref):
-            # #         if (coor120 == coor_li48htype3_ref_temp).all():
+            # #         if (coorreference == coor_li48htype3_ref_temp).all():
             # #             atom_mapping_el_w_dist_label_val["label"] = "48htype3"
 
-            # #             atom_mapping_el_w_dist[tuple(coor120)].append(atom_mapping_el_w_dist_label_val)
+            # #             atom_mapping_el_w_dist[tuple(coorreference)].append(atom_mapping_el_w_dist_label_val)
 
             # # elif litype == 4:
             # #     for idx_li48htype3_temp, coor_li48htype3_ref_temp in enumerate(coor_li48htype3_ref):
-            # #         if (coor120 == coor_li48htype3_ref_temp).all():
+            # #         if (coorreference == coor_li48htype3_ref_temp).all():
             # #             atom_mapping_el_w_dist_label_val["label"] = "48htype3"
 
-            # #             atom_mapping_el_w_dist[tuple(coor120)].append(atom_mapping_el_w_dist_label_val)
+            # #             atom_mapping_el_w_dist[tuple(coorreference)].append(atom_mapping_el_w_dist_label_val)
 
             # #     for idx_li48htype4_temp, coor_li48htype4_ref_temp in enumerate(coor_li48htype4_ref):
-            # #         if (coor120 == coor_li48htype4_ref_temp).all():
+            # #         if (coorreference == coor_li48htype4_ref_temp).all():
             # #             atom_mapping_el_w_dist_label_val["label"] = "48htype4"
 
-            # #             atom_mapping_el_w_dist[tuple(coor120)].append(atom_mapping_el_w_dist_label_val)
+            # #             atom_mapping_el_w_dist[tuple(coorreference)].append(atom_mapping_el_w_dist_label_val)
     
         # # dataframe.at[idx, col_atom_mapping_el_w_dist_label] = atom_mapping_el_w_dist
         dataframe.at[idx, col_atom_mapping_el_w_dist_label] = atom_mapping_el_w_dist_label
@@ -2435,13 +2370,15 @@ def get_label_mapping(dataframe, coor_structure_init_dict, el, activate_radius, 
 
 def create_combine_structure(dataframe, destination_directory, amount_Li, amount_P, amount_S, activate_radius, var_savefilename):
     ## TO DO: under maintenance for disambled into el
-    if activate_radius == 2 or activate_radius == 3:
-        col_coor_reduced120_el = f"coor_reduced120_48htypesmerged_Li"
-    elif activate_radius == 1:
-        col_coor_reduced120_el = f"coor_reduced120_Li_closestduplicate"
+    # CHANGED FOR INDEXING
+    # # # # # if activate_radius == 2 or activate_radius == 3:
+    # # # # #     col_coor_reducedreference_el = f"coor_reducedreference_48htypesmerged_Li"
+    # # # # # elif activate_radius == 1:
+    # # # # #     col_coor_reducedreference_el = f"coor_reducedreference_Li_closestduplicate"
+    col_coor_reducedreference_el = f"coor_reducedreference_sorted_Li"
                     
-    # col_coor_reduced120_closestduplicate_Li_closestduplicate = f"coor_reduced120_closestduplicate_Li_closestduplicate" # !!!!!
-    # col_coor_reduced120_closestduplicate_Li = f"coor_reduced120_closestduplicate_Li" # !!!!!
+    # col_coor_reducedreference_closestduplicate_Li_closestduplicate = f"coor_reducedreference_closestduplicate_Li_closestduplicate" # !!!!!
+    # col_coor_reducedreference_closestduplicate_Li = f"coor_reducedreference_closestduplicate_Li" # !!!!!
     col_coor_structure_init_dict = "coor_structure_init_dict"
 
     for idx in range(dataframe["geometry"].size):
@@ -2451,15 +2388,15 @@ def create_combine_structure(dataframe, destination_directory, amount_Li, amount
         # new_structure = Structure.from_file(dataframe['subdir_orientated_positive_poscar'][idx])
         new_structure = Structure.from_file(dataframe['subdir_positive_CONTCAR'][idx])
         coor_origin24_init = dataframe.at[idx, col_coor_structure_init_dict]
-        # coor_reduced120_Li = dataframe.at[idx, col_coor_reduced120_closestduplicate_Li]
-        # coor_reduced120_Li = dataframe.at[idx, col_coor_reduced120_closestduplicate_Li_closestduplicate]
-        coor_reduced120_Li = dataframe.at[idx, col_coor_reduced120_el]
+        # coor_reducedreference_Li = dataframe.at[idx, col_coor_reducedreference_closestduplicate_Li]
+        # coor_reducedreference_Li = dataframe.at[idx, col_coor_reducedreference_closestduplicate_Li_closestduplicate]
+        coor_reducedreference_Li = dataframe.at[idx, col_coor_reducedreference_el]
 
         coor_structure_init_P = coor_origin24_init["P"]
         coor_structure_init_S = coor_origin24_init["S"]
         coor_structure_init_Cl = coor_origin24_init["Cl"]
 
-        coor_mapped_Li = np.array(coor_reduced120_Li)
+        coor_mapped_Li = np.array(coor_reducedreference_Li)
         coor_origin_P = np.array(coor_structure_init_P)
         coor_origin_S = np.array(coor_structure_init_S)
         coor_origin_Cl = np.array(coor_structure_init_Cl)
@@ -2477,7 +2414,7 @@ def create_combine_structure(dataframe, destination_directory, amount_Li, amount
         coor_combined_array = [arr.tolist() for arr in coor_combined]
 
         ## getting the index
-        amount_Li_temp = len(coor_reduced120_Li)
+        amount_Li_temp = len(coor_reducedreference_Li)
         amount_P_temp = len(coor_structure_init_P)
         amount_S_temp = len(coor_structure_init_S)
         amount_Cl_temp = len(coor_structure_init_Cl)
@@ -2541,20 +2478,20 @@ def reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new
 
 
 def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, activate_radius, el):
-    coor_origin120_el_init = coor_structure_init_dict[el]
+    coor_reference_el_init = coor_structure_init_dict[el]
 
     col_idx_without_weirdos = "idx_without_weirdos"
     col_idx_coor_weirdos_el = f"idx_coor_weirdos_{el}"
     col_idx0_weirdos_Li = "idx0_weirdos_Li"
     col_sum_of_weirdos_Li = f"#weirdos_Li"
     if activate_radius == 2 or activate_radius == 3:
-        #col_coor_reduced120_Li = "coor_reduced120_Li"
-        col_coor_reduced120_Li = f"coor_reduced120_48htypesmerged_{el}"
+        #col_coor_reducedreference_Li = "coor_reducedreference_Li"
+        col_coor_reducedreference_Li = f"coor_reducedreference_48htypesmerged_{el}"
         # col_coor_weirdos_48htypesmerged_Li = "coor_weirdos_48htypesmerged_Li"
         # col_coor_weirdos_el = f"coor_weirdos_48htype2_{el}"
         col_sum_sanitycheck_Li = "sum_sanitycheck_48htypesmerged_Li"
     elif activate_radius == 1:
-        col_coor_reduced120_Li = f"coor_reduced120_{el}_closestduplicate"
+        col_coor_reducedreference_Li = f"coor_reducedreference_{el}_closestduplicate"
         col_sum_sanitycheck_Li = f"sum_sanitycheck_{el}_closestduplicate"
 
 
@@ -2567,10 +2504,10 @@ def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, acti
     col_ratio_weirdo_Li = "ratio_weirdo_Li"
     col_sum_amount = "sum_amount"
     col_idx_coor_limapped_weirdos_dict_init = "idx_coor_limapped_weirdos_dict_init"
-    col_ndim_coor_reduced120_Li = "ndim_coor_reduced120_Li"
+    col_ndim_coor_reducedreference_Li = "ndim_coor_reducedreference_Li"
     col_ndim_coor_weirdos_el = "ndim_coor_weirdos_el"
     col_len_coor_weirdos_el = "len_coor_weirdos_el"
-    col_len_coor_reduced120_Li = "len_coor_reduced120_Li"
+    col_len_coor_reducedreference_Li = "len_coor_reducedreference_Li"
     col_len_idx0_weirdos_Li = "len_idx0_weirdos_Li"
     col_len_idx_without_weirdos = "len_idx_without_weirdos"
     col_ndim_flag_coor = "ndim_flag_coor"
@@ -2580,17 +2517,17 @@ def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, acti
     dataframe[col_amount_types_and_weirdo] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_sum_amount] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_idx_coor_limapped_weirdos_dict_init] = [{} for _ in range(len(dataframe.index))]
-    dataframe[col_ndim_coor_reduced120_Li] = [0 for _ in range(len(dataframe.index))]
+    dataframe[col_ndim_coor_reducedreference_Li] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_ndim_coor_weirdos_el] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_len_coor_weirdos_el] = [0 for _ in range(len(dataframe.index))]
-    dataframe[col_len_coor_reduced120_Li] = [0 for _ in range(len(dataframe.index))]
+    dataframe[col_len_coor_reducedreference_Li] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_len_idx0_weirdos_Li] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_len_idx_without_weirdos] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_ndim_flag_coor] = "False"
 
-    coor_li48htype1_ref = coor_origin120_el_init[0:48]
-    coor_li48htype2_ref = coor_origin120_el_init[48:96]
-    coor_li24g_ref = coor_origin120_el_init[96:120]
+    coor_li48htype1_ref = coor_reference_el_init[0:48]
+    coor_li48htype2_ref = coor_reference_el_init[48:96]
+    coor_li24g_ref = coor_reference_el_init[96:120]
 
     for idx in range(dataframe["geometry"].size):
         coor_limapped_weirdos = []
@@ -2599,7 +2536,7 @@ def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, acti
         idx_coor_limapped_weirdos_dict = {}
 
         idx_without_weirdos = dataframe.at[idx, col_idx_without_weirdos]
-        coor_reduced120_Li = np.array(dataframe.at[idx, col_coor_reduced120_Li])
+        coor_reducedreference_Li = np.array(dataframe.at[idx, col_coor_reducedreference_Li])
         idx_coor_weirdos_el = dataframe.at[idx, col_idx_coor_weirdos_el]
         # coor_weirdos_48htype2_el = np.array(dataframe.at[idx, col_coor_weirdos_48htype2_el])
         coor_weirdos_el = np.array(list(idx_coor_weirdos_el.values()))
@@ -2607,19 +2544,19 @@ def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, acti
         nr_of_weirdos_Li = dataframe.at[idx, col_sum_of_weirdos_Li]
         sum_sanitycheck_48htypesmerged_Li = dataframe.at[idx, col_sum_sanitycheck_Li]
 
-        ndim_coor_reduced120_Li = coor_reduced120_Li.ndim
+        ndim_coor_reducedreference_Li = coor_reducedreference_Li.ndim
         ndim_coor_weirdos_el = coor_weirdos_el.ndim
         len_coor_weirdos_el = len(coor_weirdos_el)
-        len_coor_reduced120_Li = len(coor_reduced120_Li)
+        len_coor_reducedreference_Li = len(coor_reducedreference_Li)
         len_idx0_weirdos_Li = len(idx0_weirdos_Li)
         len_idx_without_weirdos = len(idx_without_weirdos)
 
         # # # # if coor_weirdos_el.ndim == 2:
         # # # if len(coor_weirdos_el) > 0:
-        # # #     coor_limapped_weirdos = np.concatenate((coor_reduced120_Li, coor_weirdos_el), axis=0)
+        # # #     coor_limapped_weirdos = np.concatenate((coor_reducedreference_Li, coor_weirdos_el), axis=0)
         # # # # elif coor_weirdos_el.ndim == 1:
         # # # elif len(coor_weirdos_el) == 0:
-        # # #     coor_limapped_weirdos = np.array(coor_reduced120_Li.copy())
+        # # #     coor_limapped_weirdos = np.array(coor_reducedreference_Li.copy())
         # # # else:
         # # #     print(f"coor_weirdos_el has no correct dimension at idx: {idx}")
         # # #     # break
@@ -2633,16 +2570,16 @@ def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, acti
         # # #     # break
     
         # if coor_weirdos_el.ndim == 2:
-        if ndim_coor_reduced120_Li == ndim_coor_weirdos_el & ndim_coor_weirdos_el == 2:
-            coor_limapped_weirdos = np.concatenate((coor_reduced120_Li, coor_weirdos_el), axis=0)
+        if ndim_coor_reducedreference_Li == ndim_coor_weirdos_el & ndim_coor_weirdos_el == 2:
+            coor_limapped_weirdos = np.concatenate((coor_reducedreference_Li, coor_weirdos_el), axis=0)
             dataframe.at[idx, col_ndim_flag_coor] = "True"
         # elif coor_weirdos_el.ndim == 1:
         elif ndim_coor_weirdos_el == 1:
-            coor_limapped_weirdos = np.array(coor_reduced120_Li.copy())
-        elif ndim_coor_reduced120_Li == 1:
+            coor_limapped_weirdos = np.array(coor_reducedreference_Li.copy())
+        elif ndim_coor_reducedreference_Li == 1:
             coor_limapped_weirdos = np.array(coor_weirdos_el.copy())
         else:
-            print(f"coor_weirdos_el or coor_reduced120_Li has no correct dimension at idx: {idx}")
+            print(f"coor_weirdos_el or coor_reducedreference_Li has no correct dimension at idx: {idx}")
             # break
 
         if len(idx0_weirdos_Li) > 0:
@@ -2738,45 +2675,47 @@ def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, acti
         # dataframe.at[idx, col_ratio_weirdo_Li] = ratio_weirdo_Li
         dataframe.at[idx, col_sum_amount] = sum_amount
         dataframe.at[idx, col_idx_coor_limapped_weirdos_dict_init] = idx_coor_limapped_weirdos_dict_init
-        dataframe.at[idx, col_ndim_coor_reduced120_Li] = ndim_coor_reduced120_Li
+        dataframe.at[idx, col_ndim_coor_reducedreference_Li] = ndim_coor_reducedreference_Li
         dataframe.at[idx, col_ndim_coor_weirdos_el] = ndim_coor_weirdos_el
         dataframe.at[idx, col_len_coor_weirdos_el] = len_coor_weirdos_el
-        dataframe.at[idx, col_len_coor_reduced120_Li] = len_coor_reduced120_Li
+        dataframe.at[idx, col_len_coor_reducedreference_Li] = len_coor_reducedreference_Li
         dataframe.at[idx, col_len_idx0_weirdos_Li] = len_idx0_weirdos_Li
         dataframe.at[idx, col_len_idx_without_weirdos] = len_idx_without_weirdos
 
 
 def get_idx_coor_limapped_weirdos_dict_litype(dataframe, coor_structure_init_dict, activate_radius, litype, el):
-    coor_origin120_el_init = coor_structure_init_dict[el]
+    coor_reference_el_init = coor_structure_init_dict[el]
 
     col_idx_without_weirdos = "idx_without_weirdos"
     col_idx_coor_weirdos_el = f"idx_coor_weirdos_{el}"
     col_idx0_weirdos_Li = "idx0_weirdos_Li"
     col_sum_of_weirdos_Li = f"#weirdos_Li"
     if activate_radius == 2 or activate_radius == 3:
-        #col_coor_reduced120_Li = "coor_reduced120_Li"
-        col_coor_reduced120_Li = f"coor_reduced120_48htypesmerged_{el}"
+        #col_coor_reducedreference_Li = "coor_reducedreference_Li"
+        # col_coor_reducedreference_Li = f"coor_reducedreference_48htypesmerged_{el}" # CHANGED
+        col_coor_reducedreference_Li = f"coor_reducedreference_sorted_{el}"
         # col_coor_weirdos_48htypesmerged_Li = "coor_weirdos_48htypesmerged_Li"
         # col_coor_weirdos_el = f"coor_weirdos_48htype2_{el}"
         col_sum_sanitycheck_Li = "sum_sanitycheck_48htypesmerged_Li"
     elif activate_radius == 1:
-        col_coor_reduced120_Li = f"coor_reduced120_{el}_closestduplicate"
+        # col_coor_reducedreference_Li = f"coor_reducedreference_{el}_closestduplicate" # CHANGED
+        col_coor_reducedreference_Li = f"coor_reducedreference_sorted_{el}"
         col_sum_sanitycheck_Li = f"sum_sanitycheck_{el}_closestduplicate"
 
 
-    col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
+    col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict" #
     col_sum_label_and_weirdo_flag = "#label_and_#weirdo_flag"
-    col_amount_types_and_weirdo = "amount_types_and_weirdo"
+    col_amount_types_and_weirdo = "amount_types_and_weirdo" #
     col_ratio_48htype1_Li = "ratio_48htype1_Li"
     col_ratio_48htype2_Li = "ratio_48htype2_Li"
     col_ratio_24g_Li = "ratio_24g_Li"
     col_ratio_weirdo_Li = "ratio_weirdo_Li"
-    col_sum_amount = "sum_amount"
-    col_idx_coor_limapped_weirdos_dict_init = "idx_coor_limapped_weirdos_dict_init"
-    col_ndim_coor_reduced120_Li = "ndim_coor_reduced120_Li"
-    col_ndim_coor_weirdos_el = "ndim_coor_weirdos_el"
-    col_len_coor_weirdos_el = "len_coor_weirdos_el"
-    col_len_coor_reduced120_Li = "len_coor_reduced120_Li"
+    col_sum_amount = "sum_amount" #
+    col_idx_coor_limapped_weirdos_dict_init = "idx_coor_limapped_weirdos_dict_init" #
+    col_ndim_coor_reducedreference_Li = "ndim_coor_reducedreference_Li" #
+    col_ndim_coor_weirdos_el = "ndim_coor_weirdos_el" #
+    col_len_coor_weirdos_el = "len_coor_weirdos_el" #
+    col_len_coor_reducedreference_Li = "len_coor_reducedreference_Li" 
     col_len_idx0_weirdos_Li = "len_idx0_weirdos_Li"
     col_len_idx_without_weirdos = "len_idx_without_weirdos"
     col_ndim_flag_coor = "ndim_flag_coor"
@@ -2786,59 +2725,59 @@ def get_idx_coor_limapped_weirdos_dict_litype(dataframe, coor_structure_init_dic
     dataframe[col_amount_types_and_weirdo] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_sum_amount] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_idx_coor_limapped_weirdos_dict_init] = [{} for _ in range(len(dataframe.index))]
-    dataframe[col_ndim_coor_reduced120_Li] = [0 for _ in range(len(dataframe.index))]
+    dataframe[col_ndim_coor_reducedreference_Li] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_ndim_coor_weirdos_el] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_len_coor_weirdos_el] = [0 for _ in range(len(dataframe.index))]
-    dataframe[col_len_coor_reduced120_Li] = [0 for _ in range(len(dataframe.index))]
+    dataframe[col_len_coor_reducedreference_Li] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_len_idx0_weirdos_Li] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_len_idx_without_weirdos] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_ndim_flag_coor] = "False"
 
-    coor_li24g_ref      = coor_origin120_el_init[0:24]
+    coor_li24g_ref      = coor_reference_el_init[0:24]
     if litype == 1:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
     elif litype == 2:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
     elif litype == 3:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
     elif litype == 4:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
     elif litype == 5:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
-        coor_li48htype5_ref = coor_origin120_el_init[216:264]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
+        coor_li48htype5_ref = coor_reference_el_init[216:264]
     elif litype == 6:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
-        coor_li48htype5_ref = coor_origin120_el_init[216:264]
-        coor_li48htype6_ref = coor_origin120_el_init[264:312]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
+        coor_li48htype5_ref = coor_reference_el_init[216:264]
+        coor_li48htype6_ref = coor_reference_el_init[264:312]
     elif litype == 7:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
-        coor_li48htype5_ref = coor_origin120_el_init[216:264]
-        coor_li48htype6_ref = coor_origin120_el_init[264:312]
-        coor_li48htype7_ref = coor_origin120_el_init[312:360]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
+        coor_li48htype5_ref = coor_reference_el_init[216:264]
+        coor_li48htype6_ref = coor_reference_el_init[264:312]
+        coor_li48htype7_ref = coor_reference_el_init[312:360]
     elif litype == 8:
-        coor_li48htype1_ref = coor_origin120_el_init[24:72]
-        coor_li48htype2_ref = coor_origin120_el_init[72:120]
-        coor_li48htype3_ref = coor_origin120_el_init[120:168]
-        coor_li48htype4_ref = coor_origin120_el_init[168:216]
-        coor_li48htype5_ref = coor_origin120_el_init[216:264]
-        coor_li48htype6_ref = coor_origin120_el_init[264:312]
-        coor_li48htype7_ref = coor_origin120_el_init[312:360]
-        coor_li48htype8_ref = coor_origin120_el_init[360:408]
+        coor_li48htype1_ref = coor_reference_el_init[24:72]
+        coor_li48htype2_ref = coor_reference_el_init[72:120]
+        coor_li48htype3_ref = coor_reference_el_init[120:168]
+        coor_li48htype4_ref = coor_reference_el_init[168:216]
+        coor_li48htype5_ref = coor_reference_el_init[216:264]
+        coor_li48htype6_ref = coor_reference_el_init[264:312]
+        coor_li48htype7_ref = coor_reference_el_init[312:360]
+        coor_li48htype8_ref = coor_reference_el_init[360:408]
 
     for idx in range(dataframe["geometry"].size):
         coor_limapped_weirdos = []
@@ -2847,7 +2786,7 @@ def get_idx_coor_limapped_weirdos_dict_litype(dataframe, coor_structure_init_dic
         idx_coor_limapped_weirdos_dict = {}
 
         idx_without_weirdos = dataframe.at[idx, col_idx_without_weirdos]
-        coor_reduced120_Li = np.array(dataframe.at[idx, col_coor_reduced120_Li])
+        coor_reducedreference_Li = np.array(dataframe.at[idx, col_coor_reducedreference_Li])
         idx_coor_weirdos_el = dataframe.at[idx, col_idx_coor_weirdos_el]
         # coor_weirdos_48htype2_el = np.array(dataframe.at[idx, col_coor_weirdos_48htype2_el])
         coor_weirdos_el = np.array(list(idx_coor_weirdos_el.values()))
@@ -2855,24 +2794,24 @@ def get_idx_coor_limapped_weirdos_dict_litype(dataframe, coor_structure_init_dic
         nr_of_weirdos_Li = dataframe.at[idx, col_sum_of_weirdos_Li]
         sum_sanitycheck_48htypesmerged_Li = dataframe.at[idx, col_sum_sanitycheck_Li]
 
-        ndim_coor_reduced120_Li = coor_reduced120_Li.ndim
+        ndim_coor_reducedreference_Li = coor_reducedreference_Li.ndim
         ndim_coor_weirdos_el = coor_weirdos_el.ndim
         len_coor_weirdos_el = len(coor_weirdos_el)
-        len_coor_reduced120_Li = len(coor_reduced120_Li)
+        len_coor_reducedreference_Li = len(coor_reducedreference_Li)
         len_idx0_weirdos_Li = len(idx0_weirdos_Li)
         len_idx_without_weirdos = len(idx_without_weirdos)
 
         # if coor_weirdos_el.ndim == 2:
-        if ndim_coor_reduced120_Li == ndim_coor_weirdos_el & ndim_coor_weirdos_el == 2:
-            coor_limapped_weirdos = np.concatenate((coor_reduced120_Li, coor_weirdos_el), axis=0)
+        if ndim_coor_reducedreference_Li == ndim_coor_weirdos_el & ndim_coor_weirdos_el == 2:
+            coor_limapped_weirdos = np.concatenate((coor_reducedreference_Li, coor_weirdos_el), axis=0)
             dataframe.at[idx, col_ndim_flag_coor] = "True"
         # elif coor_weirdos_el.ndim == 1:
         elif ndim_coor_weirdos_el == 1:
-            coor_limapped_weirdos = np.array(coor_reduced120_Li.copy())
-        elif ndim_coor_reduced120_Li == 1:
+            coor_limapped_weirdos = np.array(coor_reducedreference_Li.copy())
+        elif ndim_coor_reducedreference_Li == 1:
             coor_limapped_weirdos = np.array(coor_weirdos_el.copy())
         else:
-            print(f"coor_weirdos_el or coor_reduced120_Li has no correct dimension at idx: {idx}")
+            print(f"coor_weirdos_el or coor_reducedreference_Li has no correct dimension at idx: {idx}")
             # break
 
         if len(idx0_weirdos_Li) > 0:
@@ -3029,16 +2968,18 @@ def get_idx_coor_limapped_weirdos_dict_litype(dataframe, coor_structure_init_dic
         # dataframe.at[idx, col_ratio_weirdo_Li] = ratio_weirdo_Li
         dataframe.at[idx, col_sum_amount] = sum_amount
         dataframe.at[idx, col_idx_coor_limapped_weirdos_dict_init] = idx_coor_limapped_weirdos_dict_init
-        dataframe.at[idx, col_ndim_coor_reduced120_Li] = ndim_coor_reduced120_Li
+        dataframe.at[idx, col_ndim_coor_reducedreference_Li] = ndim_coor_reducedreference_Li
         dataframe.at[idx, col_ndim_coor_weirdos_el] = ndim_coor_weirdos_el
         dataframe.at[idx, col_len_coor_weirdos_el] = len_coor_weirdos_el
-        dataframe.at[idx, col_len_coor_reduced120_Li] = len_coor_reduced120_Li
+        dataframe.at[idx, col_len_coor_reducedreference_Li] = len_coor_reducedreference_Li
         dataframe.at[idx, col_len_idx0_weirdos_Li] = len_idx0_weirdos_Li
         dataframe.at[idx, col_len_idx_without_weirdos] = len_idx_without_weirdos
 
 
 
 def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, amount_P, amount_S, amount_Cl, var_savefilename_init, var_savefilename_new):
+    col_idx0_weirdos_Li = "idx0_weirdos_Li"
+    
     col_idx_without_weirdos = "idx_without_weirdos"
 
     dataframe[col_idx_without_weirdos] = [np.array([]) for _ in range(len(dataframe.index))]
@@ -3046,7 +2987,7 @@ def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, am
     search_string = "Li  Li0"
 
     for idx in range(dataframe["geometry"].size):
-        idx0_weirdos_Li = dataframe["idx0_weirdos_Li"][idx]
+        idx0_weirdos_Li = dataframe[col_idx0_weirdos_Li][idx]
         source_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_savefilename_init}.cif"
         source_filename_path = os.path.join(destination_directory, source_filename)
 
@@ -4735,7 +4676,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     Operation.File.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_perfect_poscar_48n24, prefix=None)
 
     Operation.File.copy_rename_files(file_loc, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
-    PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
 
     file_loc_mask_1, file_loc_important_cols = get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
     
@@ -4784,11 +4725,11 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     cif = CifWriter(cif_structure)
     cif.write_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif")
 
-    coor_structure_init_dict = ReadStructure.get_coor_dict_structure(ref_structure_48n24)
-    coor_structure_init_dict_expanded = ReadStructure.get_coor_dict_structure(Structure.from_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif"))
+    coor_structure_init_dict = ReadStructure.get_coor_structure_init_dict(ref_structure_48n24)
+    coor_structure_init_dict_expanded = ReadStructure.get_coor_structure_init_dict(Structure.from_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif"))
 
-    # PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-    ReadStructure.get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
+    # PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    ReadStructure.get_coor_structure_init_dict_wholedataframe(file_loc_important_cols, mapping = "False")
 
     # if activate_radius == 3:
     #     get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
@@ -4816,7 +4757,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
     get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
 
     # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-    # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coor120_idxweirdo_idx120_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+    # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
 
     # if activate_radius == 3:
     #     file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","sum_weirdos_Li","sum_mapped_48htype1_48htype2_Li_closestduplicate","sum_weirdos_48htype1_48htype2_Li","sum_mapped_48htype2_Li_closestduplicate","#weirdos_Li","sum_mapped_48htypesmerged_Li","sum_sanitycheck_48htypesmerged_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
@@ -5076,9 +5017,9 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 #     # max_mapping_radius = 0.04197083906
 #     ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
 
-#     coor_structure_init_dict = ReadStructure.get_coor_dict_structure(ref_structure_48n24)
-#     PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-#     ReadStructure.get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
+#     coor_structure_init_dict = ReadStructure.get_coor_structure_init_dict(ref_structure_48n24)
+#     PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+#     ReadStructure.get_coor_structure_init_dict_wholedataframe(file_loc_important_cols, mapping = "False")
 
 #     # if activate_radius == 3:
 #     #     get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
@@ -5106,7 +5047,7 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 #     get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
 
 #     # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-#     # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coor120_idxweirdo_idx120_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+#     # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
 
 #     # if activate_radius == 3:
 #     #     file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","sum_weirdos_Li","sum_mapped_48htype1_48htype2_Li_closestduplicate","sum_weirdos_48htype1_48htype2_Li","sum_mapped_48htype2_Li_closestduplicate","#weirdos_Li","sum_mapped_48htypesmerged_Li","sum_sanitycheck_48htypesmerged_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
@@ -5264,9 +5205,9 @@ def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_rad
     # max_mapping_radius = 0.04197083906
     ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
 
-    coor_structure_init_dict = ReadStructure.get_coor_dict_structure(ref_structure_48n24)
-    PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-    ReadStructure.get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
+    coor_structure_init_dict = ReadStructure.get_coor_structure_init_dict(ref_structure_48n24)
+    PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    ReadStructure.get_coor_structure_init_dict_wholedataframe(file_loc_important_cols, mapping = "False")
 
     if activate_radius == 2:
         get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
@@ -5288,7 +5229,7 @@ def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_rad
     get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
 
     # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-    # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coor120_idxweirdo_idx120_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+    # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
 
     if litype == 0:
         file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
@@ -5458,9 +5399,9 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
     # max_mapping_radius = 0.04197083906
     ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
 
-    coor_structure_init_dict = ReadStructure.get_coor_dict_structure(ref_structure_48n24)
-    PreProcessingCONTCAR.get_positive_lessthan1_poscarcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-    ReadStructure.get_coor_structure24_dict_iterated(file_loc_important_cols, mapping = "False")
+    coor_structure_init_dict = ReadStructure.get_coor_structure_init_dict(ref_structure_48n24)
+    PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    ReadStructure.get_coor_structure_init_dict_wholedataframe(file_loc_important_cols, mapping = "False")
 
     if activate_radius == 2:
         get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
@@ -5482,7 +5423,7 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
     get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
 
     # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-    # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coor120_idxweirdo_idx120_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+    # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
 
     if litype == 0:
         file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
@@ -6721,70 +6662,199 @@ def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
     return tuple_metainfo   
 
 
-def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, destination_directory, var_filename, el):
+def get_coor_48htype2_metainfo(coor_structure_init_dict_expanded, el):
+    all_coor_48htype2 = coor_structure_init_dict_expanded[el][24:72]
+
+    coor_48htype2_metainfo = defaultdict(list)
+
+    for id, coor in enumerate(all_coor_48htype2):
+        coor_48htype2_metainfo[id] = {'coor': coor}
+
+    return coor_48htype2_metainfo
+
+
+# # def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, destination_directory, var_filename, el):
+# #     col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
+    
+# #     col_occupancy = "occupancy"
+# #     col_coor24li_tuple_cage_belongin = "coor24li_tuple_cage_belongin"
+
+# #     dataframe[col_occupancy] = [{} for _ in range(len(dataframe.index))]
+# #     dataframe[col_coor24li_tuple_cage_belongin] = [{} for _ in range(len(dataframe.index))]
+
+# #     coor_structure_init_dict_expanded_el = coor_structure_init_dict_expanded[el]
+# #     coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
+
+# #     for idx in range(dataframe["geometry"].size):
+# #         coor24li_tuple_cage_belongin = defaultdict(list)
+
+# #         file_24Li = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_filename}.cif"
+# #         file_path_24Li = os.path.join(destination_directory, file_24Li)
+
+# #         coor_structure_24Li_dict_el = ReadStructure.get_coor_structure_init_dict(Structure.from_file(file_path_24Li))[el]
+        
+# #         # Convert lists of arrays to sets for efficient comparison
+# #         set_coor_structure = set(map(tuple, coor_structure_24Li_dict_el))
+# #         set_coor_li48htype1_ref = set(map(tuple, coor_li48htype1_ref))
+
+# #         # Find the difference between the two sets
+# #         result_set = set_coor_structure.difference(set_coor_li48htype1_ref)
+
+# #         # Convert the result back to a list of arrays
+# #         result_list = list(map(np.array, result_set))
+# #         # for idx_triad, val in tuple_metainfo.items():
+
+# #         for idx_triad, values_list in tuple_metainfo.items():
+# #             coor24li_tuple_cage_belongin[idx_triad] = []    # WRONG! should be idx atom
+            
+# #             for entry in values_list:
+# #                 for i in result_list:
+            
+# #                     if (i == entry['coor']).all():
+# #                         # if (tuple(i) == tuple(entry['coor'])).all():
+# #                         # coor24li_tuple_belongin_dict = {'coor': i, 'type':entry['type']}
+# #                         coor24li_tuple_cage_belongin_dict = {'coor': i, 'type':entry['type'], 'idx_cage':entry['idx_cage']}
+# #                         coor24li_tuple_cage_belongin[idx_triad].append(coor24li_tuple_cage_belongin_dict)
+
+# #         # idx_coor_weirdos_Li_dict = dataframe['idx_coor_weirdos_Li'][idx]
+
+# #         # for idx_weirdo, values_list in idx_coor_weirdos_Li_dict.items():
+# #         #         coorweirdo_tuple_belongin_dict = {'coor': values_list, 'type':'weirdo'}
+# #         #         coor24li_tuple_cage_belongin['weirdo'].append(coorweirdo_tuple_belongin_dict)
+        
+# #         # for key, val in coor24li_tuple_cage_belongin.items():
+# #         #     for i
+
+# #         len_occupancy = []
+# #         for key, val in coor24li_tuple_cage_belongin.items():
+# #             len_occupancy.append(len(val))
+
+
+# #         amount_48htype1 = (len(coor_structure_24Li_dict_el)-len(result_list))
+# #         amount_weirdo = dataframe['#weirdos_Li'][idx]
+# #         occupancy_2 = len_occupancy.count(2)
+# #         occupancy_1 = len_occupancy.count(1)
+# #         occupancy_0 = len_occupancy.count(0) - amount_48htype1 - amount_weirdo
+
+# #         sanity_check_occupancy = occupancy_2 * 2 + occupancy_1
+
+# #         # if sanity_check_occupancy != 24:
+# #         #     print(f'sum of occupancy not achieved at idx {idx}')
+# #         #     sys.exit()
+
+# #         # print(f"idx: {idx}")
+
+# #         # if sanity_check_occupancy != 24:
+# #         #     sys.exit()
+
+# #         occupancy = {'2': occupancy_2, '1': occupancy_1, '0': occupancy_0, '48htype1': amount_48htype1,'weirdo': amount_weirdo}
+
+# #         dataframe.at[idx, col_occupancy] = occupancy
+# #         dataframe.at[idx, col_coor24li_tuple_cage_belongin] = coor24li_tuple_cage_belongin
+
+
+def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, el):
+    col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
+    col_sum_of_weirdos_Li = f"#weirdos_Li"
+
     col_occupancy = "occupancy"
-    col_coor24li_tuple_cage_belongin = "coor24li_tuple_cage_belongin"
+    col_idx_coor24li_tuple_cage_belongin_empty = "idx_coor24li_tuple_cage_belongin_empty"
 
     dataframe[col_occupancy] = [{} for _ in range(len(dataframe.index))]
-    dataframe[col_coor24li_tuple_cage_belongin] = [{} for _ in range(len(dataframe.index))]
+    dataframe[col_idx_coor24li_tuple_cage_belongin_empty] = [{} for _ in range(len(dataframe.index))]
 
     coor_structure_init_dict_expanded_el = coor_structure_init_dict_expanded[el]
     coor_li48htype1_ref = coor_structure_init_dict_expanded_el[24:72]
 
+    # for idx in [4]: 
     for idx in range(dataframe["geometry"].size):
-        coor24li_tuple_cage_belongin = defaultdict(list)
+        idx_coor24li_tuple_cage_belongin_empty = defaultdict(list)
+        temp_idxtuple_coor24li_cage_belongin_empty = defaultdict(list)
 
-        file_24Li = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_filename}.cif"
-        file_path_24Li = os.path.join(destination_directory, file_24Li)
+        idx_coor_limapped_weirdos_dict = dataframe.at[idx, col_idx_coor_limapped_weirdos_dict]
 
-        coor_structure_24Li_dict_el = ReadStructure.get_coor_dict_structure(Structure.from_file(file_path_24Li))[el]
+        # # # file_24Li = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_filename}.cif"
+        # # # file_path_24Li = os.path.join(destination_directory, file_24Li)
+
+        # # # coor_structure_24Li_dict_el = ReadStructure.get_coor_structure_init_dict(Structure.from_file(file_path_24Li))[el]
         
-        # Convert lists of arrays to sets for efficient comparison
-        set_coor_structure = set(map(tuple, coor_structure_24Li_dict_el))
-        set_coor_li48htype1_ref = set(map(tuple, coor_li48htype1_ref))
+        # # # # Convert lists of arrays to sets for efficient comparison
+        # # # set_coor_structure = set(map(tuple, coor_structure_24Li_dict_el))
+        # # # set_coor_li48htype1_ref = set(map(tuple, coor_li48htype1_ref))
 
-        # Find the difference between the two sets
-        result_set = set_coor_structure.difference(set_coor_li48htype1_ref)
+        # # # # Find the difference between the two sets
+        # # # result_set = set_coor_structure.difference(set_coor_li48htype1_ref)
 
-        # Convert the result back to a list of arrays
-        result_list = list(map(np.array, result_set))
+        # # # # Convert the result back to a list of arrays
+        # # # result_list = list(map(np.array, result_set))
         # for idx_triad, val in tuple_metainfo.items():
 
         for idx_triad, values_list in tuple_metainfo.items():
-            coor24li_tuple_cage_belongin[idx_triad] = []
-            
+            idx_coor24li_tuple_cage_belongin_empty[idx_triad] = []    # idx_atom as the actual index
+            temp_idxtuple_coor24li_cage_belongin_empty[idx_triad] = []
+
             for entry in values_list:
-                for i in result_list:
+
+                coor_metainfo = entry['coor']
+                coor_metainfo_rounded = tuple(round(coordinate, 5) for coordinate in coor_metainfo)
+                
+                # for i in result_list:
+                for idx_atom, values_list_atom in idx_coor_limapped_weirdos_dict.items():
+
+                    coor_li_mapped = values_list_atom['coor']
+                    coor_li_mapped_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped)
             
-                    if (i == entry['coor']).all():
-                        # if (tuple(i) == tuple(entry['coor'])).all():
+                    if (coor_li_mapped_rounded == coor_metainfo_rounded):
+                        # if (tuple(i) == tuple(coor_metainfo_rounded)).all():
                         # coor24li_tuple_belongin_dict = {'coor': i, 'type':entry['type']}
-                        coor24li_tuple_cage_belongin_dict = {'coor': i, 'type':entry['type'], 'idx_cage':entry['idx_cage']}
-                        coor24li_tuple_cage_belongin[idx_triad].append(coor24li_tuple_cage_belongin_dict)
+                        idx_coor24li_tuple_cage_belongin_empty_dict = {'coor': coor_li_mapped_rounded, 'type':entry['type'], 'idx_tuple':idx_triad, 'idx_cage':entry['idx_cage']}
+                        idx_coor24li_tuple_cage_belongin_empty[idx_atom].append(idx_coor24li_tuple_cage_belongin_empty_dict)        # changed into idx_atom
+
+                        temp_idxtuple_coor24li_cage_belongin_empty_dict = {'coor': coor_li_mapped_rounded, 'type':entry['type'], 'idx_cage':entry['idx_cage']}
+                        temp_idxtuple_coor24li_cage_belongin_empty[idx_triad].append(temp_idxtuple_coor24li_cage_belongin_empty_dict)        # changed into idx_atom
 
         # idx_coor_weirdos_Li_dict = dataframe['idx_coor_weirdos_Li'][idx]
 
         # for idx_weirdo, values_list in idx_coor_weirdos_Li_dict.items():
         #         coorweirdo_tuple_belongin_dict = {'coor': values_list, 'type':'weirdo'}
-        #         coor24li_tuple_cage_belongin['weirdo'].append(coorweirdo_tuple_belongin_dict)
+        #         idx_coor24li_tuple_cage_belongin_empty['weirdo'].append(coorweirdo_tuple_belongin_dict)
         
-        # for key, val in coor24li_tuple_cage_belongin.items():
+        # for key, val in idx_coor24li_tuple_cage_belongin_empty.items():
         #     for i
 
         len_occupancy = []
-        for key, val in coor24li_tuple_cage_belongin.items():
+        for key, val in temp_idxtuple_coor24li_cage_belongin_empty.items():
             len_occupancy.append(len(val))
 
+        # Initialize a counter
+        amount_48htype1 = 0
+        # # amount_weirdo = 0
 
-        amount_48htype1 = (len(coor_structure_24Li_dict_el)-len(result_list))
-        amount_weirdo = dataframe['#weirdos_Li'][idx]
+        # Iterate through each key and list in the dictionary
+        for key, list_of_dicts in idx_coor_limapped_weirdos_dict.items():
+            # Iterate through each dictionary in the list
+            # # for item in list_of_dicts:
+            # Check if the 'type' is '48htype1'
+            if list_of_dicts['label'] == '48htype1':
+                # Increment the counter
+                amount_48htype1 += 1
+                    # if amount_48htype1 == 1:
+                    #     print('true')
+                # # if item['type'] == 'weirdo':
+                # #     # Increment the counter
+                # #     amount_weirdo += 1
+
+        # print(amount_48htype1)
+        # amount_48htype1 = (len(coor_structure_24Li_dict_el)-len(result_list))
+        amount_weirdo = dataframe[col_sum_of_weirdos_Li][idx]
         occupancy_2 = len_occupancy.count(2)
         occupancy_1 = len_occupancy.count(1)
         occupancy_0 = len_occupancy.count(0) - amount_48htype1 - amount_weirdo
 
-        sanity_check_occupancy = occupancy_2 * 2 + occupancy_1
+        sanity_check_occupancy = occupancy_2 * 2 + occupancy_1 + amount_48htype1 + amount_weirdo + occupancy_0
 
         # if sanity_check_occupancy != 24:
+        #     print(f'sum of occupancy not achieved at idx {idx}')
         #     sys.exit()
 
         # print(f"idx: {idx}")
@@ -6795,7 +6865,7 @@ def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, 
         occupancy = {'2': occupancy_2, '1': occupancy_1, '0': occupancy_0, '48htype1': amount_48htype1,'weirdo': amount_weirdo}
 
         dataframe.at[idx, col_occupancy] = occupancy
-        dataframe.at[idx, col_coor24li_tuple_cage_belongin] = coor24li_tuple_cage_belongin
+        dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_empty] = idx_coor24li_tuple_cage_belongin_empty
 
 
 def get_idx_cage_coor_24g(coor_24g_array, labels, idx_coor_cage_order, amount_clusters):
@@ -6878,54 +6948,156 @@ def get_tuple_cage_metainfo(tuple_metainfo, idx_cage_coor_24g):
     return tuple_cage_metainfo
 
 
-def get_complete_closest_tuple(dataframe, tuple_metainfo):
-    col_coor24li_tuple_cage_belongin = "coor24li_tuple_cage_belongin"
+# # def get_complete_closest_tuple(dataframe, tuple_metainfo):
+# #     col_coor24li_tuple_cage_belongin = "coor24li_tuple_cage_belongin"
+# #     col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
+
+# #     col_idx_coor24li_tuple_cage_belongin = "idx_coor24li_tuple_cage_belongin"
+# #     col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
+# #     col_top_n_distance_coors = "top_n_distance_coors"
+
+# #     dataframe[col_idx_coor24li_tuple_cage_belongin] = [{} for _ in range(len(dataframe.index))]
+# #     dataframe[col_idx_coor24li_tuple_cage_belongin_complete_closest] = [{} for _ in range(len(dataframe.index))]
+# #     dataframe[col_top_n_distance_coors] = [{} for _ in range(len(dataframe.index))]
+    
+# #     for idx in range(dataframe["geometry"].size):
+# #         idx_coor24li_tuple_cage_belongin = defaultdict(list)
+
+# #         coor24li_tuple_cage_belongin = dataframe[col_coor24li_tuple_cage_belongin][idx]
+# #         idx_coor_limapped_weirdos_dict = dataframe[col_idx_coor_limapped_weirdos_dict][idx]
+
+# #         for key_a, val_a in idx_coor_limapped_weirdos_dict.items():
+# #             idx_li = key_a
+# #             coor_li_mapped_a = val_a['coor']
+# #             coor_li_mapped_a_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_a)
+# #             label_li_a = val_a['label']
+
+# #             idx_coor24li_tuple_cage_belongin[idx_li] = []
+# #             for key_b, val_b in coor24li_tuple_cage_belongin.items():
+# #                 idx_tuple = key_b
+# #                 for entry_b in val_b:
+# #                     coor_li_mapped_b = entry_b['coor']
+# #                     coor_li_mapped_b_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_b)
+# #                     label_li_b = entry_b['type']
+# #                     idx_cage_b = entry_b['idx_cage']
+
+# #                     if (coor_li_mapped_a_rounded == coor_li_mapped_b_rounded) and (label_li_a == label_li_b):
+# #                         # idx_coor24li_tuple_belongin_val = {'coor': coor_li_mapped_a, 'type':label_li_a, 'idx_tuple':idx_tuple}
+# #                         idx_coor24li_tuple_cage_belongin_val = {'coor': coor_li_mapped_a, 'type':label_li_a, 'idx_tuple':idx_tuple, 'idx_cage':idx_cage_b}
+# #                         idx_coor24li_tuple_cage_belongin[idx_li].append(idx_coor24li_tuple_cage_belongin_val)
+        
+# #         dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin] = idx_coor24li_tuple_cage_belongin
+                        
+# #         distance_coors_all = defaultdict(list)
+# #         n = 3
+# #         idx_coor_limapped_weirdos_dict = dataframe[col_idx_coor_limapped_weirdos_dict][idx]
+# #         idx_coor24li_tuple_cage_belongin = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin]
+# #         # idx_coor24li_tuple_cage_belongin_complete_closest = idx_coor24li_tuple_cage_belongin.copy()
+# #         idx_coor24li_tuple_cage_belongin_complete_closest = defaultdict(list)
+
+# #         for key_c, val_c in idx_coor24li_tuple_cage_belongin.items():
+# #             idx_li = key_c
+# #             idx_coor24li_tuple_cage_belongin_complete_closest[idx_li] = []
+
+# #             if val_c == []:
+# #                 coor_li_mapped_c = idx_coor_limapped_weirdos_dict[idx_li]['coor']
+# #                 label_li_c = idx_coor_limapped_weirdos_dict[idx_li]['label']
+
+# #                 distance_prev = float("inf")
+# #                 closest_idx_tuple = None
+# #                 closest_idx_cage = None
+                
+# #                 for key_d, val_d in tuple_metainfo.items():
+# #                     for entry_d in val_d: 
+# #                         idx_tuple = key_d
+# #                         coor_tuple_d = entry_d['coor']
+# #                         label_li_d = entry_d['type']
+# #                         idx_cage_d = entry_d['idx_cage']
+
+# #                         distance = Operation.Distance.mic_eucledian_distance(coor_li_mapped_c, coor_tuple_d)
+
+# #                         # distance_coors_all_val = {'coor_li_mapped': coor_li_mapped_c, 'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d}
+
+# #                         distance_coors_all_val = {'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d, 'idx_tuple':idx_tuple, 'idx_cage':idx_cage_d}
+
+# #                         distance_coors_all[idx_li].append(distance_coors_all_val)
+
+# #                         if distance < distance_prev:
+# #                             distance_prev = distance
+# #                             closest_idx_tuple = idx_tuple
+# #                             closest_idx_cage = idx_cage_d
+
+# #                 idx_coor24li_tuple_cage_belongin_complete_closest[idx_li] = {'coor': coor_li_mapped_c, 'type': label_li_c, 'idx_tuple': closest_idx_tuple, 'idx_cage': closest_idx_cage}
+
+# #             elif val_c != []:
+# #                 for entry_c in val_c: 
+# #                     coor_li_mapped_c = entry_c['coor']
+# #                     label_li_c = entry_c['type']
+# #                     idx_tuple_c = entry_c['idx_tuple']
+# #                     idx_cage_c = entry_c['idx_cage']
+
+# #                     idx_coor24li_tuple_cage_belongin_complete_closest[idx_li] = {'coor': coor_li_mapped_c, 'type': label_li_c, 'idx_tuple': idx_tuple_c, 'idx_cage': idx_cage_c}
+
+# #         sorted_distance_coors_all = {key: sorted(value, key=lambda x: x['dist']) for key, value in distance_coors_all.items()}
+# #         top_n_distance_coors = {k: v[0:n] for k, v in sorted_distance_coors_all.items()}
+# #         # !!! assumed there's NO DUPLICATE with the SECOND distance
+
+# #         dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest] = idx_coor24li_tuple_cage_belongin_complete_closest
+# #         dataframe.at[idx, col_top_n_distance_coors] = top_n_distance_coors
+
+
+def get_complete_closest_tuple(dataframe, tuple_metainfo, coor_48htype2_metainfo):
+    col_idx_coor24li_tuple_cage_belongin_empty = "idx_coor24li_tuple_cage_belongin_empty"
     col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
 
-    col_idx_coor24li_tuple_cage_belongin = "idx_coor24li_tuple_cage_belongin"
+    # col_idx_coor24li_tuple_cage_belongin_empty_xxx = "idx_coor24li_tuple_cage_belongin_empty_xxx"
     col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
     col_top_n_distance_coors = "top_n_distance_coors"
+    col_idx_coor24li_tuple_cage_belongin_complete_id48htype2 = "idx_coor24li_tuple_cage_belongin_complete_id48htype2"
 
-    dataframe[col_idx_coor24li_tuple_cage_belongin] = [{} for _ in range(len(dataframe.index))]
+    # dataframe[col_idx_coor24li_tuple_cage_belongin_empty_xxx] = [{} for _ in range(len(dataframe.index))]
     dataframe[col_idx_coor24li_tuple_cage_belongin_complete_closest] = [{} for _ in range(len(dataframe.index))]
     dataframe[col_top_n_distance_coors] = [{} for _ in range(len(dataframe.index))]
+    dataframe[col_idx_coor24li_tuple_cage_belongin_complete_id48htype2] = [{} for _ in range(len(dataframe.index))]
     
     for idx in range(dataframe["geometry"].size):
-        idx_coor24li_tuple_cage_belongin = defaultdict(list)
+        # idx_coor24li_tuple_cage_belongin_empty_xxx = defaultdict(list)
 
+        idx_coor24li_tuple_cage_belongin_empty = dataframe[col_idx_coor24li_tuple_cage_belongin_empty][idx]
         idx_coor_limapped_weirdos_dict = dataframe[col_idx_coor_limapped_weirdos_dict][idx]
-        coor24li_tuple_cage_belongin = dataframe[col_coor24li_tuple_cage_belongin][idx]
 
-        for key_a, val_a in idx_coor_limapped_weirdos_dict.items():
-            idx_li = key_a
-            coor_li_mapped_a = val_a['coor']
-            coor_li_mapped_a_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_a)
-            label_li_a = val_a['label']
+        # for key_a, val_a in idx_coor_limapped_weirdos_dict.items():
+        #     idx_li = key_a
+        #     coor_li_mapped_a = val_a['coor']
+        #     coor_li_mapped_a_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_a)
+        #     label_li_a = val_a['label']
 
-            idx_coor24li_tuple_cage_belongin[idx_li] = []
-            for key_b, val_b in coor24li_tuple_cage_belongin.items():
-                idx_tuple = key_b
-                for entry_b in val_b:
-                    coor_li_mapped_b = entry_b['coor']
-                    coor_li_mapped_b_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_b)
-                    label_li_b = entry_b['type']
-                    idx_cage_b = entry_b['idx_cage']
+        #     idx_coor24li_tuple_cage_belongin_empty_xxx[idx_li] = []
+        #     for key_b, val_b in idx_coor24li_tuple_cage_belongin_empty.items():
+        #         idx_b_li = key_b
+        #         for entry_b in val_b:
+        #             coor_li_mapped_b = entry_b['coor']
+        #             coor_li_mapped_b_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_b)
+        #             label_li_b = entry_b['type']
+        #             idx_tuple = entry_b['idx_tuple']
+        #             idx_cage_b = entry_b['idx_cage']
 
-                    if (coor_li_mapped_a_rounded == coor_li_mapped_b_rounded) and (label_li_a == label_li_b):
-                        # idx_coor24li_tuple_belongin_val = {'coor': coor_li_mapped_a, 'type':label_li_a, 'idx_tuple':idx_tuple}
-                        idx_coor24li_tuple_cage_belongin_val = {'coor': coor_li_mapped_a, 'type':label_li_a, 'idx_tuple':idx_tuple, 'idx_cage':idx_cage_b}
-                        idx_coor24li_tuple_cage_belongin[idx_li].append(idx_coor24li_tuple_cage_belongin_val)
+        #             if (coor_li_mapped_a_rounded == coor_li_mapped_b_rounded) and (label_li_a == label_li_b):
+        #                 # idx_coor24li_tuple_belongin_val = {'coor': coor_li_mapped_a, 'type':label_li_a, 'idx_tuple':idx_tuple}
+        #                 idx_coor24li_tuple_cage_belongin_empty_xxx_val = {'coor': coor_li_mapped_a, 'type':label_li_a, 'idx_tuple':idx_tuple, 'idx_cage':idx_cage_b}
+        #                 idx_coor24li_tuple_cage_belongin_empty_xxx[idx_li].append(idx_coor24li_tuple_cage_belongin_empty_xxx_val)
         
-        dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin] = idx_coor24li_tuple_cage_belongin
+        # dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_empty_xxx] = idx_coor24li_tuple_cage_belongin_empty_xxx
                         
-        distance_coors_all = defaultdict(list)
+        distance_coors_all_closest = defaultdict(list)
         n = 3
-        idx_coor_limapped_weirdos_dict = dataframe[col_idx_coor_limapped_weirdos_dict][idx]
-        idx_coor24li_tuple_cage_belongin = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin]
-        # idx_coor24li_tuple_cage_belongin_complete_closest = idx_coor24li_tuple_cage_belongin.copy()
+        # idx_coor_limapped_weirdos_dict = dataframe[col_idx_coor_limapped_weirdos_dict][idx]
+        # idx_coor24li_tuple_cage_belongin_empty_xxx = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_empty_xxx]
+        # idx_coor24li_tuple_cage_belongin_complete_closest = idx_coor24li_tuple_cage_belongin_empty_xxx.copy()
         idx_coor24li_tuple_cage_belongin_complete_closest = defaultdict(list)
+        idx_coor24li_tuple_cage_belongin_complete_id48htype2 = defaultdict(list)
 
-        for key_c, val_c in idx_coor24li_tuple_cage_belongin.items():
+        for key_c, val_c in idx_coor24li_tuple_cage_belongin_empty.items():
             idx_li = key_c
             idx_coor24li_tuple_cage_belongin_complete_closest[idx_li] = []
 
@@ -6946,11 +7118,11 @@ def get_complete_closest_tuple(dataframe, tuple_metainfo):
 
                         distance = Operation.Distance.mic_eucledian_distance(coor_li_mapped_c, coor_tuple_d)
 
-                        # distance_coors_all_val = {'coor_li_mapped': coor_li_mapped_c, 'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d}
+                        # distance_coors_all_closest_val = {'coor_li_mapped': coor_li_mapped_c, 'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d}
 
-                        distance_coors_all_val = {'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d, 'idx_tuple':idx_tuple, 'idx_cage':idx_cage_d}
+                        distance_coors_all_closest_val = {'coor_tuple': coor_tuple_d, 'dist': distance, 'label':label_li_d, 'idx_tuple':idx_tuple, 'idx_cage':idx_cage_d}
 
-                        distance_coors_all[idx_li].append(distance_coors_all_val)
+                        distance_coors_all_closest[idx_li].append(distance_coors_all_closest_val)
 
                         if distance < distance_prev:
                             distance_prev = distance
@@ -6968,12 +7140,43 @@ def get_complete_closest_tuple(dataframe, tuple_metainfo):
 
                     idx_coor24li_tuple_cage_belongin_complete_closest[idx_li] = {'coor': coor_li_mapped_c, 'type': label_li_c, 'idx_tuple': idx_tuple_c, 'idx_cage': idx_cage_c}
 
-        sorted_distance_coors_all = {key: sorted(value, key=lambda x: x['dist']) for key, value in distance_coors_all.items()}
-        top_n_distance_coors = {k: v[0:n] for k, v in sorted_distance_coors_all.items()}
+        idx_coor24li_tuple_cage_belongin_complete_id48htype2 = idx_coor24li_tuple_cage_belongin_complete_closest.copy()
+
+        # # Renaming keys
+        # for key in idx_coor24li_tuple_cage_belongin_complete_id48htype2:
+        #     idx_coor24li_tuple_cage_belongin_complete_id48htype2[key]['idx_tuple'] = idx_coor24li_tuple_cage_belongin_complete_id48htype2[key].pop('idx_tuple_closest')
+        #     idx_coor24li_tuple_cage_belongin_complete_id48htype2[key]['idx_cage'] = idx_coor24li_tuple_cage_belongin_complete_id48htype2[key].pop('idx_cage_closest')
+
+        for key_e, val_e in idx_coor24li_tuple_cage_belongin_complete_closest.items():
+            coor_li_mapped_e = val_e['coor']
+            coor_li_mapped_e_rounded = tuple(round(coordinate, 5) for coordinate in coor_li_mapped_e)
+            label_li_e = val_e['type']
+            idx_tuple_e = val_e['idx_tuple']
+            idx_cage_e = val_e['idx_cage']
+
+            if label_li_e == '48htype1':
+                    
+                for id_48htype2, val_48htype2_metainfo_temp in coor_48htype2_metainfo.items():
+                    coor_48htype2_metainfo_temp = val_48htype2_metainfo_temp['coor']
+                    coor_48htype2_metainfo_temp_rounded = tuple(round(coordinate, 5) for coordinate in coor_48htype2_metainfo_temp)
+
+                    if (coor_li_mapped_e_rounded == coor_48htype2_metainfo_temp_rounded):
+
+                        idx_coor24li_tuple_cage_belongin_complete_id48htype2[key_e] = {'coor': coor_li_mapped_e, 'type': label_li_e, 'idx_tuple': id_48htype2, 'idx_cage': idx_cage_e}
+            
+            elif label_li_e == 'weirdos':
+                idx_tuple_weirdo = f'x'
+                print("Value of idx_tuple_weirdo before assignment:", idx_tuple_weirdo)
+                idx_coor24li_tuple_cage_belongin_complete_id48htype2[key_e] = {'coor': coor_li_mapped_e, 'type': label_li_e, 'idx_tuple': idx_tuple_weirdo, 'idx_cage': idx_cage_e}
+                print("Value of idx_tuple_weirdo after assignment:", idx_tuple_weirdo)
+                
+        sorted_distance_coors_all_closest = {key: sorted(value, key=lambda x: x['dist']) for key, value in distance_coors_all_closest.items()}
+        top_n_distance_coors = {k: v[0:n] for k, v in sorted_distance_coors_all_closest.items()}
         # !!! assumed there's NO DUPLICATE with the SECOND distance
 
         dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest] = idx_coor24li_tuple_cage_belongin_complete_closest
         dataframe.at[idx, col_top_n_distance_coors] = top_n_distance_coors
+        dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_id48htype2] = idx_coor24li_tuple_cage_belongin_complete_id48htype2
 
 
 # def weighing_movement(dataframe, litype):
@@ -7029,22 +7232,25 @@ def get_complete_closest_tuple(dataframe, tuple_metainfo):
 #         dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight] = idx_coor24li_tuple_cage_belongin_complete_closest_weight
 
 
-def plot_movement(dataframe, to_plot):
+def plot_movement(dataframe, to_plot, activate_closest_tuple):
     """
     to_plot = idx_tuple, type, idx_cage
     """
     # col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
-    col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
+    if activate_closest_tuple: # small adjustment here
+        col_idx_coor24li_tuple_cage_belongin_complete = "idx_coor24li_tuple_cage_belongin_complete_closest"
+    else: # small adjustment here
+        col_idx_coor24li_tuple_cage_belongin_complete = "idx_coor24li_tuple_cage_belongin_complete_id48htype2"
 
     df_to_plot = pd.DataFrame()
 
     for idx in range(dataframe["geometry"].size):
 
         # idx_coor24li_tuple_cage_belongin_complete_closest_weight = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest_weight]
-        idx_coor24li_tuple_cage_belongin_complete_closest = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_closest]
+        idx_coor24li_tuple_cage_belongin_complete = dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete]
 
         # for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest_weight)):
-        for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest)):
+        for j in range(len(idx_coor24li_tuple_cage_belongin_complete)):
             df_to_plot.at[idx, f"{j}"] = None  
 
             # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
@@ -7053,8 +7259,11 @@ def plot_movement(dataframe, to_plot):
             # dict_weighted[f"{j}"] = {f'dist: {distance}, coor_ref: {coor_Li_ref_mean}, coor_Li: {coor_Li[j]}'}
             
             # # for key_b, val_b in idx_coor24li_tuple_cage_belongin_complete_closest_weight.items():
-            for key_b, val_b in idx_coor24li_tuple_cage_belongin_complete_closest.items():
+            for key_b, val_b in idx_coor24li_tuple_cage_belongin_complete.items():
                 # for entry_b in val_b: 
+                # if activate_closest_tuple:
+                #     df_to_plot.at[idx, f"{key_b}"] = val_b[f'{to_plot}_closest']
+                # else:
                 df_to_plot.at[idx, f"{key_b}"] = val_b[f'{to_plot}']
 
             # diameter_24g48h = max_mapping_radius * 2
@@ -7166,7 +7375,7 @@ def plot_distance_wrtpath0(df_distance, max_mapping_radius, activate_shifting_x,
 
     lines = []
 
-    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']  # Example color list
+    colors = ['b', 'g', 'r', 'c', 'm', 'y'] #, 'k']
 
     # for i in df_distance.index:
     for i in range(len(df_distance.columns)):
@@ -7224,7 +7433,188 @@ def plot_distance_wrtpath0(df_distance, max_mapping_radius, activate_shifting_x,
 
 
 
-def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_radius, amount_Li, category_labels, activate_diameter_line, Li_idxs):
+# # # # def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_radius, litype, category_labels, activate_diameter_line, activate_relabel_s_i, Li_idxs):
+
+# # # #     # df_distance = df_distance.iloc[:,:amount_Li]
+# # # #     # df_type = df_type.iloc[:,:amount_Li]
+# # # #     # df_idx_tuple = df_idx_tuple.iloc[:,:amount_Li]
+
+# # # #     diameter_24g48h = max_mapping_radius * 2
+
+# # # #     x = range(len(df_distance))
+
+# # # #     # # fig = plt.figure()
+# # # #     # fig = plt.figure(figsize=(800/96, 600/96))  # 800x600 pixels, assuming 96 DPI
+# # # #     # ax = plt.subplot(111)
+
+# # # #     fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure size in inches
+
+# # # #     lines = []
+# # # #     texts = []
+
+# # # #     # type_marker_mapping = {
+# # # #     #     '48htype1': 'o',
+# # # #     #     '48htype2': 's',
+# # # #     #     '48htype3': '^',
+# # # #     #     '48htype4': 'D',
+# # # #     #     'weirdos': 'X',
+# # # #     #     '24g': 'v'    
+# # # #     # }
+
+# # # #     # # type_marker_mapping = {
+# # # #     # #     '48htype1': ('o', 'r'),  # Example: Circle marker with red color
+# # # #     # #     '48htype2': ('s', 'g'),  # Square marker with green color
+# # # #     # #     '48htype3': ('^', 'b'),  # Triangle marker with blue color
+# # # #     # #     '48htype4': ('D', 'c'),  # Diamond marker with cyan color
+# # # #     # #     'weirdos': ('X', 'm'),   # X marker with magenta color
+# # # #     # #     '24g': ('v', 'y')        # Triangle_down marker with yellow color
+# # # #     # # }
+
+# # # #     type_marker_mapping = {
+# # # #         '48htype1': ('o'),  # Example: Circle marker with red color
+# # # #         '48htype2': ('s'),  # Square marker with green color
+# # # #         '48htype3': ('^'),  # Triangle marker with blue color
+# # # #         '48htype4': ('D'),  # Diamond marker with cyan color
+# # # #         'weirdos': ('X'),   # X marker with magenta color
+# # # #         '24g': ('v')        # Triangle_down marker with yellow color
+# # # #     }
+
+# # # #     colors = ['b', 'g', 'r', 'c', 'm', 'y'] #, 'k']  # Example color list
+# # # #     # colors = list(mcolors.CSS4_COLORS.values())
+# # # #     # colors = [color + (0.7,) for color in mcolors.CSS4_COLORS.values()]
+# # # #     # colors = mcolors
+# # # #     # names = list(colors)
+
+# # # #     # Define offsets for text position
+# # # #     x_offset = 0.02  # Adjust these values as needed
+# # # #     y_offset = -0.05  # Adjust these values as needed
+
+# # # #     # Track which labels have been added
+# # # #     added_labels = set()
+
+# # # #     # for i in range(24):
+# # # #     for i in range(len(df_distance.columns)):
+# # # #         if Li_idxs == "all" or i in Li_idxs:
+# # # #             column_data = df_distance[f"{i}"]
+# # # #             column_val = df_type[f"{i}"]
+# # # #             column_idx_tuple = df_idx_tuple[f"{i}"]
+# # # #             # type_val = df_type[0, i]
+# # # #             # print(type_val)
+
+# # # #             line_color = colors[i % len(colors)]  # Cycle through colors list
+# # # #             # # # # # # # line_color = colors[i % len(colors)] if i < len(colors) else 'black'  # Use a default color if the index exceeds available colors
+
+# # # #             # # # for j in x:
+# # # #             for j, (y_val, type_val, idx_tuple_val) in enumerate(zip(column_data, column_val, column_idx_tuple)):
+# # # #                 # type = column_val[j]
+# # # #                 # idx_tuple = column_idx_tuple[j]
+
+# # # #                 # marker_style = type_marker_mapping.get(column_val, 'o')  # Get the marker style for the type
+# # # #                 # # marker_style = type_marker_mapping.get(type, 'o')  # Get the marker style for the type
+# # # #                 # # # # # # # marker_style, marker_color = type_marker_mapping.get(type_val, ('o','k'))  # Get the marker style for the type
+# # # #                 marker_style = type_marker_mapping.get(type_val, ('o'))  # Get the marker style for the type
+# # # #                 # # # # # # ax.scatter(j, df_distance[f"{i}"][j], label=f"Type: {column_val}", marker=marker_style, s=100)
+# # # #                 # # # # # label = f"{type_val}" if type_val not in added_labels else None
+# # # #                 # # # # # # # ax.scatter(j, df_distance.iloc[j, i], label=label, marker=marker_style, s=100)
+# # # #                 # # # # # # # # # ax.scatter(j, df_distance.iloc[j, i], label=label, marker=marker_style, s=100, color = marker_color, alpha = 0.5)
+# # # #                 # # # # # ax.scatter(j, y_val, label=label, marker=marker_style, s=100, color = marker_color, alpha = 0.5)
+# # # #                 # # # # # added_labels.add(type_val)
+# # # #                 mapped_label = category_labels.get(type_val, type_val)  # Use the original type_val if it's not found in category_labels
+# # # #                 # Use mapped_label for the label. Only add it if it's not already added.
+# # # #                 label = mapped_label if mapped_label not in added_labels else None
+# # # #                 ax.scatter(j, y_val, label=label, marker=marker_style, s=100, color=line_color, alpha=0.5)
+# # # #                 if label:  # If a label was added, record it as added
+# # # #                     added_labels.add(mapped_label)
+
+# # # #                 # # # # ax.text(j, df_distance.iloc[j, i], str(int(idx_tuple_val)), color=line_color, fontsize=20)
+# # # #                 # # # # # ax.text(j, y_val, str(int(idx_tuple_val)), color=line_color, fontsize=20)
+# # # #                 # Apply offsets to text position
+# # # #                 text_x = j + x_offset * ax.get_xlim()[1]  # Adjust text x-position
+# # # #                 text_y = y_val + y_offset * ax.get_ylim()[1]  # Adjust text y-position
+
+# # # #                 # Check if type_val is 'weirdos' and change text color to black, else use the line color
+# # # #                 text_color = 'black' if type_val in ['weirdos', '48htype1'] else line_color
+
+# # # #                 print(idx_tuple_val)
+# # # #                 if idx_tuple_val == 'x':
+# # # #                     text = ax.text(text_x, text_y, idx_tuple_val, color=text_color, fontsize=18)
+# # # #                 else:
+# # # #                     # if activate_relabel_s_i:
+# # # #                     #     if litype == 4:
+# # # #                     #         if idx_tuple_val in ['48htype2', '48htype3', '48htype4']:
+# # # #                     #             text = ax.text(text_x, text_y, str(int(idx_tuple_val))+"s", color=text_color, fontsize=18)
+# # # #                     #         elif idx_tuple_val in ['48htype1']:
+# # # #                     #             text = ax.text(text_x, text_y, str(int(idx_tuple_val))+"i", color=text_color, fontsize=18)
+# # # #                     # else:
+# # # #                     text = ax.text(text_x, text_y, str(int(idx_tuple_val)), color=text_color, fontsize=18)
+# # # #                 texts.append(text)
+
+# # # #                 # # # # # # # # # # # # # # text = ax.text(j+x_offset, y_val+y_offset, str(int(idx_tuple_val)), color=line_color, fontsize=15)
+# # # #                 # # # # # # # # if idx_tuple_val == f' ':
+# # # #                 # # # # # # # #     text = ax.text(text_x, text_y, idx_tuple_val, color=line_color, fontsize=18)
+# # # #                 # # # # # # # # else:
+# # # #                 # # # # # # # #     text = ax.text(text_x, text_y, str(int(idx_tuple_val)), color=line_color, fontsize=18)
+# # # #                 # # # # # # # # texts.append(text)
+
+# # # #             # # i = i
+# # # #             # # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
+# # # #             # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", linewidth=2, marker=marker_style, markersize=10)  # Set line width to 2 pixels
+
+# # # #             line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", color=line_color, linewidth=2)  # Set line width to 2 pixels
+# # # #             # ax.text(i, value, str(int(idx_value)), color=line_color, fontsize=8)
+
+# # # #             lines.append(line)
+# # # #             # label = f"{i}" if Li_idxs == "all" else None
+# # # #             # line, = ax.plot(x, df_distance[f"{i}"], label=label)
+# # # #             # lines.append(line)
+
+# # # #         # if type(Li_idxs) == list:
+# # # #         #     for j in Li_idxs:
+# # # #         #         if i == j:
+# # # #         #             line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
+# # # #         #             lines.append(line)
+
+# # # #     adjust_text(texts, arrowprops=dict(arrowstyle='->', color='red'))
+    
+# # # #     # # ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}')
+# # # #     if activate_diameter_line == True:
+# # # #         ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}', linewidth=1)  # Set line width to 1 pixel
+
+# # # #     # Set the y-axis to only show ticks at 0, 1, 2, 3
+# # # #     plt.yticks([0, 1, 2, 3])
+
+# # # #     # plt.title(f"Geometry {geo} with d={diameter_24g48h}")
+
+# # # #     # Shrink current axis's height by 10% on the bottom
+# # # #         # source: https://stackoverflow.com/questions/4700614/how-to-put-the-legend-outside-the-plot
+# # # #     box = ax.get_position()
+# # # #     ax.set_position([box.x0, box.y0 + box.height * 0.1,
+# # # #                     box.width, box.height * 0.9])
+
+# # # #     handles, labels = ax.get_legend_handles_labels()
+
+# # # #     # Set marker color in legend box to black
+# # # #     # # legend_handles = [(h[0], h[1], {'color': 'black'}) for h in handles]
+# # # #     legend_handles = [(h, {'color': 'black'}) for h in handles]
+
+# # # #     ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+# # # #             fancybox=True, shadow=True, ncol=5)
+    
+# # # #     # # # ax.legend(handles=legend_handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+# # # #     # # #         fancybox=True, shadow=True, ncol=5, handlelength=2, handler_map={tuple: HandlerTuple(ndivide=None)})
+# # # #     # ax.legend(handles=legend_handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+# # # #     #         fancybox=True, shadow=True, ncol=5)
+
+# # # #     # Enable cursor information
+# # # #     mplcursors.cursor(hover=True)
+
+# # # #     # Enable zooming with cursor
+# # # #     mpldatacursor.datacursor(display='multiple', draggable=True)
+
+# # # #     plt.show()
+
+
+def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_radius, litype, category_labels, activate_diameter_line, activate_relabel_s_i, Li_idxs):
 
     # df_distance = df_distance.iloc[:,:amount_Li]
     # df_type = df_type.iloc[:,:amount_Li]
@@ -7252,16 +7642,25 @@ def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_
     #     '24g': 'v'    
     # }
 
+    # # type_marker_mapping = {
+    # #     '48htype1': ('o', 'r'),  # Example: Circle marker with red color
+    # #     '48htype2': ('s', 'g'),  # Square marker with green color
+    # #     '48htype3': ('^', 'b'),  # Triangle marker with blue color
+    # #     '48htype4': ('D', 'c'),  # Diamond marker with cyan color
+    # #     'weirdos': ('X', 'm'),   # X marker with magenta color
+    # #     '24g': ('v', 'y')        # Triangle_down marker with yellow color
+    # # }
+
     type_marker_mapping = {
-        '48htype1': ('o', 'r'),  # Example: Circle marker with red color
-        '48htype2': ('s', 'g'),  # Square marker with green color
-        '48htype3': ('^', 'b'),  # Triangle marker with blue color
-        '48htype4': ('D', 'c'),  # Diamond marker with cyan color
-        'weirdos': ('X', 'm'),   # X marker with magenta color
-        '24g': ('v', 'y')        # Triangle_down marker with yellow color
+        '48htype1': ('o'),  # Example: Circle marker with red color
+        '48htype2': ('s'),  # Square marker with green color
+        '48htype3': ('^'),  # Triangle marker with blue color
+        '48htype4': ('D'),  # Diamond marker with cyan color
+        'weirdos': ('X'),   # X marker with magenta color
+        '24g': ('v')        # Triangle_down marker with yellow color
     }
 
-    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']  # Example color list
+    colors = ['b', 'g', 'r', 'c', 'm', 'y'] #, 'k']  # Example color list
     # colors = list(mcolors.CSS4_COLORS.values())
     # colors = [color + (0.7,) for color in mcolors.CSS4_COLORS.values()]
     # colors = mcolors
@@ -7293,7 +7692,8 @@ def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_
 
                 # marker_style = type_marker_mapping.get(column_val, 'o')  # Get the marker style for the type
                 # # marker_style = type_marker_mapping.get(type, 'o')  # Get the marker style for the type
-                marker_style, marker_color = type_marker_mapping.get(type_val, ('o','k'))  # Get the marker style for the type
+                # # # # # # # marker_style, marker_color = type_marker_mapping.get(type_val, ('o','k'))  # Get the marker style for the type
+                marker_style = type_marker_mapping.get(type_val, ('o'))  # Get the marker style for the type
                 # # # # # # ax.scatter(j, df_distance[f"{i}"][j], label=f"Type: {column_val}", marker=marker_style, s=100)
                 # # # # # label = f"{type_val}" if type_val not in added_labels else None
                 # # # # # # # ax.scatter(j, df_distance.iloc[j, i], label=label, marker=marker_style, s=100)
@@ -7303,7 +7703,7 @@ def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_
                 mapped_label = category_labels.get(type_val, type_val)  # Use the original type_val if it's not found in category_labels
                 # Use mapped_label for the label. Only add it if it's not already added.
                 label = mapped_label if mapped_label not in added_labels else None
-                ax.scatter(j, y_val, label=label, marker=marker_style, s=100, color=marker_color, alpha=0.5)
+                ax.scatter(j, y_val, label=label, marker=marker_style, s=100, color=line_color, alpha=0.5)
                 if label:  # If a label was added, record it as added
                     added_labels.add(mapped_label)
 
@@ -7312,10 +7712,34 @@ def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_
                 # Apply offsets to text position
                 text_x = j + x_offset * ax.get_xlim()[1]  # Adjust text x-position
                 text_y = y_val + y_offset * ax.get_ylim()[1]  # Adjust text y-position
-                
-                # # # # # # text = ax.text(j+x_offset, y_val+y_offset, str(int(idx_tuple_val)), color=line_color, fontsize=15)
-                text = ax.text(text_x, text_y, str(int(idx_tuple_val)), color=line_color, fontsize=18)
+
+                # Check if type_val is 'weirdos' and change text color to black, else use the line color
+                text_color = 'black' if type_val in ['weirdos', '48htype1'] else line_color
+
+                if activate_relabel_s_i:        
+                    # print(idx_tuple_val)
+                    if type_val in ['48htype2', '48htype3', '48htype4', '24g']:
+                        text = ax.text(text_x, text_y, str(int(idx_tuple_val))+"s", color=text_color, fontsize=18)
+                    elif type_val in ['48htype1']:
+                        text = ax.text(text_x, text_y, str(int(idx_tuple_val))+"i", color=text_color, fontsize=18)
+                    elif type_val == 'weirdos':
+                        # idx_tuple_val = 'x'
+                        print(idx_tuple_val)
+                        text = ax.text(text_x, text_y, idx_tuple_val, color=text_color, fontsize=18)
+                        print(text)
+                else:
+                    if idx_tuple_val == 'x':
+                        text = ax.text(text_x, text_y, idx_tuple_val, color=text_color, fontsize=18)
+                    else:
+                        text = ax.text(text_x, text_y, str(int(idx_tuple_val)), color=text_color, fontsize=18)
                 texts.append(text)
+
+                # # # # # # # # # # # # # # text = ax.text(j+x_offset, y_val+y_offset, str(int(idx_tuple_val)), color=line_color, fontsize=15)
+                # # # # # # # # if idx_tuple_val == f' ':
+                # # # # # # # #     text = ax.text(text_x, text_y, idx_tuple_val, color=line_color, fontsize=18)
+                # # # # # # # # else:
+                # # # # # # # #     text = ax.text(text_x, text_y, str(int(idx_tuple_val)), color=line_color, fontsize=18)
+                # # # # # # # # texts.append(text)
 
             # # i = i
             # # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
@@ -7341,6 +7765,8 @@ def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_
     if activate_diameter_line == True:
         ax.axhline(y=diameter_24g48h, color='b', linestyle=':', label=f'd_mapping = {diameter_24g48h:.3f}', linewidth=1)  # Set line width to 1 pixel
 
+    # ax.set_ylim(-0.5, 3.5)
+
     # Set the y-axis to only show ticks at 0, 1, 2, 3
     plt.yticks([0, 1, 2, 3])
 
@@ -7354,8 +7780,17 @@ def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_
 
     handles, labels = ax.get_legend_handles_labels()
 
+    # Set marker color in legend box to black
+    # # legend_handles = [(h[0], h[1], {'color': 'black'}) for h in handles]
+    legend_handles = [(h, {'color': 'black'}) for h in handles]
+
     ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
             fancybox=True, shadow=True, ncol=5)
+    
+    # # # ax.legend(handles=legend_handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+    # # #         fancybox=True, shadow=True, ncol=5, handlelength=2, handler_map={tuple: HandlerTuple(ndivide=None)})
+    # ax.legend(handles=legend_handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
+    #         fancybox=True, shadow=True, ncol=5)
 
     # Enable cursor information
     mplcursors.cursor(hover=True)
@@ -7366,9 +7801,12 @@ def plot_distance_wrtpath0_sign(df_distance, df_type, df_idx_tuple, max_mapping_
     plt.show()
 
 
-def get_df_movement(dataframe):
+def get_df_movement(dataframe, activate_closest_tuple):
     # col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
-    col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
+    if activate_closest_tuple:
+        col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_closest"
+    else:
+        col_idx_coor24li_tuple_cage_belongin_complete_closest = "idx_coor24li_tuple_cage_belongin_complete_id48htype2"
 
     df_to_plot = pd.DataFrame()
 
@@ -7391,10 +7829,14 @@ def get_df_movement(dataframe):
             # idx_tuple_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['idx_tuple']
             # idx_cage_next = idx_coor24li_tuple_cage_belongin_complete_closest_weight_next[j]['idx_cage']
 
+            coor = idx_coor24li_tuple_cage_belongin_complete_closest[j]['coor']
+            coor_rounded = tuple(round(coordinate, 5) for coordinate in coor)
             type = idx_coor24li_tuple_cage_belongin_complete_closest[j]['type']
             idx_tuple = idx_coor24li_tuple_cage_belongin_complete_closest[j]['idx_tuple']
             idx_cage = idx_coor24li_tuple_cage_belongin_complete_closest[j]['idx_cage']
 
+            coor_next = idx_coor24li_tuple_cage_belongin_complete_closest_next[j]['coor']
+            coor_next_rounded = tuple(round(coordinate, 5) for coordinate in coor_next)
             type_next = idx_coor24li_tuple_cage_belongin_complete_closest_next[j]['type']
             idx_tuple_next = idx_coor24li_tuple_cage_belongin_complete_closest_next[j]['idx_tuple']
             idx_cage_next = idx_coor24li_tuple_cage_belongin_complete_closest_next[j]['idx_cage']
@@ -7405,7 +7847,9 @@ def get_df_movement(dataframe):
                 type_movement = 'intracage'
             elif idx_cage == idx_cage_next and idx_tuple == idx_tuple_next and type != type_next:
                 type_movement = 'intratriad'
-            elif idx_cage == idx_cage_next and idx_tuple == idx_tuple_next and type == type_next:
+            elif idx_cage == idx_cage_next and idx_tuple == idx_tuple_next and type == type_next and coor_rounded != coor_next_rounded:
+                type_movement = 'intratriad'
+            elif idx_cage == idx_cage_next and idx_tuple == idx_tuple_next and type == type_next and coor_rounded == coor_next_rounded:
                 type_movement = 'staying'
 
             df_to_plot.at[idx, f"{j}"] = type_movement
