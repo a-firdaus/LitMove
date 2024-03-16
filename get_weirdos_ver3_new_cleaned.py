@@ -51,6 +51,22 @@ def replace(i):
 
 
 class Operation:
+    class String:
+        def modify_line(line, old_part, new_label):
+            """
+            Replace a specific part of a line with a new label.
+            
+            Args:
+                line (str): The original line of text.
+                old_part (str): The part of the line to be replaced.
+                new_label (str): The new label to insert in place of the old part.
+            
+            Returns:
+                str: The modified line with the new label.
+            """
+            return line.replace(old_part, new_label)
+
+
     class File:
         def splitall(path):
             """
@@ -3952,6 +3968,8 @@ class Mapping:
                             # file_operations_instance = Operation.File()
                             # modified_line = lines[idx_line].file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
                             modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
+                            # modified_line = lines[idx_line](func=replace(lines[idx_line].split()[1], new_label))
+                            # # modified_line = Operation.String.modify_line(lines[idx_line], lines[idx_line].split()[1], new_label)
                             new_text.append(modified_line)
                             
                     lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
