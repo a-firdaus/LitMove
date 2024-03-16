@@ -8,10 +8,14 @@ Welcome to xyz's documentation!
 
 .. automodule:: get_weirdos_ver3_new_cleaned
    :members:
-
+   :undoc-members:
+   :show-inheritance:
+   
 .. .. automodule:: get_df
 ..    :members:
-
+..    :undoc-members:
+..    :show-inheritance:
+   
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

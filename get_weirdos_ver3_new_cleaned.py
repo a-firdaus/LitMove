@@ -30,28 +30,29 @@ from pymatgen.io.cif import CifWriter
 from pymatgen.io.vasp.inputs import Poscar
 
 
-def replace(i):
-    """
-    Replace a string with NaN if it cannot be converted to a float.
-
-    Args:
-        i (str): The input string.
-
-    Returns:
-        float or np.nan: The converted float or NaN.
-
-    Source:
-        https://stackoverflow.com/questions/57048617/how-do-i-replace-all-string-values-with-nan-dynamically
-    """
-    try:
-        float(i)
-        return float(i)
-    except:
-        return np.nan
-
 
 class Operation:
     class String:
+        def replace(i):
+            """
+            Replace a string with NaN if it cannot be converted to a float.
+
+            Args:
+                i (str): The input string.
+
+            Returns:
+                float or np.nan: The converted float or NaN.
+
+            Source:
+                https://stackoverflow.com/questions/57048617/how-do-i-replace-all-string-values-with-nan-dynamically
+            """
+            try:
+                float(i)
+                return float(i)
+            except:
+                return np.nan
+
+
         def modify_line(line, old_part, new_label):
             """
             Replace a specific part of a line with a new label.
@@ -65,6 +66,20 @@ class Operation:
                 str: The modified line with the new label.
             """
             return line.replace(old_part, new_label)
+        
+
+        def replace_values_in_series(series, replacements):
+            """
+            Replace values in a Pandas Series according to a replacements dictionary.
+            
+            Args:
+                series (pd.Series): The Pandas Series to modify.
+                replacements (dict): A dictionary where keys are old values and values are new values.
+            
+            Returns:
+                pd.Series: The modified Series with replaced values.
+            """
+            return series.replace(replacements)
 
 
     class File:
@@ -354,8 +369,7 @@ class Operation:
             - distance_1D (float): The value to apply the periodic boundary conditions to.
 
             Returns:
-            - distance_1D (float): The adjusted value after applying the periodic boundary conditions, ensuring it 
-                    remains within the normalized range [0, 0.5].
+            - distance_1D (float): The adjusted value after applying the periodic boundary conditions, ensuring it remains within the normalized range [0, 0.5].
             """
             while abs(distance_1D) > 0.5:
                 return 1 - abs(distance_1D)
@@ -1100,11 +1114,9 @@ class Orientation:
 
 
 class PreProcessingCONTCAR:
-    def get_CONTCAR_normal_elements(dataframe, destination_directory, filename, prefix = None):
+    def get_CONTCAR_normal_elements(dataframe, destination_directory, filename, prefix=None):
         """
-        Modifies CONTCAR files to include standard elemental labels for each site configuration,
-        instead of '  Li_sv_GW/24a6a  P_GW/715c28f22  S_GW/357db9cfb  Cl_GW/3ef3b316\n'
-        from the result of NEB calculation.
+        Modifies CONTCAR files to include standard elemental labels for each site configuration, instead of '  Li_sv_GW/24a6a  P_GW/715c28f22  S_GW/357db9cfb  Cl_GW/3ef3b316\n' from the result of NEB calculation.
 
         Parameters:
         - dataframe (pandas.DataFrame): DataFrame containing necessary data columns.
@@ -1115,6 +1127,7 @@ class PreProcessingCONTCAR:
         Returns:
         - None: The function modifies CONTCAR files but does not return any value.
         """
+        # Function body goes here
         for index in range(dataframe["geometry"].size):
             # Generate the new filename
             if prefix == None:
@@ -2083,18 +2096,15 @@ class Mapping:
         - max_mapping_radius (float): Maximum mapping radius for identifying nearby atomic positions.
 
         Returns:
-        - flag_el:                                      By default False. True if there's > 1 atom belong to a same reference. 
-        - coor_weirdos_el:                              Coordinate of weirdos
-        - sum_weirdos_el:                               Sum amount of weirdos
-        - duplicate_closest24_w_data_el:                Dictionary, whose key is coor24 
-                                                        and values are multiple coorreference it belongs to and dist.
-        - atom_mapping_el_w_dist_closestduplicate:      Dictionary, whose key is coorreference 
-                                                        and its value is THE CLOSEST coor24 and dist
-        - coor_reducedreference_el_closestduplicate:    List of coorreference based on atom_mapping_el_w_dist_closestduplicate, 
-                                                        so its the closest only.
-        - atom_mapping_el_closestduplicate:             Dictionary, key: coorreference, value: coor24
-        - sum_mapped_el_closestduplicate:               Sum amount of coor_reducedreference_el_closestduplicate
-        - sum_sanitycheck_el_closestduplicate:          sum_mapped_el_closestduplicate + sum_weirdos_el
+        - flag_el: By default False. True if there's > 1 atom belong to a same reference. 
+        - coor_weirdos_el: Coordinate of weirdos
+        - sum_weirdos_el: Sum amount of weirdos
+        - duplicate_closest24_w_data_el: Dictionary, whose key is coor24 and values are multiple coorreference it belongs to and dist.
+        - atom_mapping_el_w_dist_closestduplicate: Dictionary, whose key is coorreference and its value is THE CLOSEST coor24 and dist
+        - coor_reducedreference_el_closestduplicate: List of coorreference based on atom_mapping_el_w_dist_closestduplicate, so its the closest only.
+        - atom_mapping_el_closestduplicate: Dictionary, key: coorreference, value: coor24
+        - sum_mapped_el_closestduplicate: Sum amount of coor_reducedreference_el_closestduplicate
+        - sum_sanitycheck_el_closestduplicate: sum_mapped_el_closestduplicate + sum_weirdos_el
         """
         coor_reference_el_init = coor_structure_init_dict[el]
         col_coor_structure_init_dict = "coor_structure_init_dict"
@@ -3967,9 +3977,9 @@ class Mapping:
                             new_label = f"Li{idx_without_weirdos[i]}"
                             # file_operations_instance = Operation.File()
                             # modified_line = lines[idx_line].file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
-                            modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
                             # modified_line = lines[idx_line](func=replace(lines[idx_line].split()[1], new_label))
-                            # # modified_line = Operation.String.modify_line(lines[idx_line], lines[idx_line].split()[1], new_label)
+                            # # modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
+                            modified_line = Operation.String.modify_line(lines[idx_line], lines[idx_line].split()[1], new_label)
                             new_text.append(modified_line)
                             
                     lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
@@ -4036,7 +4046,8 @@ class Mapping:
                             new_label = f"Li{idx_without_weirdos[i]}"
                             # file_operations_instance = Operation.File()
                             # modified_line = file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
-                            modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
+                            # # modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
+                            modified_line = Operation.String.modify_line(lines[idx_line], lines[idx_line].split()[1], new_label)
                             new_text.append(modified_line)
 
                     lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
@@ -4077,7 +4088,8 @@ class Mapping:
                             new_label = f"P{idx_P_new}"
                             # file_operations_instance = Operation.File()
                             # modified_line = file_operations_instance.replace(lines[idx_line_P].split()[1], new_label)     
-                            modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
+                            # # modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
+                            modified_line = Operation.String.modify_line(lines[idx_line_P], lines[idx_line_P].split()[1], new_label)
                             new_text_P_S_Cl.append(modified_line)
                     for i in range(amount_S):
                         idx_line_S = idx_P_S_Cl_line_new_start + amount_P + i
@@ -4086,7 +4098,8 @@ class Mapping:
                             new_label = f"S{idx_S_new}"
                             # file_operations_instance = Operation.File()
                             # modified_line = file_operations_instance.replace(lines[idx_line_S].split()[1], new_label)     
-                            modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
+                            # # modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
+                            modified_line = Operation.String.modify_line(lines[idx_line_S], lines[idx_line_S].split()[1], new_label)
                             new_text_P_S_Cl.append(modified_line)
                     for i in range(amount_Cl):
                         idx_line_Cl = idx_P_S_Cl_line_new_start + amount_P + amount_S + i
@@ -4095,7 +4108,8 @@ class Mapping:
                             new_label = f"Cl{idx_Cl_new}"
                             # file_operations_instance = Operation.File()
                             # modified_line = file_operations_instance.replace(lines[idx_line_Cl].split()[1], new_label)     
-                            modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
+                            # # modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
+                            modified_line = Operation.String.modify_line(lines[idx_line_Cl], lines[idx_line_Cl].split()[1], new_label)
                             new_text_P_S_Cl.append(modified_line)
 
                     lines[idx_P_S_Cl_line_new_start : amount_P + amount_S + amount_Cl + idx_P_S_Cl_line_new_start] = new_text_P_S_Cl
@@ -4201,7 +4215,8 @@ class Mapping:
                         new_label = f"P{idx_P_new}"
                         # file_operations_instance = Operation.File()
                         # modified_line = file_operations_instance.replace(lines[idx_line_P].split()[1], new_label)
-                        modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
+                        # # modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
+                        modified_line = Operation.String.modify_line(lines[idx_line_P], lines[idx_line_P].split()[1], new_label)
                         new_text_P_S_Cl.append(modified_line)
                 for i in range(amount_S):
                     idx_line_S = idx_P_S_Cl_line_new_start + amount_P + i
@@ -4210,7 +4225,8 @@ class Mapping:
                         new_label = f"S{idx_S_new}"
                         # file_operations_instance = Operation.File()
                         # modified_line = file_operations_instance.replace(lines[idx_line_S].split()[1], new_label)            
-                        modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
+                        # # modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
+                        modified_line = Operation.String.modify_line(lines[idx_line_S], lines[idx_line_S].split()[1], new_label)
                         new_text_P_S_Cl.append(modified_line)
                 for i in range(amount_Cl):
                     idx_line_Cl = idx_P_S_Cl_line_new_start + amount_P + amount_S + i
@@ -4219,7 +4235,8 @@ class Mapping:
                         new_label = f"Cl{idx_Cl_new}"
                         # file_operations_instance = Operation.File()
                         # modified_line = file_operations_instance.replace(lines[idx_line_Cl].split()[1], new_label)     
-                        modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
+                        # # modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
+                        modified_line = Operation.String.modify_line(lines[idx_line_Cl], lines[idx_line_Cl].split()[1], new_label)
                         new_text_P_S_Cl.append(modified_line)
 
                 lines[idx_P_S_Cl_line_new_start : amount_P + amount_S + amount_Cl + idx_P_S_Cl_line_new_start] = new_text_P_S_Cl
@@ -5288,6 +5305,9 @@ def diagonalizing_latticeconstantsmatrix(dataframe, destination_directory, latti
 
 
 def format_float(number):
+    """
+    format float
+    """
     # # basically nothing is formatted here
     # if number < 0:
     #     # return f'{(number*-1):.5f}0'
@@ -7554,7 +7574,8 @@ class Plot:
                 long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
 
                 if category_labels:
-                    long_df['category'] = long_df['category'].replace(category_labels)
+                    # # long_df['category'] = long_df['category'].replace(category_labels)
+                    long_df['category'] = Operation.String.replace_values_in_series(long_df['category'], category_labels)
 
                 if style == "bar":
                     fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx file vs Li type")
@@ -7907,7 +7928,8 @@ class Plot:
                 long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
 
                 if category_labels:
-                    long_df['category'] = long_df['category'].replace(category_labels)
+                    # # long_df['category'] = long_df['category'].replace(category_labels)
+                    long_df['category'] = Operation.String.replace_values_in_series(long_df['category'], category_labels)
 
                 fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx of file vs Occupancy")
                 fig.show()
