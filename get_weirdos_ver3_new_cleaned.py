@@ -796,6 +796,19 @@ class Operation:
                 dataframe.at[idx, col_distance_el] = distance_el
                 dataframe.at[idx, col_closest_neighbors_w_dist_el] = closest_neighbors_w_dist_el
 
+    class Float:
+        def format_float(number):
+            """
+            format float
+            """
+            # # basically nothing is formatted here
+            # if number < 0:
+            #     # return f'{(number*-1):.5f}0'
+            #     return f'{number:.5f}'
+            # else:
+            #     return f'{number:.5f}'
+            return number
+
 
 class Orientation:
     def get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation):
@@ -1290,6 +1303,66 @@ class PreProcessingCONTCAR:
 
             dataframe.at[idx, col_latticeconstant_structure_dict] = latticeconstant_structure_dict
             dataframe.at[idx, col_latticeconstant_structure_dict_flag] = latticeconstant_structure_dict_flag
+
+
+    def diagonalizing_latticeconstantsmatrix(dataframe, destination_directory, latticeconstantsmatrix_line_nr_start, var_name_in, var_name_out, n_decimal):
+        # # dataframe['subdir_orientated_positive_poscar'] = None
+        for idx in range(dataframe["geometry"].size):
+            filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_POSCAR_{var_name_in}"
+            filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
+
+            with open(filename_to_transform_path, 'r') as file:
+                lines = file.readlines()
+            data = lines[latticeconstantsmatrix_line_nr_start:latticeconstantsmatrix_line_nr_start+3]
+
+            df = pd.DataFrame([string.strip().split() for string in data]).astype(float)
+
+            df_diagonal = np.diag(df.values)
+
+            max_val = 0
+            for i in df_diagonal:
+                if i > max_val:
+                    max_val = i
+
+            min_val = float('inf')
+            for j in df_diagonal:
+                if j < min_val:
+                    min_val = j
+
+            # replace all diagonal of df with the max_val and let off-diagonal as 0
+            for row in range(len(df)):
+                for col in range(len(df)):
+                    if row == col:
+                        if col == 0:
+                            df[row][col] = '{:.{width}f}'.format(float(max_val), width=n_decimal)
+                        else:
+                            df[row][col] = '  ' + '{:.{width}f}'.format(float(max_val), width=n_decimal)
+                    else:
+                        if col == 0: 
+                            df[row][col] = '{:.{width}f}'.format(float(0), width=n_decimal)
+                        else:
+                            df[row][col] = '  ' + '{:.{width}f}'.format(float(0), width=n_decimal)
+
+            row_list = df.to_string(index=False, header=False).split('\n')
+            # row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
+            row_list_w_beginning = [' ' + row for row in row_list]       # 1 space in the beginning
+            absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
+
+            line_append_list = []
+            for idx_c, line in enumerate(absolute_correct_list):
+                line_new_line = str(line) + '\n'
+                line_append_list.append(line_new_line)
+
+            file_list = lines[:latticeconstantsmatrix_line_nr_start] + line_append_list + lines[latticeconstantsmatrix_line_nr_start+3:]
+
+            poscar_filename_diagonalized = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_POSCAR_{var_name_out}"
+            destination_path = os.path.join(destination_directory, poscar_filename_diagonalized)
+            
+            with open(destination_path, "w") as poscar_positive_file:
+                for item in file_list:
+                    poscar_positive_file.writelines(item)
+
+            # # dataframe['subdir_orientated_positive_poscar'][idx] = destination_path
 
 
 class ReadStructure:
@@ -1800,7 +1873,17 @@ class ReadStructure:
 
 
     class Parameter:
-        def get_dx_dz_init(file_path, litype):
+        def get_dx_dz(file_path, litype):
+            """
+            Get position (dx, dz) from a CIF file.
+
+            Parameters:
+            - file_path (str): The path to the file to be read.
+            - litype: how many lithium type to be identified.
+
+            Returns:
+            - array of all positions from all types.
+            """
             dictio = {}
 
             if litype == 0:
@@ -3300,6 +3383,212 @@ class Mapping:
                 dataframe.at[idx, col_len_coor_reducedreference_Li] = len_coor_reducedreference_Li
                 dataframe.at[idx, col_len_idx0_weirdos_Li] = len_idx0_weirdos_Li
                 dataframe.at[idx, col_len_idx_without_weirdos] = len_idx_without_weirdos
+
+
+        # def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, activate_radius, el):
+        #     coor_reference_el_init = coor_structure_init_dict[el]
+
+        #     col_idx_without_weirdos = "idx_without_weirdos"
+        #     col_idx_coor_weirdos_el = f"idx_coor_weirdos_{el}"
+        #     col_idx0_weirdos_Li = "idx0_weirdos_Li"
+        #     col_sum_of_weirdos_Li = f"#weirdos_Li"
+        #     if activate_radius == 2 or activate_radius == 3:
+        #         #col_coor_reducedreference_Li = "coor_reducedreference_Li"
+        #         col_coor_reducedreference_Li = f"coor_reducedreference_48htypesmerged_{el}"
+        #         # col_coor_weirdos_48htypesmerged_Li = "coor_weirdos_48htypesmerged_Li"
+        #         # col_coor_weirdos_el = f"coor_weirdos_48htype2_{el}"
+        #         col_sum_sanitycheck_Li = "sum_sanitycheck_48htypesmerged_Li"
+        #     elif activate_radius == 1:
+        #         col_coor_reducedreference_Li = f"coor_reducedreference_{el}_closestduplicate"
+        #         col_sum_sanitycheck_Li = f"sum_sanitycheck_{el}_closestduplicate"
+
+
+        #     col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
+        #     col_sum_label_and_weirdo_flag = "#label_and_#weirdo_flag"
+        #     col_amount_types_and_weirdo = "amount_types_and_weirdo"
+        #     col_ratio_48htype1_Li = "ratio_48htype1_Li"
+        #     col_ratio_48htype2_Li = "ratio_48htype2_Li"
+        #     col_ratio_24g_Li = "ratio_24g_Li"
+        #     col_ratio_weirdo_Li = "ratio_weirdo_Li"
+        #     col_sum_amount = "sum_amount"
+        #     col_idx_coor_limapped_weirdos_dict_init = "idx_coor_limapped_weirdos_dict_init"
+        #     col_ndim_coor_reducedreference_Li = "ndim_coor_reducedreference_Li"
+        #     col_ndim_coor_weirdos_el = "ndim_coor_weirdos_el"
+        #     col_len_coor_weirdos_el = "len_coor_weirdos_el"
+        #     col_len_coor_reducedreference_Li = "len_coor_reducedreference_Li"
+        #     col_len_idx0_weirdos_Li = "len_idx0_weirdos_Li"
+        #     col_len_idx_without_weirdos = "len_idx_without_weirdos"
+        #     col_ndim_flag_coor = "ndim_flag_coor"
+
+        #     dataframe[col_idx_coor_limapped_weirdos_dict] = [{} for _ in range(len(dataframe.index))]
+        #     dataframe[col_sum_label_and_weirdo_flag] = "False"
+        #     dataframe[col_amount_types_and_weirdo] = [0 for _ in range(len(dataframe.index))]
+        #     dataframe[col_sum_amount] = [0 for _ in range(len(dataframe.index))]
+        #     dataframe[col_idx_coor_limapped_weirdos_dict_init] = [{} for _ in range(len(dataframe.index))]
+        #     dataframe[col_ndim_coor_reducedreference_Li] = [0 for _ in range(len(dataframe.index))]
+        #     dataframe[col_ndim_coor_weirdos_el] = [0 for _ in range(len(dataframe.index))]
+        #     dataframe[col_len_coor_weirdos_el] = [0 for _ in range(len(dataframe.index))]
+        #     dataframe[col_len_coor_reducedreference_Li] = [0 for _ in range(len(dataframe.index))]
+        #     dataframe[col_len_idx0_weirdos_Li] = [0 for _ in range(len(dataframe.index))]
+        #     dataframe[col_len_idx_without_weirdos] = [0 for _ in range(len(dataframe.index))]
+        #     dataframe[col_ndim_flag_coor] = "False"
+
+        #     coor_li48htype1_ref = coor_reference_el_init[0:48]
+        #     coor_li48htype2_ref = coor_reference_el_init[48:96]
+        #     coor_li24g_ref = coor_reference_el_init[96:120]
+
+        #     for idx in range(dataframe["geometry"].size):
+        #         coor_limapped_weirdos = []
+        #         idx0_limapped_weirdos = []
+        #         idx_coor_limapped_weirdos_dict_init = {}
+        #         idx_coor_limapped_weirdos_dict = {}
+
+        #         idx_without_weirdos = dataframe.at[idx, col_idx_without_weirdos]
+        #         coor_reducedreference_Li = np.array(dataframe.at[idx, col_coor_reducedreference_Li])
+        #         idx_coor_weirdos_el = dataframe.at[idx, col_idx_coor_weirdos_el]
+        #         # coor_weirdos_48htype2_el = np.array(dataframe.at[idx, col_coor_weirdos_48htype2_el])
+        #         coor_weirdos_el = np.array(list(idx_coor_weirdos_el.values()))
+        #         idx0_weirdos_Li = dataframe.at[idx, col_idx0_weirdos_Li]
+        #         nr_of_weirdos_Li = dataframe.at[idx, col_sum_of_weirdos_Li]
+        #         sum_sanitycheck_48htypesmerged_Li = dataframe.at[idx, col_sum_sanitycheck_Li]
+
+        #         ndim_coor_reducedreference_Li = coor_reducedreference_Li.ndim
+        #         ndim_coor_weirdos_el = coor_weirdos_el.ndim
+        #         len_coor_weirdos_el = len(coor_weirdos_el)
+        #         len_coor_reducedreference_Li = len(coor_reducedreference_Li)
+        #         len_idx0_weirdos_Li = len(idx0_weirdos_Li)
+        #         len_idx_without_weirdos = len(idx_without_weirdos)
+
+        #         # # # # if coor_weirdos_el.ndim == 2:
+        #         # # # if len(coor_weirdos_el) > 0:
+        #         # # #     coor_limapped_weirdos = np.concatenate((coor_reducedreference_Li, coor_weirdos_el), axis=0)
+        #         # # # # elif coor_weirdos_el.ndim == 1:
+        #         # # # elif len(coor_weirdos_el) == 0:
+        #         # # #     coor_limapped_weirdos = np.array(coor_reducedreference_Li.copy())
+        #         # # # else:
+        #         # # #     print(f"coor_weirdos_el has no correct dimension at idx: {idx}")
+        #         # # #     # break
+
+        #         # # # if len(idx0_weirdos_Li) > 0:
+        #         # # #     idx0_limapped_weirdos = np.concatenate((idx_without_weirdos, idx0_weirdos_Li), axis=0)
+        #         # # # elif len(idx0_weirdos_Li) == 0:
+        #         # # #     idx0_limapped_weirdos = np.array(idx_without_weirdos.copy())
+        #         # # # else:
+        #         # # #     print(f"idx0_weirdos_Li has no correct len at idx: {idx}")
+        #         # # #     # break
+            
+        #         # if coor_weirdos_el.ndim == 2:
+        #         if ndim_coor_reducedreference_Li == ndim_coor_weirdos_el & ndim_coor_weirdos_el == 2:
+        #             coor_limapped_weirdos = np.concatenate((coor_reducedreference_Li, coor_weirdos_el), axis=0)
+        #             dataframe.at[idx, col_ndim_flag_coor] = "True"
+        #         # elif coor_weirdos_el.ndim == 1:
+        #         elif ndim_coor_weirdos_el == 1:
+        #             coor_limapped_weirdos = np.array(coor_reducedreference_Li.copy())
+        #         elif ndim_coor_reducedreference_Li == 1:
+        #             coor_limapped_weirdos = np.array(coor_weirdos_el.copy())
+        #         else:
+        #             print(f"coor_weirdos_el or coor_reducedreference_Li has no correct dimension at idx: {idx}")
+        #             # break
+
+        #         if len(idx0_weirdos_Li) > 0:
+        #             idx0_limapped_weirdos = np.concatenate((idx_without_weirdos, idx0_weirdos_Li), axis=0)
+        #         elif len(idx0_weirdos_Li) == 0:
+        #             idx0_limapped_weirdos = np.array(idx_without_weirdos.copy())
+        #         elif len(idx_without_weirdos) == 0:
+        #             idx0_limapped_weirdos = np.array(idx0_weirdos_Li.copy())
+        #         else:
+        #             print(f"idx0_weirdos_Li or idx_without_weirdos has no correct len at idx: {idx}")
+        #             # break
+
+        #         idx_coor_limapped_weirdos_dict_init = dict(zip(idx0_limapped_weirdos, coor_limapped_weirdos))
+        #         # if idx == 52:
+        #         #     # print(f"type = {type(idx_coor_limapped_weirdos_dict_init)}")
+        #         #     # print(f"idx_coor_limapped_weirdos_dict_init = {idx_coor_limapped_weirdos_dict_init}")
+
+        #         #     coor_48htype1_Li = []; coor_48htype2_Li = []; coor_24g_Li = []; coor_weirdo_Li = []
+        #         #     for key, value in idx_coor_limapped_weirdos_dict_init.items():
+        #         #         print(f"key: {key}, value: {value}")
+        #         #         if (value == coor_li48htype1_ref).all():
+
+        #         coor_48htype1_Li = []; coor_48htype2_Li = []; coor_24g_Li = []; coor_weirdo_Li = []
+        #         for key, value in idx_coor_limapped_weirdos_dict_init.items():
+        #             idx_coor_limapped_weirdos_dict_val = {}
+
+        #             idx_coor_limapped_weirdos_dict_val['coor'] = tuple(value)
+
+        #             for idx_li48htype1_temp, coor_li48htype1_ref_temp in enumerate(coor_li48htype1_ref):
+        #                 if (value == coor_li48htype1_ref_temp).all():
+        #                     idx_coor_limapped_weirdos_dict_val["label"] = "48htype1"
+        #                     coor_48htype1_Li.append(np.array(list(value)))
+        #                     if int(key) in idx_coor_limapped_weirdos_dict:
+        #                         idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
+        #                     else:
+        #                         idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
+        #             for idx_li48htype2_temp, coor_li48htype2_ref_temp in enumerate(coor_li48htype2_ref):
+        #                 if (value == coor_li48htype2_ref_temp).all():
+        #                     idx_coor_limapped_weirdos_dict_val["label"] = "48htype2"
+        #                     coor_48htype2_Li.append(np.array(list(value)))
+        #                     if int(key) in idx_coor_limapped_weirdos_dict:
+        #                         idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
+        #                     else:
+        #                         idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
+        #             for idx_24g_temp, coor_li24g_ref_temp in enumerate(coor_li24g_ref):
+        #                 if (value == coor_li24g_ref_temp).all():
+        #                     idx_coor_limapped_weirdos_dict_val["label"] = "24g"
+        #                     coor_24g_Li.append(np.array(list(value)))
+        #                     if int(key) in idx_coor_limapped_weirdos_dict:
+        #                         idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
+        #                     else:
+        #                         idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
+        #             for idx_weirdos_temp, coor_weirdos_ref_temp in enumerate(coor_weirdos_el):
+        #                 if (value == coor_weirdos_ref_temp).all():
+        #                     idx_coor_limapped_weirdos_dict_val["label"] = "weirdos"
+        #                     coor_weirdo_Li.append(np.array(list(value)))
+        #                     if int(key) in idx_coor_limapped_weirdos_dict:
+        #                         idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
+        #                     else:
+        #                         idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
+
+        #             # if int(key) in idx_coor_limapped_weirdos_dict:
+        #             #     idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
+        #             # else:
+        #             #     idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
+
+        #         # amount of each type
+        #         amount_48htype1_Li = len(coor_48htype1_Li)
+        #         amount_48htype2_Li = len(coor_48htype2_Li)
+        #         amount_24g_Li = len(coor_24g_Li)
+        #         amount_weirdo = len(coor_weirdo_Li)
+        #         sum_amount = amount_48htype1_Li + amount_48htype2_Li + amount_24g_Li + amount_weirdo
+
+        #         # sanity check for the amount
+        #         # if amount_weirdo == nr_of_weirdos_Li & sum_amount == sum_sanitycheck_48htypesmerged_Li:
+        #         # if int(amount_weirdo) == int(nr_of_weirdos_Li) & int(sum_amount) == int(sum_sanitycheck_48htypesmerged_Li):
+        #         if int(amount_weirdo) == int(nr_of_weirdos_Li):
+        #             if int(sum_amount) == int(sum_sanitycheck_48htypesmerged_Li):
+        #                 dataframe.at[idx, col_sum_label_and_weirdo_flag] = "True"
+
+        #         amount_types_and_weirdo = f"48htype1: {amount_48htype1_Li}, 48htype2: {amount_48htype2_Li}, 24g: {amount_24g_Li}, weirdo: {amount_weirdo}"
+
+        #         # ratio_48htype1_Li = amount_48htype1_Li / sum_amount
+        #         # ratio_48htype2_Li = amount_48htype2_Li / sum_amount
+        #         # ratio_24g_Li = amount_24g_Li / sum_amount
+        #         # ratio_weirdo_Li = amount_weirdo / sum_amount
+
+        #         dataframe.at[idx, col_idx_coor_limapped_weirdos_dict] = idx_coor_limapped_weirdos_dict
+        #         dataframe.at[idx, col_amount_types_and_weirdo] = amount_types_and_weirdo
+        #         # dataframe.at[idx, col_ratio_48htype1_Li] = ratio_48htype1_Li
+        #         # dataframe.at[idx, col_ratio_48htype2_Li] = ratio_48htype2_Li
+        #         # dataframe.at[idx, col_ratio_24g_Li] = ratio_24g_Li
+        #         # dataframe.at[idx, col_ratio_weirdo_Li] = ratio_weirdo_Li
+        #         dataframe.at[idx, col_sum_amount] = sum_amount
+        #         dataframe.at[idx, col_idx_coor_limapped_weirdos_dict_init] = idx_coor_limapped_weirdos_dict_init
+        #         dataframe.at[idx, col_ndim_coor_reducedreference_Li] = ndim_coor_reducedreference_Li
+        #         dataframe.at[idx, col_ndim_coor_weirdos_el] = ndim_coor_weirdos_el
+        #         dataframe.at[idx, col_len_coor_weirdos_el] = len_coor_weirdos_el
+        #         dataframe.at[idx, col_len_coor_reducedreference_Li] = len_coor_reducedreference_Li
+        #         dataframe.at[idx, col_len_idx0_weirdos_Li] = len_idx0_weirdos_Li
+        #         dataframe.at[idx, col_len_idx_without_weirdos] = len_idx_without_weirdos
 
 
     class Labelling:
@@ -5024,1286 +5313,1383 @@ class Movement:
             return df
 
 
-def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, activate_radius, el):
-    coor_reference_el_init = coor_structure_init_dict[el]
+class Optimizer:
+    class GetSumWeirdos:
+        # # not yet changed from 3665 - 4444 (???)
+        def get_sum_weirdos_Li_var_not_complete(max_mapping_radius, max_mapping_radius_48htype2, activate_radius, file_perfect_poscar_24_wo_cif, file_perfect_poscar_48n24_wo_cif, litype, var_optitype, iter_type, foldermapping_namestyle_all, cif_namestyle_all, modif_all_litype, full_calculation):
+            """
+                iter_type: varying_dx_dz, varying_radius, none
+                cif_namestyle_all: True, False, None
+                full_calculation: True, False
+            """
+            
+            direc = os.getcwd() # get current working directory
+
+            # # user input
+            # max_mapping_radius = 0.043
+            # max_mapping_radius_48htype2 = 0.076
+            # activate_radius = 2
+            lattice_constant = 10.2794980000
+
+            folder_name_init_system = "/Init_System"
+            file_new_system = "CONTCAR"
+            file_name_toten = "toten_final.ods"
+            col_excel_geo = "geometry"
+            col_excel_path = "path"
+            reference_folder = "_reference_cif"
+            results_folder = "_results"
+
+            file_perfect_poscar_24 = f"{file_perfect_poscar_24_wo_cif}.cif"
+            file_perfect_poscar_48n24 = f"{file_perfect_poscar_48n24_wo_cif}.cif"
+
+            file_path_ori_ref_48n24 = f"/{reference_folder}/{file_perfect_poscar_48n24}"
+            path_ori_ref_48n24 = direc+str(file_path_ori_ref_48n24)
+            path_reference_folder = direc+"/"+str(reference_folder)
+
+            ref_positions_array_all = np.array(ReadStructure.Parameter.get_dx_dz(path_ori_ref_48n24, litype))
 
-    col_idx_without_weirdos = "idx_without_weirdos"
-    col_idx_coor_weirdos_el = f"idx_coor_weirdos_{el}"
-    col_idx0_weirdos_Li = "idx0_weirdos_Li"
-    col_sum_of_weirdos_Li = f"#weirdos_Li"
-    if activate_radius == 2 or activate_radius == 3:
-        #col_coor_reducedreference_Li = "coor_reducedreference_Li"
-        col_coor_reducedreference_Li = f"coor_reducedreference_48htypesmerged_{el}"
-        # col_coor_weirdos_48htypesmerged_Li = "coor_weirdos_48htypesmerged_Li"
-        # col_coor_weirdos_el = f"coor_weirdos_48htype2_{el}"
-        col_sum_sanitycheck_Li = "sum_sanitycheck_48htypesmerged_Li"
-    elif activate_radius == 1:
-        col_coor_reducedreference_Li = f"coor_reducedreference_{el}_closestduplicate"
-        col_sum_sanitycheck_Li = f"sum_sanitycheck_{el}_closestduplicate"
-
-
-    col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
-    col_sum_label_and_weirdo_flag = "#label_and_#weirdo_flag"
-    col_amount_types_and_weirdo = "amount_types_and_weirdo"
-    col_ratio_48htype1_Li = "ratio_48htype1_Li"
-    col_ratio_48htype2_Li = "ratio_48htype2_Li"
-    col_ratio_24g_Li = "ratio_24g_Li"
-    col_ratio_weirdo_Li = "ratio_weirdo_Li"
-    col_sum_amount = "sum_amount"
-    col_idx_coor_limapped_weirdos_dict_init = "idx_coor_limapped_weirdos_dict_init"
-    col_ndim_coor_reducedreference_Li = "ndim_coor_reducedreference_Li"
-    col_ndim_coor_weirdos_el = "ndim_coor_weirdos_el"
-    col_len_coor_weirdos_el = "len_coor_weirdos_el"
-    col_len_coor_reducedreference_Li = "len_coor_reducedreference_Li"
-    col_len_idx0_weirdos_Li = "len_idx0_weirdos_Li"
-    col_len_idx_without_weirdos = "len_idx_without_weirdos"
-    col_ndim_flag_coor = "ndim_flag_coor"
-
-    dataframe[col_idx_coor_limapped_weirdos_dict] = [{} for _ in range(len(dataframe.index))]
-    dataframe[col_sum_label_and_weirdo_flag] = "False"
-    dataframe[col_amount_types_and_weirdo] = [0 for _ in range(len(dataframe.index))]
-    dataframe[col_sum_amount] = [0 for _ in range(len(dataframe.index))]
-    dataframe[col_idx_coor_limapped_weirdos_dict_init] = [{} for _ in range(len(dataframe.index))]
-    dataframe[col_ndim_coor_reducedreference_Li] = [0 for _ in range(len(dataframe.index))]
-    dataframe[col_ndim_coor_weirdos_el] = [0 for _ in range(len(dataframe.index))]
-    dataframe[col_len_coor_weirdos_el] = [0 for _ in range(len(dataframe.index))]
-    dataframe[col_len_coor_reducedreference_Li] = [0 for _ in range(len(dataframe.index))]
-    dataframe[col_len_idx0_weirdos_Li] = [0 for _ in range(len(dataframe.index))]
-    dataframe[col_len_idx_without_weirdos] = [0 for _ in range(len(dataframe.index))]
-    dataframe[col_ndim_flag_coor] = "False"
-
-    coor_li48htype1_ref = coor_reference_el_init[0:48]
-    coor_li48htype2_ref = coor_reference_el_init[48:96]
-    coor_li24g_ref = coor_reference_el_init[96:120]
-
-    for idx in range(dataframe["geometry"].size):
-        coor_limapped_weirdos = []
-        idx0_limapped_weirdos = []
-        idx_coor_limapped_weirdos_dict_init = {}
-        idx_coor_limapped_weirdos_dict = {}
-
-        idx_without_weirdos = dataframe.at[idx, col_idx_without_weirdos]
-        coor_reducedreference_Li = np.array(dataframe.at[idx, col_coor_reducedreference_Li])
-        idx_coor_weirdos_el = dataframe.at[idx, col_idx_coor_weirdos_el]
-        # coor_weirdos_48htype2_el = np.array(dataframe.at[idx, col_coor_weirdos_48htype2_el])
-        coor_weirdos_el = np.array(list(idx_coor_weirdos_el.values()))
-        idx0_weirdos_Li = dataframe.at[idx, col_idx0_weirdos_Li]
-        nr_of_weirdos_Li = dataframe.at[idx, col_sum_of_weirdos_Li]
-        sum_sanitycheck_48htypesmerged_Li = dataframe.at[idx, col_sum_sanitycheck_Li]
-
-        ndim_coor_reducedreference_Li = coor_reducedreference_Li.ndim
-        ndim_coor_weirdos_el = coor_weirdos_el.ndim
-        len_coor_weirdos_el = len(coor_weirdos_el)
-        len_coor_reducedreference_Li = len(coor_reducedreference_Li)
-        len_idx0_weirdos_Li = len(idx0_weirdos_Li)
-        len_idx_without_weirdos = len(idx_without_weirdos)
-
-        # # # # if coor_weirdos_el.ndim == 2:
-        # # # if len(coor_weirdos_el) > 0:
-        # # #     coor_limapped_weirdos = np.concatenate((coor_reducedreference_Li, coor_weirdos_el), axis=0)
-        # # # # elif coor_weirdos_el.ndim == 1:
-        # # # elif len(coor_weirdos_el) == 0:
-        # # #     coor_limapped_weirdos = np.array(coor_reducedreference_Li.copy())
-        # # # else:
-        # # #     print(f"coor_weirdos_el has no correct dimension at idx: {idx}")
-        # # #     # break
-
-        # # # if len(idx0_weirdos_Li) > 0:
-        # # #     idx0_limapped_weirdos = np.concatenate((idx_without_weirdos, idx0_weirdos_Li), axis=0)
-        # # # elif len(idx0_weirdos_Li) == 0:
-        # # #     idx0_limapped_weirdos = np.array(idx_without_weirdos.copy())
-        # # # else:
-        # # #     print(f"idx0_weirdos_Li has no correct len at idx: {idx}")
-        # # #     # break
-    
-        # if coor_weirdos_el.ndim == 2:
-        if ndim_coor_reducedreference_Li == ndim_coor_weirdos_el & ndim_coor_weirdos_el == 2:
-            coor_limapped_weirdos = np.concatenate((coor_reducedreference_Li, coor_weirdos_el), axis=0)
-            dataframe.at[idx, col_ndim_flag_coor] = "True"
-        # elif coor_weirdos_el.ndim == 1:
-        elif ndim_coor_weirdos_el == 1:
-            coor_limapped_weirdos = np.array(coor_reducedreference_Li.copy())
-        elif ndim_coor_reducedreference_Li == 1:
-            coor_limapped_weirdos = np.array(coor_weirdos_el.copy())
-        else:
-            print(f"coor_weirdos_el or coor_reducedreference_Li has no correct dimension at idx: {idx}")
-            # break
-
-        if len(idx0_weirdos_Li) > 0:
-            idx0_limapped_weirdos = np.concatenate((idx_without_weirdos, idx0_weirdos_Li), axis=0)
-        elif len(idx0_weirdos_Li) == 0:
-            idx0_limapped_weirdos = np.array(idx_without_weirdos.copy())
-        elif len(idx_without_weirdos) == 0:
-            idx0_limapped_weirdos = np.array(idx0_weirdos_Li.copy())
-        else:
-            print(f"idx0_weirdos_Li or idx_without_weirdos has no correct len at idx: {idx}")
-            # break
-
-        idx_coor_limapped_weirdos_dict_init = dict(zip(idx0_limapped_weirdos, coor_limapped_weirdos))
-        # if idx == 52:
-        #     # print(f"type = {type(idx_coor_limapped_weirdos_dict_init)}")
-        #     # print(f"idx_coor_limapped_weirdos_dict_init = {idx_coor_limapped_weirdos_dict_init}")
-
-        #     coor_48htype1_Li = []; coor_48htype2_Li = []; coor_24g_Li = []; coor_weirdo_Li = []
-        #     for key, value in idx_coor_limapped_weirdos_dict_init.items():
-        #         print(f"key: {key}, value: {value}")
-        #         if (value == coor_li48htype1_ref).all():
-
-        coor_48htype1_Li = []; coor_48htype2_Li = []; coor_24g_Li = []; coor_weirdo_Li = []
-        for key, value in idx_coor_limapped_weirdos_dict_init.items():
-            idx_coor_limapped_weirdos_dict_val = {}
-
-            idx_coor_limapped_weirdos_dict_val['coor'] = tuple(value)
-
-            for idx_li48htype1_temp, coor_li48htype1_ref_temp in enumerate(coor_li48htype1_ref):
-                if (value == coor_li48htype1_ref_temp).all():
-                    idx_coor_limapped_weirdos_dict_val["label"] = "48htype1"
-                    coor_48htype1_Li.append(np.array(list(value)))
-                    if int(key) in idx_coor_limapped_weirdos_dict:
-                        idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
-                    else:
-                        idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
-            for idx_li48htype2_temp, coor_li48htype2_ref_temp in enumerate(coor_li48htype2_ref):
-                if (value == coor_li48htype2_ref_temp).all():
-                    idx_coor_limapped_weirdos_dict_val["label"] = "48htype2"
-                    coor_48htype2_Li.append(np.array(list(value)))
-                    if int(key) in idx_coor_limapped_weirdos_dict:
-                        idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
-                    else:
-                        idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
-            for idx_24g_temp, coor_li24g_ref_temp in enumerate(coor_li24g_ref):
-                if (value == coor_li24g_ref_temp).all():
-                    idx_coor_limapped_weirdos_dict_val["label"] = "24g"
-                    coor_24g_Li.append(np.array(list(value)))
-                    if int(key) in idx_coor_limapped_weirdos_dict:
-                        idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
-                    else:
-                        idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
-            for idx_weirdos_temp, coor_weirdos_ref_temp in enumerate(coor_weirdos_el):
-                if (value == coor_weirdos_ref_temp).all():
-                    idx_coor_limapped_weirdos_dict_val["label"] = "weirdos"
-                    coor_weirdo_Li.append(np.array(list(value)))
-                    if int(key) in idx_coor_limapped_weirdos_dict:
-                        idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
-                    else:
-                        idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
-
-            # if int(key) in idx_coor_limapped_weirdos_dict:
-            #     idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
-            # else:
-            #     idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
-
-        # amount of each type
-        amount_48htype1_Li = len(coor_48htype1_Li)
-        amount_48htype2_Li = len(coor_48htype2_Li)
-        amount_24g_Li = len(coor_24g_Li)
-        amount_weirdo = len(coor_weirdo_Li)
-        sum_amount = amount_48htype1_Li + amount_48htype2_Li + amount_24g_Li + amount_weirdo
-
-        # sanity check for the amount
-        # if amount_weirdo == nr_of_weirdos_Li & sum_amount == sum_sanitycheck_48htypesmerged_Li:
-        # if int(amount_weirdo) == int(nr_of_weirdos_Li) & int(sum_amount) == int(sum_sanitycheck_48htypesmerged_Li):
-        if int(amount_weirdo) == int(nr_of_weirdos_Li):
-            if int(sum_amount) == int(sum_sanitycheck_48htypesmerged_Li):
-                dataframe.at[idx, col_sum_label_and_weirdo_flag] = "True"
-
-        amount_types_and_weirdo = f"48htype1: {amount_48htype1_Li}, 48htype2: {amount_48htype2_Li}, 24g: {amount_24g_Li}, weirdo: {amount_weirdo}"
-
-        # ratio_48htype1_Li = amount_48htype1_Li / sum_amount
-        # ratio_48htype2_Li = amount_48htype2_Li / sum_amount
-        # ratio_24g_Li = amount_24g_Li / sum_amount
-        # ratio_weirdo_Li = amount_weirdo / sum_amount
-
-        dataframe.at[idx, col_idx_coor_limapped_weirdos_dict] = idx_coor_limapped_weirdos_dict
-        dataframe.at[idx, col_amount_types_and_weirdo] = amount_types_and_weirdo
-        # dataframe.at[idx, col_ratio_48htype1_Li] = ratio_48htype1_Li
-        # dataframe.at[idx, col_ratio_48htype2_Li] = ratio_48htype2_Li
-        # dataframe.at[idx, col_ratio_24g_Li] = ratio_24g_Li
-        # dataframe.at[idx, col_ratio_weirdo_Li] = ratio_weirdo_Li
-        dataframe.at[idx, col_sum_amount] = sum_amount
-        dataframe.at[idx, col_idx_coor_limapped_weirdos_dict_init] = idx_coor_limapped_weirdos_dict_init
-        dataframe.at[idx, col_ndim_coor_reducedreference_Li] = ndim_coor_reducedreference_Li
-        dataframe.at[idx, col_ndim_coor_weirdos_el] = ndim_coor_weirdos_el
-        dataframe.at[idx, col_len_coor_weirdos_el] = len_coor_weirdos_el
-        dataframe.at[idx, col_len_coor_reducedreference_Li] = len_coor_reducedreference_Li
-        dataframe.at[idx, col_len_idx0_weirdos_Li] = len_idx0_weirdos_Li
-        dataframe.at[idx, col_len_idx_without_weirdos] = len_idx_without_weirdos
-
-
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-
-
-def diagonalizing_latticeconstantsmatrix(dataframe, destination_directory, latticeconstantsmatrix_line_nr_start, var_name_in, var_name_out, n_decimal):
-    # # dataframe['subdir_orientated_positive_poscar'] = None
-    for idx in range(dataframe["geometry"].size):
-        filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_POSCAR_{var_name_in}"
-        filename_to_transform_path = os.path.join(destination_directory, filename_to_transform)
-
-        with open(filename_to_transform_path, 'r') as file:
-            lines = file.readlines()
-        data = lines[latticeconstantsmatrix_line_nr_start:latticeconstantsmatrix_line_nr_start+3]
-
-        df = pd.DataFrame([string.strip().split() for string in data]).astype(float)
-
-        df_diagonal = np.diag(df.values)
-
-        max_val = 0
-        for i in df_diagonal:
-            if i > max_val:
-                max_val = i
-
-        min_val = float('inf')
-        for j in df_diagonal:
-            if j < min_val:
-                min_val = j
-
-        # replace all diagonal of df with the max_val and let off-diagonal as 0
-        for row in range(len(df)):
-            for col in range(len(df)):
-                if row == col:
-                    if col == 0:
-                        df[row][col] = '{:.{width}f}'.format(float(max_val), width=n_decimal)
-                    else:
-                        df[row][col] = '  ' + '{:.{width}f}'.format(float(max_val), width=n_decimal)
-                else:
-                    if col == 0: 
-                        df[row][col] = '{:.{width}f}'.format(float(0), width=n_decimal)
-                    else:
-                        df[row][col] = '  ' + '{:.{width}f}'.format(float(0), width=n_decimal)
-
-        row_list = df.to_string(index=False, header=False).split('\n')
-        # row_list_space = ['  '.join(string.split()) for string in row_list] # 2 spaces of distance
-        row_list_w_beginning = [' ' + row for row in row_list]       # 1 space in the beginning
-        absolute_correct_list = '\n'.join(row_list_w_beginning).splitlines()        
-
-        line_append_list = []
-        for idx_c, line in enumerate(absolute_correct_list):
-            line_new_line = str(line) + '\n'
-            line_append_list.append(line_new_line)
-
-        file_list = lines[:latticeconstantsmatrix_line_nr_start] + line_append_list + lines[latticeconstantsmatrix_line_nr_start+3:]
-
-        poscar_filename_positive = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_POSCAR_{var_name_out}"
-        destination_path = os.path.join(destination_directory, poscar_filename_positive)
-        
-        with open(destination_path, "w") as poscar_positive_file:
-            for item in file_list:
-                poscar_positive_file.writelines(item)
-
-        # # dataframe['subdir_orientated_positive_poscar'][idx] = destination_path
-
-
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-
-
-def format_float(number):
-    """
-    format float
-    """
-    # # basically nothing is formatted here
-    # if number < 0:
-    #     # return f'{(number*-1):.5f}0'
-    #     return f'{number:.5f}'
-    # else:
-    #     return f'{number:.5f}'
-    return number
-
-
-def create_file_name(direc_perfect_poscar, ref_positions_array, var_optitype):
-    formatted_positions = [format_float(pos) for pos in ref_positions_array]
-    formatted_positions_str = list(map(str, formatted_positions))
-    return os.path.join(direc_perfect_poscar, f"Li6PS5Cl_{'_'.join(formatted_positions_str)}_{var_optitype}.cif")
-
-
-def modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype):
-    file_path_new = create_file_name(direc_perfect_poscar, ref_positions_array_filename, var_optitype)
-    if modif_all_litype == True:
-        change_dx_dz_alllitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
-    elif modif_all_litype == False:
-        change_dx_dz_specificlitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
-    elif modif_all_litype == None:
-        change_dx_dz_alllitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
-
-    return file_path_new
-
-
-# def modif_dx_dz_cif_alllitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, litype, var_optitype):
-#     file_path_new = create_file_name(direc_perfect_poscar, ref_positions_array, var_optitype)
-#     change_dx_dz_alllitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
-
-#     return file_path_new
-
-
-# def modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, litype, var_optitype):
-#     file_path_new = create_file_name(direc_perfect_poscar, ref_positions_array, var_optitype)
-#     change_dx_dz_specificlitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
-
-#     return file_path_new
-
-
-def change_dx_dz_alllitype(file_path, file_path_new, ref_positions_array, litype):
-    # old_name = change_dx_dz
-    # ref_positions_array = ALL values in this array
-
-    formatted_positions = [format_float(pos) for pos in ref_positions_array]
-    print(f"formatted_positions: {formatted_positions}")
-
-    with open(file_path, 'r') as f:
-        lines = f.readlines()
-
-    if litype == 0:
-        new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions
-
-        with open(file_path_new, 'w') as f:
-            for line in lines:
-                if line.startswith("Li1"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
-                    parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                f.write(line)
-
-    elif litype == 1:
-        new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
-        new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
-
-        with open(file_path_new, 'w') as f:
-            for line in lines:
-                if line.startswith("Li1"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
-                    parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li2"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                f.write(line)
-
-    elif litype == 2:
-        new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
-        new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
-        new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
-
-        with open(file_path_new, 'w') as f:
-            for line in lines:
-                if line.startswith("Li1"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
-                    parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li2"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li3"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                f.write(line)
-
-    elif litype == 3:
-        new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
-        new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
-        new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
-        new_dx1_48h_type3, new_dx2_48h_type3, new_dz_48h_type3 = formatted_positions[9:12]
-
-        with open(file_path_new, 'w') as f:
-            for line in lines:
-                if line.startswith("Li1"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
-                    parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li2"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li3"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li4"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type3}",f"{new_dx2_48h_type3}",f"{new_dz_48h_type3}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                f.write(line)
-
-    elif litype == 4:
-        new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
-        new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
-        new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
-        new_dx1_48h_type3, new_dx2_48h_type3, new_dz_48h_type3 = formatted_positions[9:12]
-        new_dx1_48h_type4, new_dx2_48h_type4, new_dz_48h_type4 = formatted_positions[12:15]
-
-        with open(file_path_new, 'w') as f:
-            for line in lines:
-                if line.startswith("Li1"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
-                    parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li2"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li3"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li4"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type3}",f"{new_dx2_48h_type3}",f"{new_dz_48h_type3}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li5"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type4}",f"{new_dx2_48h_type4}",f"{new_dz_48h_type4}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                f.write(line)
-
-    elif litype == 5:
-        new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
-        new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
-        new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
-        new_dx1_48h_type3, new_dx2_48h_type3, new_dz_48h_type3 = formatted_positions[9:12]
-        new_dx1_48h_type4, new_dx2_48h_type4, new_dz_48h_type4 = formatted_positions[12:15]
-        new_dx1_48h_type5, new_dx2_48h_type5, new_dz_48h_type5 = formatted_positions[15:18]
-
-        with open(file_path_new, 'w') as f:
-            for line in lines:
-                if line.startswith("Li1"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
-                    parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li2"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li3"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li4"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type3}",f"{new_dx2_48h_type3}",f"{new_dz_48h_type3}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li5"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type4}",f"{new_dx2_48h_type4}",f"{new_dz_48h_type4}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li6"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type5}",f"{new_dx2_48h_type5}",f"{new_dz_48h_type5}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                f.write(line)
-    elif litype == 6:
-        new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
-        new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
-        new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
-        new_dx1_48h_type3, new_dx2_48h_type3, new_dz_48h_type3 = formatted_positions[9:12]
-        new_dx1_48h_type4, new_dx2_48h_type4, new_dz_48h_type4 = formatted_positions[12:15]
-        new_dx1_48h_type5, new_dx2_48h_type5, new_dz_48h_type5 = formatted_positions[15:18]
-        new_dx1_48h_type6, new_dx2_48h_type6, new_dz_48h_type6 = formatted_positions[18:21]
-
-        with open(file_path_new, 'w') as f:
-            for line in lines:
-                if line.startswith("Li1"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
-                    parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li2"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li3"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li4"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type3}",f"{new_dx2_48h_type3}",f"{new_dz_48h_type3}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li5"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type4}",f"{new_dx2_48h_type4}",f"{new_dz_48h_type4}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li6"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type5}",f"{new_dx2_48h_type5}",f"{new_dz_48h_type5}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li7"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type6}",f"{new_dx2_48h_type6}",f"{new_dz_48h_type6}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                f.write(line)
-    elif litype == 7:
-        new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
-        new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
-        new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
-        new_dx1_48h_type3, new_dx2_48h_type3, new_dz_48h_type3 = formatted_positions[9:12]
-        new_dx1_48h_type4, new_dx2_48h_type4, new_dz_48h_type4 = formatted_positions[12:15]
-        new_dx1_48h_type5, new_dx2_48h_type5, new_dz_48h_type5 = formatted_positions[15:18]
-        new_dx1_48h_type6, new_dx2_48h_type6, new_dz_48h_type6 = formatted_positions[18:21]
-        new_dx1_48h_type7, new_dx2_48h_type7, new_dz_48h_type7 = formatted_positions[21:24]
-
-        with open(file_path_new, 'w') as f:
-            for line in lines:
-                if line.startswith("Li1"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
-                    parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li2"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li3"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li4"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type3}",f"{new_dx2_48h_type3}",f"{new_dz_48h_type3}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li5"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type4}",f"{new_dx2_48h_type4}",f"{new_dz_48h_type4}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li6"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type5}",f"{new_dx2_48h_type5}",f"{new_dz_48h_type5}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li7"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type6}",f"{new_dx2_48h_type6}",f"{new_dz_48h_type6}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li8"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type7}",f"{new_dx2_48h_type7}",f"{new_dz_48h_type7}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                f.write(line)
-    elif litype == 8:
-        new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
-        new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
-        new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
-        new_dx1_48h_type3, new_dx2_48h_type3, new_dz_48h_type3 = formatted_positions[9:12]
-        new_dx1_48h_type4, new_dx2_48h_type4, new_dz_48h_type4 = formatted_positions[12:15]
-        new_dx1_48h_type5, new_dx2_48h_type5, new_dz_48h_type5 = formatted_positions[15:18]
-        new_dx1_48h_type6, new_dx2_48h_type6, new_dz_48h_type6 = formatted_positions[18:21]
-        new_dx1_48h_type7, new_dx2_48h_type7, new_dz_48h_type7 = formatted_positions[21:24]
-        new_dx1_48h_type8, new_dx2_48h_type8, new_dz_48h_type8 = formatted_positions[24:27]
-
-        with open(file_path_new, 'w') as f:
-            for line in lines:
-                if line.startswith("Li1"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
-                    parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li2"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li3"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li4"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type3}",f"{new_dx2_48h_type3}",f"{new_dz_48h_type3}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li5"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type4}",f"{new_dx2_48h_type4}",f"{new_dz_48h_type4}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li6"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type5}",f"{new_dx2_48h_type5}",f"{new_dz_48h_type5}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li7"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type6}",f"{new_dx2_48h_type6}",f"{new_dz_48h_type6}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li8"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type7}",f"{new_dx2_48h_type7}",f"{new_dz_48h_type7}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                if line.startswith("Li9"):
-                    parts = line.split()
-                    # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
-                    parts[4:6+1] = [f"{new_dx1_48h_type8}",f"{new_dx2_48h_type8}",f"{new_dz_48h_type8}"]
-                    parts[2] = f" {parts[2]}"
-                    parts[-1] = f"{parts[-1]}\n"
-                    line = " ".join(parts)
-                f.write(line)
-
-def change_dx_dz_specificlitype(file_path, file_path_new, ref_positions_array, litype):
-
-    formatted_positions = [format_float(pos) for pos in ref_positions_array]
-
-    new_dx1_type, new_dx2_type, new_dz_type = formatted_positions
-
-    with open(file_path, 'r') as f:
-        lines = f.readlines()
-
-    with open(file_path_new, 'w') as f:
-        for line in lines:
-            if line.startswith(f"Li{litype+1}"):
-                parts = line.split()
-                # parts[4:6+1] = [f"{new_dx1_type:.5f}",f"{new_dx2_type:.5f}",f"{new_dz_type:.5f}"]
-                parts[4:6+1] = [f"{new_dx1_type}",f"{new_dx2_type}",f"{new_dz_type}"]
-                parts[2] = f" {parts[2]}"
-                parts[-1] = f"{parts[-1]}\n"
-                line = " ".join(parts)
-            f.write(line)
-
-
-# # not yet changed from 3665 - 4444
-def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, activate_radius, file_perfect_poscar_24_wo_cif, file_perfect_poscar_48n24_wo_cif, litype, var_optitype, iter_type, foldermapping_namestyle_all, cif_namestyle_all, modif_all_litype, full_calculation):
-    """
-        iter_type: varying_dx_dz, varying_radius, none
-        cif_namestyle_all: True, False, None
-        full_calculation: True, False
-    """
-    
-    direc = os.getcwd() # get current working directory
-
-    # # user input
-    # max_mapping_radius = 0.043
-    # max_mapping_radius_48htype2 = 0.076
-    # activate_radius = 2
-    lattice_constant = 10.2794980000
-
-    folder_name_init_system = "/Init_System"
-    file_new_system = "CONTCAR"
-    file_name_toten = "toten_final.ods"
-    col_excel_geo = "geometry"
-    col_excel_path = "path"
-    reference_folder = "_reference_cif"
-    results_folder = "_results"
-
-    file_perfect_poscar_24 = f"{file_perfect_poscar_24_wo_cif}.cif"
-    file_perfect_poscar_48n24 = f"{file_perfect_poscar_48n24_wo_cif}.cif"
-
-    file_path_ori_ref_48n24 = f"/{reference_folder}/{file_perfect_poscar_48n24}"
-    path_ori_ref_48n24 = direc+str(file_path_ori_ref_48n24)
-    path_reference_folder = direc+"/"+str(reference_folder)
-
-    ref_positions_array_all = np.array(ReadStructure.Parameter.get_dx_dz_init(path_ori_ref_48n24, litype))
-
-    if litype == 0:
-        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
-        
-        ref_positions_array_singlelitype = ref_positions_array_all[0:3]
-        ref_positions_array_all_compactform = [dx_24g, dz1_24g]
-
-    elif litype == 1:
-        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
-        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
-
-        ref_positions_array_singlelitype = ref_positions_array_all[3:6]
-        ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1]
-
-    elif litype == 2:
-        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
-        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
-        dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
-
-        ref_positions_array_singlelitype = ref_positions_array_all[6:9]
-        ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2]
-
-    elif litype == 3:
-        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
-        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
-        dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
-        dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
-
-        ref_positions_array_singlelitype = ref_positions_array_all[9:12]
-        ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3]
-
-    elif litype == 4:
-        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
-        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
-        dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
-        dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
-        dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
-
-        ref_positions_array_singlelitype = ref_positions_array_all[12:15]
-        ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4]
-
-    elif litype == 5:
-        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
-        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
-        dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
-        dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
-        dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
-        dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
-
-        ref_positions_array_singlelitype = ref_positions_array_all[15:18]
-        ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4, dx1_48h_type5, dx2_48h_type5]
-    
-    elif litype == 6:
-        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
-        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
-        dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
-        dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
-        dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
-        dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
-        dx1_48h_type6, dx2_48h_type6, dz_48h_type6 = ref_positions_array_all[18:21]
-
-        ref_positions_array_singlelitype = ref_positions_array_all[18:21]
-        ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4, dx1_48h_type5, dx2_48h_type5, dx1_48h_type6, dx2_48h_type6]
-    
-    elif litype == 7:
-        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
-        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
-        dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
-        dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
-        dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
-        dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
-        dx1_48h_type6, dx2_48h_type6, dz_48h_type6 = ref_positions_array_all[18:21]
-        dx1_48h_type7, dx2_48h_type7, dz_48h_type7 = ref_positions_array_all[21:24]
-
-        ref_positions_array_singlelitype = ref_positions_array_all[21:24]
-        ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4, dx1_48h_type5, dx2_48h_type5, dx1_48h_type6, dx2_48h_type6, dx1_48h_type7, dx2_48h_type7]
-
-    elif litype == 8:
-        dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
-        dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
-        dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
-        dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
-        dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
-        dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
-        dx1_48h_type6, dx2_48h_type6, dz_48h_type6 = ref_positions_array_all[18:21]
-        dx1_48h_type7, dx2_48h_type7, dz_48h_type7 = ref_positions_array_all[21:24]
-        dx1_48h_type8, dx2_48h_type8, dz_48h_type8 = ref_positions_array_all[24:27]
-
-        ref_positions_array_singlelitype = ref_positions_array_all[24:27]
-        ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4, dx1_48h_type5, dx2_48h_type5, dx1_48h_type6, dx2_48h_type6, dx1_48h_type7, dx2_48h_type7, dx1_48h_type8, dx2_48h_type8]
-
-
-    # max_mapping_radius_48htype1_48htype2 = (max_mapping_radius + max_mapping_radius_48htype2) / 2
-    # file_perfect_poscar_48n24 = "Li6PS5Cl_type2.cif"
-    # file_perfect_poscar_24 = "Li6PS5Cl_24_mod_2p27291.cif" # copy this manually to folder_name_perfect_poscar  
-
-    folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_perfect_poscar_48n24_wo_cif}/"
-    path_folder_name_iter_type = direc+str(folder_name_iter_type)
-    Operation.File.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
-
-
-    if foldermapping_namestyle_all == True:
-        if activate_radius == 2:
             if litype == 0:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 1:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 2:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 3:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 4:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 5:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 6:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"            
-            elif litype == 7:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"            
-            elif litype == 8:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-        
-        elif activate_radius == 1:
-            if litype == 0:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{max_mapping_radius}/"
-            elif litype == 1:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}/"
-            elif litype == 2:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}/"
-            elif litype == 3:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}/"
-            elif litype == 4:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}/"
-            elif litype == 5:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}/"
-            elif litype == 6:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}/"            
-            elif litype == 7:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}/"            
-            elif litype == 8:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}/"
-        
-    else:
-        if activate_radius == 2:
-            if litype == 0:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 1:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 2:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 3:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 4:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 5:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 6:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 7:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
-            elif litype == 8:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
                 
-        elif activate_radius == 1:
-            if litype == 0:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{max_mapping_radius}/"
+                ref_positions_array_singlelitype = ref_positions_array_all[0:3]
+                ref_positions_array_all_compactform = [dx_24g, dz1_24g]
+
             elif litype == 1:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}/"
+                dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+                dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+
+                ref_positions_array_singlelitype = ref_positions_array_all[3:6]
+                ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1]
+
             elif litype == 2:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}/"
+                dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+                dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+                dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+
+                ref_positions_array_singlelitype = ref_positions_array_all[6:9]
+                ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2]
+
             elif litype == 3:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}/"
+                dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+                dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+                dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+                dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+
+                ref_positions_array_singlelitype = ref_positions_array_all[9:12]
+                ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3]
+
             elif litype == 4:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}/"
+                dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+                dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+                dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+                dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+                dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
+
+                ref_positions_array_singlelitype = ref_positions_array_all[12:15]
+                ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4]
+
             elif litype == 5:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}/"
+                dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+                dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+                dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+                dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+                dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
+                dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
+
+                ref_positions_array_singlelitype = ref_positions_array_all[15:18]
+                ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4, dx1_48h_type5, dx2_48h_type5]
+            
             elif litype == 6:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}/"
+                dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+                dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+                dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+                dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+                dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
+                dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
+                dx1_48h_type6, dx2_48h_type6, dz_48h_type6 = ref_positions_array_all[18:21]
+
+                ref_positions_array_singlelitype = ref_positions_array_all[18:21]
+                ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4, dx1_48h_type5, dx2_48h_type5, dx1_48h_type6, dx2_48h_type6]
+            
             elif litype == 7:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}/"
+                dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+                dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+                dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+                dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+                dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
+                dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
+                dx1_48h_type6, dx2_48h_type6, dz_48h_type6 = ref_positions_array_all[18:21]
+                dx1_48h_type7, dx2_48h_type7, dz_48h_type7 = ref_positions_array_all[21:24]
+
+                ref_positions_array_singlelitype = ref_positions_array_all[21:24]
+                ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4, dx1_48h_type5, dx2_48h_type5, dx1_48h_type6, dx2_48h_type6, dx1_48h_type7, dx2_48h_type7]
+
             elif litype == 8:
-                folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}/"
+                dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+                dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+                dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+                dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+                dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
+                dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
+                dx1_48h_type6, dx2_48h_type6, dz_48h_type6 = ref_positions_array_all[18:21]
+                dx1_48h_type7, dx2_48h_type7, dz_48h_type7 = ref_positions_array_all[21:24]
+                dx1_48h_type8, dx2_48h_type8, dz_48h_type8 = ref_positions_array_all[24:27]
+
+                ref_positions_array_singlelitype = ref_positions_array_all[24:27]
+                ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4, dx1_48h_type5, dx2_48h_type5, dx1_48h_type6, dx2_48h_type6, dx1_48h_type7, dx2_48h_type7, dx1_48h_type8, dx2_48h_type8]
 
 
-    folder_name_perfect_poscar = "/_reference_cif/cif_matrix/Li1/"
-    cif_line_nr_start = 26  # index from 0
-    poscar_line_nr_start = 8
-    poscar_line_nr_end = 60
-    contcar_columns_type2 = ['coord_x', 'coord_y', 'coord_z']
-    amount_Li = 24
-    col_excel_toten = "toten [eV]" 
-    amount_P = 4 
-    amount_S = 20 
-    amount_Cl = 4
-    file_restructure = "CONTCAR" 
-    cif_columns = ['species', 'idx_species', 'unkownvar_1', 'coord_x', 'coord_y', 'coord_z', 'unkownvar_2'] 
+            # max_mapping_radius_48htype1_48htype2 = (max_mapping_radius + max_mapping_radius_48htype2) / 2
+            # file_perfect_poscar_48n24 = "Li6PS5Cl_type2.cif"
+            # file_perfect_poscar_24 = "Li6PS5Cl_24_mod_2p27291.cif" # copy this manually to folder_name_perfect_poscar  
 
-    direc_restructure_destination = direc+str(folder_name_destination_restructure)
-    # direc_perfect_poscar = direc+str(folder_name_iter_type) ### direc+str(folder_name_perfect_poscar)
-    path_perfect_poscar_24 = os.path.join(path_folder_name_iter_type, file_perfect_poscar_24)
-    direc_init_system = direc+str(folder_name_init_system)
-
-    dtype = {col_excel_geo: float, col_excel_path: float}
-
-    data_toten = pd.read_excel(file_name_toten, dtype=dtype, engine="odf")
-    data_toten_ori = data_toten
-    data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
-
-    file_loc = create_file_loc(direc_init_system, data_toten, file_new_system)
-
-    # just refreshing folder
-    Operation.File.check_folder_existance(direc_restructure_destination, empty_folder=True)
-
-    # copy ref.cif inside _results/../.. 
-    Operation.File.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_perfect_poscar_48n24, prefix=None)
-
-    Operation.File.copy_rename_files(file_loc, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
-    PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-
-    file_loc_mask_1, file_loc_important_cols = Orientation.get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
-    
-    if modif_all_litype == True:
-        ref_positions_array = ref_positions_array_all
-    elif modif_all_litype == False:
-        ref_positions_array = ref_positions_array_singlelitype
-    elif modif_all_litype == None:
-        ref_positions_array = ref_positions_array_all
-
-    if cif_namestyle_all == True:
-        ref_positions_array_filename = ref_positions_array_all_compactform
-    elif cif_namestyle_all == False:
-        ref_positions_array_filename = ref_positions_array_singlelitype
-    # # DUNNO WHAT TO DO HERE
-    elif cif_namestyle_all == None:
-        ref_positions_array_filename = ref_positions_array_all_compactform
-
-    # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-    # path_perfect_poscar_48n24 = modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
-    path_perfect_poscar_48n24 = modif_dx_dz_get_filepath(path_folder_name_iter_type, path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
-
-    # just copy file
-    # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
-    # !!! had to copy file_perfect_poscar_48n24 into Li1
-    # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_48n24, prefix=None)
-    Operation.File.copy_rename_single_file(direc_restructure_destination, path_folder_name_iter_type, file_perfect_poscar_48n24, prefix=None)
-
-    # Operation.File.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None,  savedir = True)
-
-    # # var_c = "trf_w_linalg_orientated"
-    # # Orientation.get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
+            folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_perfect_poscar_48n24_wo_cif}/"
+            path_folder_name_iter_type = direc+str(folder_name_iter_type)
+            Operation.File.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
 
 
-    # # var_name_in = "trf_w_linalg_orientated"
-    # # var_name_out = "trf_w_linalg_orientated_positive"
-    # # n_decimal = 8
-    # # get_orientated_positive_lessthan1_cif(file_loc_important_cols, direc_restructure_destination, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal)
-
-    # max_mapping_radius = 0.05282658993283027
-    # max_mapping_radius = 0.045
-    # max_mapping_radius = 0.055
-    # max_mapping_radius = 0.04197083906
-    ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
-    cif_structure = Structure(ref_structure_48n24.lattice, ref_structure_48n24.species, ref_structure_48n24.frac_coords)
-    cif = CifWriter(cif_structure)
-    cif.write_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif")
-
-    coor_structure_init_dict = ReadStructure.Coor.get_coor_structure_init_dict(ref_structure_48n24)
-    coor_structure_init_dict_expanded = ReadStructure.Coor.get_coor_structure_init_dict(Structure.from_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif"))
-
-    # PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-    ReadStructure.Coor.get_coor_structure_init_dict_wholedataframe(file_loc_important_cols, mapping = "False")
-
-    # if activate_radius == 3:
-    #     get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
-    #     get_flag_map_weirdos_48htype1_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype1_48htype2)
-    #     get_flag_map_weirdos_48htypesmerged_level1_el(file_loc_important_cols, "Li")
-    #     get_flag_map_weirdos_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
-    #     get_flag_map_48htypesmerged_el(file_loc_important_cols, "Li", activate_radius)
-    if activate_radius == 2:
-        get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
-        get_flag_map_weirdos_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
-        get_flag_map_48htypesmerged_el(file_loc_important_cols, "Li", activate_radius)
-    elif activate_radius == 1:
-        get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
-
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "P", max_mapping_radius)
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "S", max_mapping_radius)
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Cl", max_mapping_radius)
-
-    Mapping.AtomIndexing.get_idx_weirdos_el(file_loc_important_cols, "Li", activate_radius)
-
-    # Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, el="Li")
-    Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, "Li", activate_radius)
-    # # Mapping.OutputCIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
-    
-    Mapping.Labelling.get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
-
-    # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-    # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-
-    # if activate_radius == 3:
-    #     file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","sum_weirdos_Li","sum_mapped_48htype1_48htype2_Li_closestduplicate","sum_weirdos_48htype1_48htype2_Li","sum_mapped_48htype2_Li_closestduplicate","#weirdos_Li","sum_mapped_48htypesmerged_Li","sum_sanitycheck_48htypesmerged_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-    #     file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","sum_weirdos_Li","sum_mapped_48htype1_48htype2_Li_closestduplicate","sum_weirdos_48htype1_48htype2_Li","sum_mapped_48htype2_Li_closestduplicate","#weirdos_Li","sum_mapped_48htypesmerged_Li","sum_sanitycheck_48htypesmerged_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","toten [eV]"]]
-
-    #     sum_weirdos_Li = float(file_loc_important_cols_sorted_toten["#weirdos_Li"].sum())
-
-    #     var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type1}_{dx2_48h_type1}_{formatted_dz_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{formatted_dz_48h_type2}_{dx_24g}_{dz1_24g}_{formatted_dz2_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}_{max_mapping_radius_48htype1_48htype2}"
-    
-    if full_calculation == False:
-        pass
-    elif full_calculation == True:
-        Mapping.OutputCIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, activate_radius, var_savefilename = "mapLi")
-        Mapping.OutputCIF.rewrite_cif_w_correct_Li_idx(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed")
-        Mapping.OutputCIF.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed", var_savefilename_new = "mapLi_reindexed")
-        # # # # Operation.File.delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed.cif")
-
-        Mapping.OutputCIF.rewrite_cif_w_correct_Li_idx_weirdos_appended(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, activate_radius,var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
-        Mapping.OutputCIF.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
-        # # # Operation.File.delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed_weirdos_appended.cif")
-
-        PreProcessingCONTCAR.create_cif_pymatgen(file_loc_important_cols, direc_restructure_destination, file_restructure = "CONTCAR_positive", var_name = "CONTCAR_positive_pymatgen")
-
-        # # # Mapping.OutputCIF.ascending_Li(file_loc_important_cols, direc_restructure_destination, var_filename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
-        # # # Mapping.OutputCIF.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended_reordered", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
-
-        Mapping.AtomIndexing.get_idx_coor_limapped_weirdos_dict_litype(file_loc_important_cols, coor_structure_init_dict, activate_radius, litype, el="Li")
-
-        PreProcessingCONTCAR.get_latticeconstant_structure_dict_iterated(file_loc_important_cols, direc_restructure_destination, var_filename = "CONTCAR")
-        # Plot.StructureAnalysis.energy_vs_latticeconstant(file_loc_important_cols, var_filename = "CONTCAR")
-        Plot.StructureAnalysis.weirdos_directcoor(file_loc_important_cols, activate_radius)
-
-        coor_weirdos_Li = Mapping.OutputWeirdos.get_coor_weirdos_array(file_loc_important_cols, activate_radius)
-        Mapping.OutputWeirdos.create_POSCAR_weirdos(coor_weirdos_Li, direc_restructure_destination, lattice_constant, filename = "POSCAR_weirdos")
-
-        Mapping.Labelling.get_label_mapping(file_loc_important_cols, coor_structure_init_dict, "Li", activate_radius, litype)
-
-    if litype == 0:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]]
-    elif litype == 1:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","toten [eV]"]]
-    elif litype == 2:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","toten [eV]"]]
-    elif litype == 3:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_24g_Li","toten [eV]"]]
-    elif litype == 4:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_24g_Li","toten [eV]"]]
-    elif litype == 5:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","toten [eV]"]]   
-    elif litype == 6:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]] 
-    elif litype == 7:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]] 
-    elif litype == 8:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]]   
-
-        # var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type1}_{dx2_48h_type1}_{formatted_dz_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{formatted_dz_48h_type2}_{dx_24g}_{dz1_24g}_{formatted_dz2_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
-    
-    sum_weirdos_Li = float(file_loc_important_cols_sorted_toten["#weirdos_Li"].sum())
+            if foldermapping_namestyle_all == True:
+                if activate_radius == 2:
+                    if litype == 0:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 1:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 2:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 3:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 4:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 5:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 6:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"            
+                    elif litype == 7:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"            
+                    elif litype == 8:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                
+                elif activate_radius == 1:
+                    if litype == 0:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{max_mapping_radius}/"
+                    elif litype == 1:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}/"
+                    elif litype == 2:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}/"
+                    elif litype == 3:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}/"
+                    elif litype == 4:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}/"
+                    elif litype == 5:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}/"
+                    elif litype == 6:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}/"            
+                    elif litype == 7:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}/"            
+                    elif litype == 8:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}/"
+                
+            else:
+                if activate_radius == 2:
+                    if litype == 0:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 1:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 2:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 3:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 4:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 5:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 6:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 7:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    elif litype == 8:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                        
+                elif activate_radius == 1:
+                    if litype == 0:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{max_mapping_radius}/"
+                    elif litype == 1:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}/"
+                    elif litype == 2:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}/"
+                    elif litype == 3:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}/"
+                    elif litype == 4:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}/"
+                    elif litype == 5:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}/"
+                    elif litype == 6:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}/"
+                    elif litype == 7:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}/"
+                    elif litype == 8:
+                        folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}/"
 
 
+            folder_name_perfect_poscar = "/_reference_cif/cif_matrix/Li1/"
+            cif_line_nr_start = 26  # index from 0
+            poscar_line_nr_start = 8
+            poscar_line_nr_end = 60
+            contcar_columns_type2 = ['coord_x', 'coord_y', 'coord_z']
+            amount_Li = 24
+            col_excel_toten = "toten [eV]" 
+            amount_P = 4 
+            amount_S = 20 
+            amount_Cl = 4
+            file_restructure = "CONTCAR" 
+            cif_columns = ['species', 'idx_species', 'unkownvar_1', 'coord_x', 'coord_y', 'coord_z', 'unkownvar_2'] 
 
-    if foldermapping_namestyle_all == True:
-        if activate_radius == 2:
+            direc_restructure_destination = direc+str(folder_name_destination_restructure)
+            # direc_perfect_poscar = direc+str(folder_name_iter_type) ### direc+str(folder_name_perfect_poscar)
+            path_perfect_poscar_24 = os.path.join(path_folder_name_iter_type, file_perfect_poscar_24)
+            direc_init_system = direc+str(folder_name_init_system)
+
+            dtype = {col_excel_geo: float, col_excel_path: float}
+
+            data_toten = pd.read_excel(file_name_toten, dtype=dtype, engine="odf")
+            data_toten_ori = data_toten
+            data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
+
+            file_loc = CreateDataFrame.create_file_loc(direc_init_system, data_toten, file_new_system)
+
+            # just refreshing folder
+            Operation.File.check_folder_existance(direc_restructure_destination, empty_folder=True)
+
+            # copy ref.cif inside _results/../.. 
+            Operation.File.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_perfect_poscar_48n24, prefix=None)
+
+            Operation.File.copy_rename_files(file_loc, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
+            PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+
+            file_loc_mask_1, file_loc_important_cols = Orientation.get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
+            
+            if modif_all_litype == True:
+                ref_positions_array = ref_positions_array_all
+            elif modif_all_litype == False:
+                ref_positions_array = ref_positions_array_singlelitype
+            elif modif_all_litype == None:
+                ref_positions_array = ref_positions_array_all
+
+            if cif_namestyle_all == True:
+                ref_positions_array_filename = ref_positions_array_all_compactform
+            elif cif_namestyle_all == False:
+                ref_positions_array_filename = ref_positions_array_singlelitype
+            # # DUNNO WHAT TO DO HERE
+            elif cif_namestyle_all == None:
+                ref_positions_array_filename = ref_positions_array_all_compactform
+
+            # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
+            # path_perfect_poscar_48n24 = Optimizer.Position.Modify.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
+            path_perfect_poscar_48n24 = Optimizer.Position.Modify.modif_dx_dz_get_filepath(path_folder_name_iter_type, path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
+
+            # just copy file
+            # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+            # !!! had to copy file_perfect_poscar_48n24 into Li1
+            # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_48n24, prefix=None)
+            Operation.File.copy_rename_single_file(direc_restructure_destination, path_folder_name_iter_type, file_perfect_poscar_48n24, prefix=None)
+
+            # Operation.File.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None,  savedir = True)
+
+            # # var_c = "trf_w_linalg_orientated"
+            # # Orientation.get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
+
+
+            # # var_name_in = "trf_w_linalg_orientated"
+            # # var_name_out = "trf_w_linalg_orientated_positive"
+            # # n_decimal = 8
+            # # get_orientated_positive_lessthan1_cif(file_loc_important_cols, direc_restructure_destination, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal)
+
+            # max_mapping_radius = 0.05282658993283027
+            # max_mapping_radius = 0.045
+            # max_mapping_radius = 0.055
+            # max_mapping_radius = 0.04197083906
+            ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
+            cif_structure = Structure(ref_structure_48n24.lattice, ref_structure_48n24.species, ref_structure_48n24.frac_coords)
+            cif = CifWriter(cif_structure)
+            cif.write_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif")
+
+            coor_structure_init_dict = ReadStructure.Coor.get_coor_structure_init_dict(ref_structure_48n24)
+            coor_structure_init_dict_expanded = ReadStructure.Coor.get_coor_structure_init_dict(Structure.from_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif"))
+
+            # PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+            ReadStructure.Coor.get_coor_structure_init_dict_wholedataframe(file_loc_important_cols, mapping = "False")
+
+            # if activate_radius == 3:
+            #     get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
+            #     get_flag_map_weirdos_48htype1_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype1_48htype2)
+            #     get_flag_map_weirdos_48htypesmerged_level1_el(file_loc_important_cols, "Li")
+            #     get_flag_map_weirdos_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
+            #     get_flag_map_48htypesmerged_el(file_loc_important_cols, "Li", activate_radius)
+            if activate_radius == 2:
+                get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
+                get_flag_map_weirdos_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
+                get_flag_map_48htypesmerged_el(file_loc_important_cols, "Li", activate_radius)
+            elif activate_radius == 1:
+                get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
+
+            # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "P", max_mapping_radius)
+            # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "S", max_mapping_radius)
+            # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Cl", max_mapping_radius)
+
+            Mapping.AtomIndexing.get_idx_weirdos_el(file_loc_important_cols, "Li", activate_radius)
+
+            # Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, el="Li")
+            Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, "Li", activate_radius)
+            # # Mapping.OutputCIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
+            
+            Mapping.Labelling.get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
+
+            # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+
+            # if activate_radius == 3:
+            #     file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","sum_weirdos_Li","sum_mapped_48htype1_48htype2_Li_closestduplicate","sum_weirdos_48htype1_48htype2_Li","sum_mapped_48htype2_Li_closestduplicate","#weirdos_Li","sum_mapped_48htypesmerged_Li","sum_sanitycheck_48htypesmerged_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            #     file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","sum_weirdos_Li","sum_mapped_48htype1_48htype2_Li_closestduplicate","sum_weirdos_48htype1_48htype2_Li","sum_mapped_48htype2_Li_closestduplicate","#weirdos_Li","sum_mapped_48htypesmerged_Li","sum_sanitycheck_48htypesmerged_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","toten [eV]"]]
+
+            #     sum_weirdos_Li = float(file_loc_important_cols_sorted_toten["#weirdos_Li"].sum())
+
+            #     var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type1}_{dx2_48h_type1}_{formatted_dz_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{formatted_dz_48h_type2}_{dx_24g}_{dz1_24g}_{formatted_dz2_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}_{max_mapping_radius_48htype1_48htype2}"
+            
+            if full_calculation == False:
+                pass
+            elif full_calculation == True:
+                Mapping.OutputCIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, activate_radius, var_savefilename = "mapLi")
+                Mapping.OutputCIF.rewrite_cif_w_correct_Li_idx(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed")
+                Mapping.OutputCIF.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed", var_savefilename_new = "mapLi_reindexed")
+                # # # # Operation.File.delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed.cif")
+
+                Mapping.OutputCIF.rewrite_cif_w_correct_Li_idx_weirdos_appended(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, activate_radius,var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
+                Mapping.OutputCIF.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
+                # # # Operation.File.delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed_weirdos_appended.cif")
+
+                PreProcessingCONTCAR.create_cif_pymatgen(file_loc_important_cols, direc_restructure_destination, file_restructure = "CONTCAR_positive", var_name = "CONTCAR_positive_pymatgen")
+
+                # # # Mapping.OutputCIF.ascending_Li(file_loc_important_cols, direc_restructure_destination, var_filename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
+                # # # Mapping.OutputCIF.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended_reordered", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
+
+                Mapping.AtomIndexing.get_idx_coor_limapped_weirdos_dict_litype(file_loc_important_cols, coor_structure_init_dict, activate_radius, litype, el="Li")
+
+                PreProcessingCONTCAR.get_latticeconstant_structure_dict_iterated(file_loc_important_cols, direc_restructure_destination, var_filename = "CONTCAR")
+                # Plot.StructureAnalysis.energy_vs_latticeconstant(file_loc_important_cols, var_filename = "CONTCAR")
+                Plot.StructureAnalysis.weirdos_directcoor(file_loc_important_cols, activate_radius)
+
+                coor_weirdos_Li = Mapping.OutputWeirdos.get_coor_weirdos_array(file_loc_important_cols, activate_radius)
+                Mapping.OutputWeirdos.create_POSCAR_weirdos(coor_weirdos_Li, direc_restructure_destination, lattice_constant, filename = "POSCAR_weirdos")
+
+                Mapping.Labelling.get_label_mapping(file_loc_important_cols, coor_structure_init_dict, "Li", activate_radius, litype)
+
             if litype == 0:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]]
             elif litype == 1:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","toten [eV]"]]
             elif litype == 2:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","toten [eV]"]]
             elif litype == 3:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_24g_Li","toten [eV]"]]
             elif litype == 4:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_24g_Li","toten [eV]"]]
             elif litype == 5:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","toten [eV]"]]   
             elif litype == 6:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]] 
             elif litype == 7:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]] 
             elif litype == 8:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
-        
-        elif activate_radius == 1:
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]]   
+
+                # var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type1}_{dx2_48h_type1}_{formatted_dz_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{formatted_dz_48h_type2}_{dx_24g}_{dz1_24g}_{formatted_dz2_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+            
+            sum_weirdos_Li = float(file_loc_important_cols_sorted_toten["#weirdos_Li"].sum())
+
+
+
+            if foldermapping_namestyle_all == True:
+                if activate_radius == 2:
+                    if litype == 0:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 1:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 2:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 3:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 4:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 5:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 6:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 7:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 8:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                
+                elif activate_radius == 1:
+                    if litype == 0:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{max_mapping_radius}"
+                    elif litype == 1:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}"
+                    elif litype == 2:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}"
+                    elif litype == 3:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}"
+                    elif litype == 4:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}"
+                    elif litype == 5:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}"
+                    elif litype == 6:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}"
+                    elif litype == 7:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}"
+                    elif litype == 8:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}"
+                
+            
+            else:
+                if activate_radius == 2:
+                    if litype == 0:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 1:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 2:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 3:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 4:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 5:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 6:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 7:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                    elif litype == 8:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+
+                elif activate_radius == 1:
+                    if litype == 0:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{max_mapping_radius}"
+                    elif litype == 1:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}"
+                    elif litype == 2:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}"
+                    elif litype == 3:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}"
+                    elif litype == 4:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}"
+                    elif litype == 5:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}"
+                    elif litype == 6:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}"
+                    elif litype == 7:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}"
+                    elif litype == 8:
+                        var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}"
+
+
+            # path_excel_file = os.path.join(direc_perfect_poscar, f'04_outputs_{var_excel_file}_{var_optitype}.xlsx')
+            path_excel_file = os.path.join(path_folder_name_iter_type, f'04_outputs_{var_excel_file}_{var_optitype}.xlsx')
+            file_loc_important_cols_sorted_toten.to_excel(path_excel_file, index=False)
+
+            if activate_radius == 1:
+                file_loc_important_cols.to_pickle(f'{path_folder_name_iter_type}file_loc_important_cols_{max_mapping_radius}_{file_perfect_poscar_48n24_wo_cif}.pkl') 
+            elif activate_radius == 2:
+                file_loc_important_cols.to_pickle(f'{path_folder_name_iter_type}file_loc_important_cols_{max_mapping_radius}_{max_mapping_radius_48htype2}_{file_perfect_poscar_48n24_wo_cif}.pkl')
+            # elif activate_radius == 3:
+            #     file_loc_important_cols.to_pickle(f'{path_folder_name_iter_type}file_loc_important_cols_{max_mapping_radius}_{max_mapping_radius_48htype2}_{max_mapping_radius_48htype1_48htype2}_{file_perfect_poscar_48n24_wo_cif}.pkl')
+
+            return sum_weirdos_Li
+
+
+        def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, dataframe_init, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype, iter_type):
+            # renamed from get_sum_weirdos_Li_var_wo_weirdo_litype
+            """
+            
+
+            Parameters:
+            - ref_positions_array
+            - max_mapping_radius
+            - max_mapping_radius_48htype2
+            - dataframe_init
+            - activate_radius
+            - file_perfect_poscar_24
+            - file_ori_ref_48n24
+            - litype
+            - var_optitype
+            - iter_type
+
+            Returns:
+            - 
+
+            Notes:
+            - Only tested for activate_radius max 2
+            """
+            dataframe = dataframe_init
+
+            formatted_positions = [Operation.Float.format_float(pos) for pos in ref_positions_array]
+            new_dx1_type, new_dx2_type, new_dz_type = formatted_positions
+            
+            direc = os.getcwd() # get current working directory
+
+            results_folder = "_results"
+            reference_folder = "_reference_cif"
+
+            file_path_ori_ref_48n24 = f"./{reference_folder}/{file_ori_ref_48n24}"
+            # # max_mapping_radius_48htype1_48htype2 = (max_mapping_radius + max_mapping_radius_48htype2) / 2
+
+            # # folder_name_init_system = "/Init_System"
+            # # file_new_system = "CONTCAR"
+            file_name_toten = "toten_final.ods"
+            col_excel_geo = "geometry"
+            col_excel_path = "path"
+
+            folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_ori_ref_48n24}/"
+            path_folder_name_iter_type = direc+str(folder_name_iter_type)
+            Operation.File.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
+
+            # copy ref.cif inside _results/../.. 
+            Operation.File.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_ori_ref_48n24, prefix=None)
+
+            if activate_radius == 2:
+                folder_name_destination_restructure = f"{path_folder_name_iter_type}restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}_optimizer/"
+            elif activate_radius == 1:
+                folder_name_destination_restructure = f"{path_folder_name_iter_type}restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_optimizer/"
+
+            folder_name_perfect_poscar = folder_name_iter_type
+            cif_line_nr_start = 26  # index from 0
+            poscar_line_nr_start = 8
+            poscar_line_nr_end = 60
+            contcar_columns_type2 = ['coord_x', 'coord_y', 'coord_z']
+            amount_Li = 24
+            col_excel_toten = "toten [eV]" 
+            amount_P = 4 
+            amount_S = 20 
+            file_restructure = "CONTCAR" 
+            cif_columns = ['species', 'idx_species', 'unkownvar_1', 'coord_x', 'coord_y', 'coord_z', 'unkownvar_2'] 
+
+            direc_restructure_destination = direc+str(folder_name_destination_restructure)
+            direc_perfect_poscar = direc+str(folder_name_perfect_poscar)
+            path_perfect_poscar_24 = os.path.join(direc_perfect_poscar, file_perfect_poscar_24)
+            direc_init_system = direc+str(folder_name_init_system)
+
+            dtype = {col_excel_geo: float, col_excel_path: float}
+
+            data_toten = pd.read_excel(file_name_toten, dtype=dtype, engine="odf")
+            data_toten_ori = data_toten
+            data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
+
+            # just refreshing folder
+            Operation.File.check_folder_existance(direc_restructure_destination, empty_folder=True)
+
+            # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
+            # path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
+            path_perfect_poscar_48n24 = Optimizer.Position.Modify.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array, litype, var_optitype, modif_all_litype = False)
+
+            # just copy file
+            # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+            # !!! had to copy file_ori_ref_48n24 into Li1
+            Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
+
+            # file_loc_mask_1, dataframe = Orientation.get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
+
+            Operation.File.copy_rename_files(dataframe, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+
+
+            # # var_c = "trf_w_linalg_orientated"
+            # # Orientation.get_structure_with_linalg_orientated(dataframe, direc_restructure_destination, file_restructure, var_c)
+
+
+            # # var_name_in = "trf_w_linalg_orientated"
+            # # var_name_out = "trf_w_linalg_orientated_positive"
+            # # n_decimal = 8
+            # # get_orientated_positive_lessthan1_cif(dataframe, direc_restructure_destination, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal)
+
+            # max_mapping_radius = 0.05282658993283027
+            # max_mapping_radius = 0.045
+            # max_mapping_radius = 0.055
+            # max_mapping_radius = 0.04197083906
+            ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
+
+            coor_structure_init_dict = ReadStructure.Coor.get_coor_structure_init_dict(ref_structure_48n24)
+            PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(dataframe, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+            ReadStructure.Coor.get_coor_structure_init_dict_wholedataframe(dataframe, mapping = "False")
+
+            if activate_radius == 2:
+                get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, "Li", max_mapping_radius)
+                get_flag_map_weirdos_48htype2_el(dataframe, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
+                get_flag_map_48htypesmerged_el(dataframe, "Li", activate_radius)
+            elif activate_radius == 1:
+                get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, "Li", max_mapping_radius)
+
+            # get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, "P", max_mapping_radius)
+            # get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, "S", max_mapping_radius)
+            # get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, "Cl", max_mapping_radius)
+
+            Mapping.AtomIndexing.get_idx_weirdos_el(dataframe, "Li", activate_radius)
+
+            # Mapping.AtomIndexing.idx_correcting_mapped_el(dataframe, el="Li")
+            Mapping.AtomIndexing.idx_correcting_mapped_el(dataframe, "Li", activate_radius)
+            # # Mapping.OutputCIF.create_combine_structure(dataframe, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
+            
+            Mapping.Labelling.get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, "Li", litype)
+
+            # dataframe_sorted_toten = dataframe[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            # dataframe_sorted_toten = dataframe[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+
             if litype == 0:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{max_mapping_radius}"
+                dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]]
             elif litype == 1:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}"
+                dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","toten [eV]"]]
             elif litype == 2:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}"
+                dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","toten [eV]"]]
             elif litype == 3:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}"
+                dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_24g_Li","toten [eV]"]]
             elif litype == 4:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}"
+                dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_24g_Li","toten [eV]"]]
             elif litype == 5:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}"
+                dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","toten [eV]"]]
             elif litype == 6:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}"
+                dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]] 
             elif litype == 7:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}"
+                dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]] 
             elif litype == 8:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}"
-        
-    
-    else:
-        if activate_radius == 2:
+                dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]]   
+
+            sum_weirdos_Li = float(dataframe_sorted_toten["#weirdos_Li"].sum())
+                    
+            if activate_radius == 2:
+                var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+
+            elif activate_radius == 1:
+                var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}"
+
+            path_excel_file = os.path.join(direc_perfect_poscar, f'04_outputs_{var_excel_file}_{var_optitype}.xlsx')
+            dataframe_sorted_toten.to_excel(path_excel_file, index=False)
+
+            return sum_weirdos_Li
+
+
+        def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype):
+            """
+            
+
+            Parameters:
+            - ref_positions_array (str): 
+            - max_mapping_radius
+            - max_mapping_radius_48htype2
+            - activate_radius
+            - file_perfect_poscar_24
+            - file_ori_ref_48n24
+            - litype
+            - var_optitype
+
+            Returns:
+            - 
+            """
+            formatted_positions = [Operation.Float.format_float(pos) for pos in ref_positions_array]
+            new_dx1_type, new_dx2_type, new_dz_type = formatted_positions
+
+            direc = os.getcwd() # get current working directory
+
+            file_path_ori_ref_48n24 = f"./perfect_poscar/cif_matrix/ori/{file_ori_ref_48n24}"
+            # max_mapping_radius_48htype1_48htype2 = (max_mapping_radius + max_mapping_radius_48htype2) / 2
+            # file_ori_ref_48n24 = "Li6PS5Cl_type2.cif"
+            # file_perfect_poscar_24 = "Li6PS5Cl_24_mod_2p27291.cif" # copy this manually to folder_name_perfect_poscar  
+
+            folder_name_init_system = "/Init_System"
+            file_new_system = "CONTCAR"
+            file_name_toten = "toten_final.ods"
+            col_excel_geo = "geometry"
+            col_excel_path = "path"
+
+            if activate_radius == 2:
+                folder_name_destination_restructure = f"/restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}_optimizer/"
+            elif activate_radius == 1:
+                folder_name_destination_restructure = f"/restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_optimizer/"
+
+            folder_name_perfect_poscar = "/perfect_poscar/cif_matrix/Li1/"
+            cif_line_nr_start = 26  # index from 0
+            poscar_line_nr_start = 8
+            poscar_line_nr_end = 60
+            contcar_columns_type2 = ['coord_x', 'coord_y', 'coord_z']
+            amount_Li = 24
+            col_excel_toten = "toten [eV]" 
+            amount_P = 4 
+            amount_S = 20 
+            file_restructure = "CONTCAR" 
+            cif_columns = ['species', 'idx_species', 'unkownvar_1', 'coord_x', 'coord_y', 'coord_z', 'unkownvar_2'] 
+
+            direc_restructure_destination = direc+str(folder_name_destination_restructure)
+            direc_perfect_poscar = direc+str(folder_name_perfect_poscar)
+            path_perfect_poscar_24 = os.path.join(direc_perfect_poscar, file_perfect_poscar_24)
+            direc_init_system = direc+str(folder_name_init_system)
+
+            dtype = {col_excel_geo: float, col_excel_path: float}
+
+            data_toten = pd.read_excel(file_name_toten, dtype=dtype, engine="odf")
+            data_toten_ori = data_toten
+            data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
+
+            geometry = np.array([])
+            path = np.array([])
+            subdir_col = np.array([])
+            for subdir, dirs, files in os.walk(direc,topdown=False):
+                # source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
+                for file in files:
+                    filepath = subdir + os.sep
+                    # get directory of CONTCAR
+                    if os.path.basename(file) == file_new_system:
+                        geometry_nr = Operation.File.splitall(subdir)[-2]
+                        path_nr = Operation.File.splitall(subdir)[-1]
+                        geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
+                        geometry_ori = geometry
+                        geometry.dropna(axis=1)
+                        path = pd.DataFrame(np.append(path, int(path_nr)), columns=["path"])#
+                        path.dropna(axis=1)
+                        path_sorted = path.sort_values(by="path",ascending=False)
+                        subdir_file = os.path.join(subdir,file_new_system)
+                        # # create directory of POSCAR of init system
+                        subdir_init_system = direc_init_system + os.sep + geometry_nr + os.sep + path_nr
+                        subdir_col = pd.DataFrame(np.append(subdir_col, subdir_file), columns=["subdir_new_system"])
+                        file_loc = geometry.join(path)
+                        file_loc["subdir_new_system"] = subdir_col#
+                        path_ori = path
+
+            file_loc_ori_notsorted = file_loc.copy()
+            file_loc = file_loc.sort_values(by=["geometry","path"],ignore_index=True,ascending=False) # sort descendingly based on path
+
+            file_loc["g+p"] = (file_loc["geometry"] + file_loc["path"]).fillna(0) # replace NaN with 0
+            file_loc["g+p+1"] = file_loc["g+p"].shift(1)
+            file_loc["g+p+1"][0] = 0 # replace 1st element with 0
+            file_loc["g+p-1"] = file_loc["g+p"].shift(-1)
+            file_loc["g+p-1"][(file_loc["g+p-1"]).size - 1] = 0.0 # replace last element with 0
+            file_loc["perfect_system"] = file_loc["g+p"][(file_loc["g+p+1"] > file_loc["g+p"]) & (file_loc["g+p-1"] > file_loc["g+p"])]
+            file_loc["perfect_system"][file_loc["geometry"].size-1] = 0.0 # hardcode the path 0/0
+            file_loc["p_s_mask"] = [0 if np.isnan(item) else 1 for item in file_loc["perfect_system"]]
+
+
+
+            if data_toten[col_excel_geo].all() == file_loc["geometry"].all() & data_toten[col_excel_path].all() == file_loc["path"].all():
+                file_loc[col_excel_toten] = data_toten[col_excel_toten]
+            else:
+                print("check the compatibility of column geometry and path between data_toten file and file_loc")
+
+            # just refreshing folder
+            Operation.File.check_folder_existance(direc_restructure_destination, empty_folder=True)
+
+            # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
+            path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype, litype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
+
+            # just copy file
+            # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+            # !!! had to copy file_ori_ref_48n24 into Li1
+            Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
+
+            file_loc_mask_1, file_loc_important_cols = Orientation.get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
+
+            Operation.File.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+
+
+            # # var_c = "trf_w_linalg_orientated"
+            # # Orientation.get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
+
+
+            # # var_name_in = "trf_w_linalg_orientated"
+            # # var_name_out = "trf_w_linalg_orientated_positive"
+            # # n_decimal = 8
+            # # get_orientated_positive_lessthan1_cif(file_loc_important_cols, direc_restructure_destination, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal)
+
+            # max_mapping_radius = 0.05282658993283027
+            # max_mapping_radius = 0.045
+            # max_mapping_radius = 0.055
+            # max_mapping_radius = 0.04197083906
+            ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
+
+            coor_structure_init_dict = ReadStructure.Coor.get_coor_structure_init_dict(ref_structure_48n24)
+            PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+            ReadStructure.Coor.get_coor_structure_init_dict_wholedataframe(file_loc_important_cols, mapping = "False")
+
+            if activate_radius == 2:
+                get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
+                get_flag_map_weirdos_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
+                get_flag_map_48htypesmerged_el(file_loc_important_cols, "Li", activate_radius)
+            elif activate_radius == 1:
+                get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
+
+            # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "P", max_mapping_radius)
+            # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "S", max_mapping_radius)
+            # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Cl", max_mapping_radius)
+
+            Mapping.AtomIndexing.get_idx_weirdos_el(file_loc_important_cols, "Li", activate_radius)
+
+            # Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, el="Li")
+            Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, "Li", activate_radius)
+            # # Mapping.OutputCIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
+            
+            Mapping.Labelling.get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
+
+            # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+
             if litype == 0:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]]
             elif litype == 1:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]]
             elif litype == 2:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]]
             elif litype == 3:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]]
             elif litype == 4:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype_Li","#closest_48htype4_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype_Li","#closest_48htype4_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]]
             elif litype == 5:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]]
             elif litype == 6:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]] 
             elif litype == 7:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]] 
             elif litype == 8:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
-
-        elif activate_radius == 1:
-            if litype == 0:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{max_mapping_radius}"
-            elif litype == 1:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}"
-            elif litype == 2:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}"
-            elif litype == 3:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}"
-            elif litype == 4:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}"
-            elif litype == 5:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}"
-            elif litype == 6:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}"
-            elif litype == 7:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}"
-            elif litype == 8:
-                var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}"
+                file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+                file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]]   
 
 
-    # path_excel_file = os.path.join(direc_perfect_poscar, f'04_outputs_{var_excel_file}_{var_optitype}.xlsx')
-    path_excel_file = os.path.join(path_folder_name_iter_type, f'04_outputs_{var_excel_file}_{var_optitype}.xlsx')
-    file_loc_important_cols_sorted_toten.to_excel(path_excel_file, index=False)
+            sum_weirdos_Li = float(file_loc_important_cols_sorted_toten["#weirdos_Li"].sum())
+                
+            if activate_radius == 2:
+                var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
 
-    if activate_radius == 1:
-        file_loc_important_cols.to_pickle(f'{path_folder_name_iter_type}file_loc_important_cols_{max_mapping_radius}_{file_perfect_poscar_48n24_wo_cif}.pkl') 
-    elif activate_radius == 2:
-        file_loc_important_cols.to_pickle(f'{path_folder_name_iter_type}file_loc_important_cols_{max_mapping_radius}_{max_mapping_radius_48htype2}_{file_perfect_poscar_48n24_wo_cif}.pkl')
-    # elif activate_radius == 3:
-    #     file_loc_important_cols.to_pickle(f'{path_folder_name_iter_type}file_loc_important_cols_{max_mapping_radius}_{max_mapping_radius_48htype2}_{max_mapping_radius_48htype1_48htype2}_{file_perfect_poscar_48n24_wo_cif}.pkl')
+            elif activate_radius == 1:
+                var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}"
 
-    return sum_weirdos_Li
+            path_excel_file = os.path.join(direc_perfect_poscar, f'04_outputs_{var_excel_file}_{var_optitype}.xlsx')
+            file_loc_important_cols_sorted_toten.to_excel(path_excel_file, index=False)
+
+            return sum_weirdos_Li
 
 
-# def get_sum_weirdos_Li_var_wo_weirdo(dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, max_mapping_radius, max_mapping_radius_48htype2, df_wo_weirdos_selectedcol, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype):
+    class Position:
+        class Modify:
+            def change_dx_dz_alllitype(file_path, file_path_new, ref_positions_array, litype):
+                # old_name = change_dx_dz
+                # ref_positions_array = ALL values in this array
 
-#     file_loc_important_cols = df_wo_weirdos_selectedcol
+                formatted_positions = [Operation.Float.format_float(pos) for pos in ref_positions_array]
+                print(f"formatted_positions: {formatted_positions}")
 
-#     formatted_dx1_48h_type1 = format_float(dx1_48h_type1)
-#     formatted_dx2_48h_type1 = format_float(dx2_48h_type1)
-#     formatted_dz_48h_type1 = format_float(dz_48h_type1)
-#     formatted_dx1_48h_type2 = format_float(dx1_48h_type2)
-#     formatted_dx2_48h_type2 = format_float(dx2_48h_type2)
-#     formatted_dz_48h_type2 = format_float(dz_48h_type2)
-#     formatted_dx_24g = format_float(dx_24g)
-#     formatted_dz1_24g = format_float(dz1_24g)
-#     formatted_dz2_24g = format_float(dz2_24g)
+                with open(file_path, 'r') as f:
+                    lines = f.readlines()
+
+                if litype == 0:
+                    new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions
+
+                    with open(file_path_new, 'w') as f:
+                        for line in lines:
+                            if line.startswith("Li1"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
+                                parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            f.write(line)
+
+                elif litype == 1:
+                    new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
+                    new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
+
+                    with open(file_path_new, 'w') as f:
+                        for line in lines:
+                            if line.startswith("Li1"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
+                                parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li2"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            f.write(line)
+
+                elif litype == 2:
+                    new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
+                    new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
+                    new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
+
+                    with open(file_path_new, 'w') as f:
+                        for line in lines:
+                            if line.startswith("Li1"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
+                                parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li2"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li3"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            f.write(line)
+
+                elif litype == 3:
+                    new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
+                    new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
+                    new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
+                    new_dx1_48h_type3, new_dx2_48h_type3, new_dz_48h_type3 = formatted_positions[9:12]
+
+                    with open(file_path_new, 'w') as f:
+                        for line in lines:
+                            if line.startswith("Li1"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
+                                parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li2"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li3"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li4"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type3}",f"{new_dx2_48h_type3}",f"{new_dz_48h_type3}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            f.write(line)
+
+                elif litype == 4:
+                    new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
+                    new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
+                    new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
+                    new_dx1_48h_type3, new_dx2_48h_type3, new_dz_48h_type3 = formatted_positions[9:12]
+                    new_dx1_48h_type4, new_dx2_48h_type4, new_dz_48h_type4 = formatted_positions[12:15]
+
+                    with open(file_path_new, 'w') as f:
+                        for line in lines:
+                            if line.startswith("Li1"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
+                                parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li2"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li3"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li4"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type3}",f"{new_dx2_48h_type3}",f"{new_dz_48h_type3}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li5"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type4}",f"{new_dx2_48h_type4}",f"{new_dz_48h_type4}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            f.write(line)
+
+                elif litype == 5:
+                    new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
+                    new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
+                    new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
+                    new_dx1_48h_type3, new_dx2_48h_type3, new_dz_48h_type3 = formatted_positions[9:12]
+                    new_dx1_48h_type4, new_dx2_48h_type4, new_dz_48h_type4 = formatted_positions[12:15]
+                    new_dx1_48h_type5, new_dx2_48h_type5, new_dz_48h_type5 = formatted_positions[15:18]
+
+                    with open(file_path_new, 'w') as f:
+                        for line in lines:
+                            if line.startswith("Li1"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
+                                parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li2"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li3"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li4"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type3}",f"{new_dx2_48h_type3}",f"{new_dz_48h_type3}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li5"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type4}",f"{new_dx2_48h_type4}",f"{new_dz_48h_type4}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li6"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type5}",f"{new_dx2_48h_type5}",f"{new_dz_48h_type5}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            f.write(line)
+                elif litype == 6:
+                    new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
+                    new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
+                    new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
+                    new_dx1_48h_type3, new_dx2_48h_type3, new_dz_48h_type3 = formatted_positions[9:12]
+                    new_dx1_48h_type4, new_dx2_48h_type4, new_dz_48h_type4 = formatted_positions[12:15]
+                    new_dx1_48h_type5, new_dx2_48h_type5, new_dz_48h_type5 = formatted_positions[15:18]
+                    new_dx1_48h_type6, new_dx2_48h_type6, new_dz_48h_type6 = formatted_positions[18:21]
+
+                    with open(file_path_new, 'w') as f:
+                        for line in lines:
+                            if line.startswith("Li1"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
+                                parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li2"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li3"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li4"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type3}",f"{new_dx2_48h_type3}",f"{new_dz_48h_type3}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li5"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type4}",f"{new_dx2_48h_type4}",f"{new_dz_48h_type4}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li6"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type5}",f"{new_dx2_48h_type5}",f"{new_dz_48h_type5}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li7"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type6}",f"{new_dx2_48h_type6}",f"{new_dz_48h_type6}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            f.write(line)
+                elif litype == 7:
+                    new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
+                    new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
+                    new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
+                    new_dx1_48h_type3, new_dx2_48h_type3, new_dz_48h_type3 = formatted_positions[9:12]
+                    new_dx1_48h_type4, new_dx2_48h_type4, new_dz_48h_type4 = formatted_positions[12:15]
+                    new_dx1_48h_type5, new_dx2_48h_type5, new_dz_48h_type5 = formatted_positions[15:18]
+                    new_dx1_48h_type6, new_dx2_48h_type6, new_dz_48h_type6 = formatted_positions[18:21]
+                    new_dx1_48h_type7, new_dx2_48h_type7, new_dz_48h_type7 = formatted_positions[21:24]
+
+                    with open(file_path_new, 'w') as f:
+                        for line in lines:
+                            if line.startswith("Li1"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
+                                parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li2"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li3"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li4"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type3}",f"{new_dx2_48h_type3}",f"{new_dz_48h_type3}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li5"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type4}",f"{new_dx2_48h_type4}",f"{new_dz_48h_type4}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li6"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type5}",f"{new_dx2_48h_type5}",f"{new_dz_48h_type5}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li7"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type6}",f"{new_dx2_48h_type6}",f"{new_dz_48h_type6}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li8"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type7}",f"{new_dx2_48h_type7}",f"{new_dz_48h_type7}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            f.write(line)
+                elif litype == 8:
+                    new_dx_24g, new_dz1_24g, new_dz2_24g = formatted_positions[0:3]
+                    new_dx1_48h_type1, new_dx2_48h_type1, new_dz_48h_type1 = formatted_positions[3:6]
+                    new_dx1_48h_type2, new_dx2_48h_type2, new_dz_48h_type2 = formatted_positions[6:9]
+                    new_dx1_48h_type3, new_dx2_48h_type3, new_dz_48h_type3 = formatted_positions[9:12]
+                    new_dx1_48h_type4, new_dx2_48h_type4, new_dz_48h_type4 = formatted_positions[12:15]
+                    new_dx1_48h_type5, new_dx2_48h_type5, new_dz_48h_type5 = formatted_positions[15:18]
+                    new_dx1_48h_type6, new_dx2_48h_type6, new_dz_48h_type6 = formatted_positions[18:21]
+                    new_dx1_48h_type7, new_dx2_48h_type7, new_dz_48h_type7 = formatted_positions[21:24]
+                    new_dx1_48h_type8, new_dx2_48h_type8, new_dz_48h_type8 = formatted_positions[24:27]
+
+                    with open(file_path_new, 'w') as f:
+                        for line in lines:
+                            if line.startswith("Li1"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type1:.5f}",f"{new_dx2_48h_type1:.5f}",f"{new_dz_48h_type1:.5f}"]
+                                parts[4:6+1] = [f"{new_dx_24g}",f"{new_dz1_24g}",f"{new_dz2_24g}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li2"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx_24g:.5f}",f"{new_dz1_24g:.5f}",f"{new_dz2_24g:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type1}",f"{new_dx2_48h_type1}",f"{new_dz_48h_type1}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li3"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type2}",f"{new_dx2_48h_type2}",f"{new_dz_48h_type2}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li4"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type3}",f"{new_dx2_48h_type3}",f"{new_dz_48h_type3}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li5"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type4}",f"{new_dx2_48h_type4}",f"{new_dz_48h_type4}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li6"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type5}",f"{new_dx2_48h_type5}",f"{new_dz_48h_type5}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li7"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type6}",f"{new_dx2_48h_type6}",f"{new_dz_48h_type6}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li8"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type7}",f"{new_dx2_48h_type7}",f"{new_dz_48h_type7}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            if line.startswith("Li9"):
+                                parts = line.split()
+                                # parts[4:6+1] = [f"{new_dx1_48h_type2:.5f}",f"{new_dx2_48h_type2:.5f}",f"{new_dz_48h_type2:.5f}"]
+                                parts[4:6+1] = [f"{new_dx1_48h_type8}",f"{new_dx2_48h_type8}",f"{new_dz_48h_type8}"]
+                                parts[2] = f" {parts[2]}"
+                                parts[-1] = f"{parts[-1]}\n"
+                                line = " ".join(parts)
+                            f.write(line)
+
+
+            def change_dx_dz_specificlitype(file_path, file_path_new, ref_positions_array, litype):
+
+                formatted_positions = [Operation.Float.format_float(pos) for pos in ref_positions_array]
+
+                new_dx1_type, new_dx2_type, new_dz_type = formatted_positions
+
+                with open(file_path, 'r') as f:
+                    lines = f.readlines()
+
+                with open(file_path_new, 'w') as f:
+                    for line in lines:
+                        if line.startswith(f"Li{litype+1}"):
+                            parts = line.split()
+                            # parts[4:6+1] = [f"{new_dx1_type:.5f}",f"{new_dx2_type:.5f}",f"{new_dz_type:.5f}"]
+                            parts[4:6+1] = [f"{new_dx1_type}",f"{new_dx2_type}",f"{new_dz_type}"]
+                            parts[2] = f" {parts[2]}"
+                            parts[-1] = f"{parts[-1]}\n"
+                            line = " ".join(parts)
+                        f.write(line)
+
+
+            def modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype):
+                file_path_new = Optimizer.Position.Output.create_file_name(direc_perfect_poscar, ref_positions_array_filename, var_optitype)
+                if modif_all_litype == True:
+                    Optimizer.Position.Modify.change_dx_dz_alllitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
+                elif modif_all_litype == False:
+                    Optimizer.Position.Modify.change_dx_dz_specificlitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
+                elif modif_all_litype == None:
+                    Optimizer.Position.Modify.change_dx_dz_alllitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
+
+                return file_path_new
+
+
+            # # SEEMS NO USAGE
+            # def modif_dx_dz_cif_alllitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, litype, var_optitype):
+            #     file_path_new = Optimizer.Position.Output.create_file_name(direc_perfect_poscar, ref_positions_array, var_optitype)
+            #     Optimizer.Position.Modify.change_dx_dz_alllitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
+
+            #     return file_path_new
+
+
+            # # SEEMS NO USAGE
+            # def modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, litype, var_optitype):
+            #     file_path_new = Optimizer.Position.Output.create_file_name(direc_perfect_poscar, ref_positions_array, var_optitype)
+            #     Optimizer.Position.Modify.change_dx_dz_specificlitype(file_path_ori_ref_48n24, file_path_new, ref_positions_array, litype)
+
+            #     return file_path_new
+
+
+        class Output:
+            def create_file_name(direc_perfect_poscar, ref_positions_array, var_optitype):
+                formatted_positions = [Operation.Float.format_float(pos) for pos in ref_positions_array]
+                formatted_positions_str = list(map(str, formatted_positions))
+                return os.path.join(direc_perfect_poscar, f"Li6PS5Cl_{'_'.join(formatted_positions_str)}_{var_optitype}.cif")
+
+
+# def get_sum_weirdos_Li_var_wo_weirdo(dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, max_mapping_radius, max_mapping_radius_48htype2, dataframe, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype):
+
+#     file_loc_important_cols = dataframe
+
+#     formatted_dx1_48h_type1 = Operation.Float.format_float(dx1_48h_type1)
+#     formatted_dx2_48h_type1 = Operation.Float.format_float(dx2_48h_type1)
+#     formatted_dz_48h_type1 = Operation.Float.format_float(dz_48h_type1)
+#     formatted_dx1_48h_type2 = Operation.Float.format_float(dx1_48h_type2)
+#     formatted_dx2_48h_type2 = Operation.Float.format_float(dx2_48h_type2)
+#     formatted_dz_48h_type2 = Operation.Float.format_float(dz_48h_type2)
+#     formatted_dx_24g = Operation.Float.format_float(dx_24g)
+#     formatted_dz1_24g = Operation.Float.format_float(dz1_24g)
+#     formatted_dz2_24g = Operation.Float.format_float(dz2_24g)
 #     direc = os.getcwd() # get current working directory
 
 #     # # user input
@@ -6475,363 +6861,6 @@ def get_sum_weirdos_Li_var(max_mapping_radius, max_mapping_radius_48htype2, acti
 #     return sum_weirdos_Li
 
 
-def get_sum_weirdos_Li_var_wo_weirdo_litype(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, df_wo_weirdos_selectedcol, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype, iter_type):
-
-    file_loc_important_cols = df_wo_weirdos_selectedcol
-
-    formatted_positions = [format_float(pos) for pos in ref_positions_array]
-    new_dx1_type, new_dx2_type, new_dz_type = formatted_positions
-    
-    direc = os.getcwd() # get current working directory
-
-    # # user input
-    # max_mapping_radius = 0.043
-    # max_mapping_radius_48htype2 = 0.076
-    # activate_radius = 2
-    results_folder = "_results"
-    reference_folder = "_reference_cif"
-
-    file_path_ori_ref_48n24 = f"./{reference_folder}/{file_ori_ref_48n24}"
-    # max_mapping_radius_48htype1_48htype2 = (max_mapping_radius + max_mapping_radius_48htype2) / 2
-    # file_ori_ref_48n24 = "Li6PS5Cl_type2.cif"
-    # file_perfect_poscar_24 = "Li6PS5Cl_24_mod_2p27291.cif" # copy this manually to folder_name_perfect_poscar  
-
-    folder_name_init_system = "/Init_System"
-    file_new_system = "CONTCAR"
-    file_name_toten = "toten_final.ods"
-    col_excel_geo = "geometry"
-    col_excel_path = "path"
-
-    folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_ori_ref_48n24}/"
-    path_folder_name_iter_type = direc+str(folder_name_iter_type)
-    Operation.File.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
-
-    # copy ref.cif inside _results/../.. 
-    Operation.File.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_ori_ref_48n24, prefix=None)
-
-    if activate_radius == 2:
-        folder_name_destination_restructure = f"{path_folder_name_iter_type}restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}_optimizer/"
-    elif activate_radius == 1:
-        folder_name_destination_restructure = f"{path_folder_name_iter_type}restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_optimizer/"
-
-    folder_name_perfect_poscar = folder_name_iter_type
-    cif_line_nr_start = 26  # index from 0
-    poscar_line_nr_start = 8
-    poscar_line_nr_end = 60
-    contcar_columns_type2 = ['coord_x', 'coord_y', 'coord_z']
-    amount_Li = 24
-    col_excel_toten = "toten [eV]" 
-    amount_P = 4 
-    amount_S = 20 
-    file_restructure = "CONTCAR" 
-    cif_columns = ['species', 'idx_species', 'unkownvar_1', 'coord_x', 'coord_y', 'coord_z', 'unkownvar_2'] 
-
-    direc_restructure_destination = direc+str(folder_name_destination_restructure)
-    direc_perfect_poscar = direc+str(folder_name_perfect_poscar)
-    path_perfect_poscar_24 = os.path.join(direc_perfect_poscar, file_perfect_poscar_24)
-    direc_init_system = direc+str(folder_name_init_system)
-
-    dtype = {col_excel_geo: float, col_excel_path: float}
-
-    data_toten = pd.read_excel(file_name_toten, dtype=dtype, engine="odf")
-    data_toten_ori = data_toten
-    data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
-
-    # just refreshing folder
-    Operation.File.check_folder_existance(direc_restructure_destination, empty_folder=True)
-
-    # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-    # path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-    path_perfect_poscar_48n24 = modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array, litype, var_optitype, modif_all_litype = False)
-
-    # just copy file
-    # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
-    # !!! had to copy file_ori_ref_48n24 into Li1
-    Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
-
-    # file_loc_mask_1, file_loc_important_cols = Orientation.get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
-
-    Operation.File.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
-
-
-    # # var_c = "trf_w_linalg_orientated"
-    # # Orientation.get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
-
-
-    # # var_name_in = "trf_w_linalg_orientated"
-    # # var_name_out = "trf_w_linalg_orientated_positive"
-    # # n_decimal = 8
-    # # get_orientated_positive_lessthan1_cif(file_loc_important_cols, direc_restructure_destination, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal)
-
-    # max_mapping_radius = 0.05282658993283027
-    # max_mapping_radius = 0.045
-    # max_mapping_radius = 0.055
-    # max_mapping_radius = 0.04197083906
-    ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
-
-    coor_structure_init_dict = ReadStructure.Coor.get_coor_structure_init_dict(ref_structure_48n24)
-    PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-    ReadStructure.Coor.get_coor_structure_init_dict_wholedataframe(file_loc_important_cols, mapping = "False")
-
-    if activate_radius == 2:
-        get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
-        get_flag_map_weirdos_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
-        get_flag_map_48htypesmerged_el(file_loc_important_cols, "Li", activate_radius)
-    elif activate_radius == 1:
-        get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
-
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "P", max_mapping_radius)
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "S", max_mapping_radius)
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Cl", max_mapping_radius)
-
-    Mapping.AtomIndexing.get_idx_weirdos_el(file_loc_important_cols, "Li", activate_radius)
-
-    # Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, el="Li")
-    Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, "Li", activate_radius)
-    # # Mapping.OutputCIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
-    
-    Mapping.Labelling.get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
-
-    # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-    # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-
-    if litype == 0:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]]
-    elif litype == 1:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","toten [eV]"]]
-    elif litype == 2:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","toten [eV]"]]
-    elif litype == 3:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_24g_Li","toten [eV]"]]
-    elif litype == 4:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_24g_Li","toten [eV]"]]
-    elif litype == 5:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","toten [eV]"]]
-    elif litype == 6:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]] 
-    elif litype == 7:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]] 
-    elif litype == 8:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]]   
-
-    sum_weirdos_Li = float(file_loc_important_cols_sorted_toten["#weirdos_Li"].sum())
-            
-    if activate_radius == 2:
-        var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
-
-    elif activate_radius == 1:
-        var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}"
-
-    path_excel_file = os.path.join(direc_perfect_poscar, f'04_outputs_{var_excel_file}_{var_optitype}.xlsx')
-    file_loc_important_cols_sorted_toten.to_excel(path_excel_file, index=False)
-
-    return sum_weirdos_Li
-
-
-def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype):
-    
-    formatted_positions = [format_float(pos) for pos in ref_positions_array]
-    new_dx1_type, new_dx2_type, new_dz_type = formatted_positions
-
-    direc = os.getcwd() # get current working directory
-
-    # # user input
-    # max_mapping_radius = 0.043
-    # max_mapping_radius_48htype2 = 0.076
-    # activate_radius = 2
-
-    file_path_ori_ref_48n24 = f"./perfect_poscar/cif_matrix/ori/{file_ori_ref_48n24}"
-    # max_mapping_radius_48htype1_48htype2 = (max_mapping_radius + max_mapping_radius_48htype2) / 2
-    # file_ori_ref_48n24 = "Li6PS5Cl_type2.cif"
-    # file_perfect_poscar_24 = "Li6PS5Cl_24_mod_2p27291.cif" # copy this manually to folder_name_perfect_poscar  
-
-    folder_name_init_system = "/Init_System"
-    file_new_system = "CONTCAR"
-    file_name_toten = "toten_final.ods"
-    col_excel_geo = "geometry"
-    col_excel_path = "path"
-
-    if activate_radius == 2:
-        folder_name_destination_restructure = f"/restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}_optimizer/"
-    elif activate_radius == 1:
-        folder_name_destination_restructure = f"/restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_optimizer/"
-
-    folder_name_perfect_poscar = "/perfect_poscar/cif_matrix/Li1/"
-    cif_line_nr_start = 26  # index from 0
-    poscar_line_nr_start = 8
-    poscar_line_nr_end = 60
-    contcar_columns_type2 = ['coord_x', 'coord_y', 'coord_z']
-    amount_Li = 24
-    col_excel_toten = "toten [eV]" 
-    amount_P = 4 
-    amount_S = 20 
-    file_restructure = "CONTCAR" 
-    cif_columns = ['species', 'idx_species', 'unkownvar_1', 'coord_x', 'coord_y', 'coord_z', 'unkownvar_2'] 
-
-    direc_restructure_destination = direc+str(folder_name_destination_restructure)
-    direc_perfect_poscar = direc+str(folder_name_perfect_poscar)
-    path_perfect_poscar_24 = os.path.join(direc_perfect_poscar, file_perfect_poscar_24)
-    direc_init_system = direc+str(folder_name_init_system)
-
-    dtype = {col_excel_geo: float, col_excel_path: float}
-
-    data_toten = pd.read_excel(file_name_toten, dtype=dtype, engine="odf")
-    data_toten_ori = data_toten
-    data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
-
-    geometry = np.array([])
-    path = np.array([])
-    subdir_col = np.array([])
-    for subdir, dirs, files in os.walk(direc,topdown=False):
-        # source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
-        for file in files:
-            filepath = subdir + os.sep
-            # get directory of CONTCAR
-            if os.path.basename(file) == file_new_system:
-                geometry_nr = Operation.File.splitall(subdir)[-2]
-                path_nr = Operation.File.splitall(subdir)[-1]
-                geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
-                geometry_ori = geometry
-                geometry.dropna(axis=1)
-                path = pd.DataFrame(np.append(path, int(path_nr)), columns=["path"])#
-                path.dropna(axis=1)
-                path_sorted = path.sort_values(by="path",ascending=False)
-                subdir_file = os.path.join(subdir,file_new_system)
-                # # create directory of POSCAR of init system
-                subdir_init_system = direc_init_system + os.sep + geometry_nr + os.sep + path_nr
-                subdir_col = pd.DataFrame(np.append(subdir_col, subdir_file), columns=["subdir_new_system"])
-                file_loc = geometry.join(path)
-                file_loc["subdir_new_system"] = subdir_col#
-                path_ori = path
-
-    file_loc_ori_notsorted = file_loc.copy()
-    file_loc = file_loc.sort_values(by=["geometry","path"],ignore_index=True,ascending=False) # sort descendingly based on path
-
-    file_loc["g+p"] = (file_loc["geometry"] + file_loc["path"]).fillna(0) # replace NaN with 0
-    file_loc["g+p+1"] = file_loc["g+p"].shift(1)
-    file_loc["g+p+1"][0] = 0 # replace 1st element with 0
-    file_loc["g+p-1"] = file_loc["g+p"].shift(-1)
-    file_loc["g+p-1"][(file_loc["g+p-1"]).size - 1] = 0.0 # replace last element with 0
-    file_loc["perfect_system"] = file_loc["g+p"][(file_loc["g+p+1"] > file_loc["g+p"]) & (file_loc["g+p-1"] > file_loc["g+p"])]
-    file_loc["perfect_system"][file_loc["geometry"].size-1] = 0.0 # hardcode the path 0/0
-    file_loc["p_s_mask"] = [0 if np.isnan(item) else 1 for item in file_loc["perfect_system"]]
-
-
-
-    if data_toten[col_excel_geo].all() == file_loc["geometry"].all() & data_toten[col_excel_path].all() == file_loc["path"].all():
-        file_loc[col_excel_toten] = data_toten[col_excel_toten]
-    else:
-        print("check the compatibility of column geometry and path between data_toten file and file_loc")
-
-    # just refreshing folder
-    Operation.File.check_folder_existance(direc_restructure_destination, empty_folder=True)
-
-    # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-    path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype, litype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-
-    # just copy file
-    # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
-    # !!! had to copy file_ori_ref_48n24 into Li1
-    Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
-
-    file_loc_mask_1, file_loc_important_cols = Orientation.get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
-
-    Operation.File.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
-
-
-    # # var_c = "trf_w_linalg_orientated"
-    # # Orientation.get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
-
-
-    # # var_name_in = "trf_w_linalg_orientated"
-    # # var_name_out = "trf_w_linalg_orientated_positive"
-    # # n_decimal = 8
-    # # get_orientated_positive_lessthan1_cif(file_loc_important_cols, direc_restructure_destination, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal)
-
-    # max_mapping_radius = 0.05282658993283027
-    # max_mapping_radius = 0.045
-    # max_mapping_radius = 0.055
-    # max_mapping_radius = 0.04197083906
-    ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
-
-    coor_structure_init_dict = ReadStructure.Coor.get_coor_structure_init_dict(ref_structure_48n24)
-    PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-    ReadStructure.Coor.get_coor_structure_init_dict_wholedataframe(file_loc_important_cols, mapping = "False")
-
-    if activate_radius == 2:
-        get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
-        get_flag_map_weirdos_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
-        get_flag_map_48htypesmerged_el(file_loc_important_cols, "Li", activate_radius)
-    elif activate_radius == 1:
-        get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
-
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "P", max_mapping_radius)
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "S", max_mapping_radius)
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Cl", max_mapping_radius)
-
-    Mapping.AtomIndexing.get_idx_weirdos_el(file_loc_important_cols, "Li", activate_radius)
-
-    # Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, el="Li")
-    Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, "Li", activate_radius)
-    # # Mapping.OutputCIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
-    
-    Mapping.Labelling.get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
-
-    # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-    # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-
-    if litype == 0:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]]
-    elif litype == 1:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]]
-    elif litype == 2:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]]
-    elif litype == 3:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]]
-    elif litype == 4:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype_Li","#closest_48htype4_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype_Li","#closest_48htype4_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]]
-    elif litype == 5:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","atom_mapping_Li_w_dist_label","toten [eV]"]]
-    elif litype == 6:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]] 
-    elif litype == 7:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]] 
-    elif litype == 8:
-        file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
-        file_loc_important_cols_not_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]]   
-
-
-    sum_weirdos_Li = float(file_loc_important_cols_sorted_toten["#weirdos_Li"].sum())
-        
-    if activate_radius == 2:
-        var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
-
-    elif activate_radius == 1:
-        var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}"
-
-    path_excel_file = os.path.join(direc_perfect_poscar, f'04_outputs_{var_excel_file}_{var_optitype}.xlsx')
-    file_loc_important_cols_sorted_toten.to_excel(path_excel_file, index=False)
-
-    return sum_weirdos_Li
-
-
 # def varying_radius_vs_sumweirdosLi(dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, max_mapping_radius, max_mapping_radius_48htype2, delta_radius, n_sample, var_optitype):
     
 #     col_radius_type1 = "radius_type1"
@@ -6874,379 +6903,198 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
 #     return radius_sumweirdosLi_df
 
 
-def plot_varying_radius_vs_sumweirdosLi(dataframe):
-    col_radius_type1 = "radius_type1"
-    col_radius_type2 = "radius_type2"
-    col_sumweirdosLi = "sumweirdosLi"
-
-    # # dataframe_to_float = dataframe.copy()
-    # dataframe_to_float[col_radius_type1] = dataframe_to_float[col_radius_type1].apply(lambda x: float(x[0]))
-    # dataframe_to_float[col_radius_type2] = dataframe_to_float[col_radius_type2].apply(lambda x: float(x[0]))
-    # dataframe_to_float[col_sumweirdosLi] = dataframe_to_float[col_sumweirdosLi].apply(lambda x: float(x[0]))
-
-    # # %matplotlib inline
-    matrix_map = dataframe.pivot_table(index=col_radius_type2, columns=col_radius_type1,values=col_sumweirdosLi)  
-    sns.heatmap(matrix_map)
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
+##############################################################################################################################################################
 
 
-def plot_distweirdos(dataframe):
-    col_top1_sorted_idxweirdo_dist_el = "top1_sorted_idxweirdo_dist_Li"
-    col_top1_sorted_idxweirdo_label_el = "top1_sorted_idxweirdo_label_Li"
-    col_top1_sorted_idxweirdo_coor_el = "top1_sorted_idxweirdo_coor_Li"
-    col_top1_sorted_idxweirdo_file_el = "top1_sorted_idxweirdo_file_Li"
+# def get_triads_movement(destination_directory, geo, var_filename, filename_ref_72):
+#     # df_coor = pd.DataFrame()
+#     df_triad = pd.DataFrame()
+#     df_ratio = pd.DataFrame()
+#     df_dist = pd.DataFrame()
 
-    val = 0.
+#     df_dist["dist"] = None
+#     # coor_Li_ref = []
 
-    dist_weirdos_el_appendend = []
-    y_appended = []
-    label_weirdos_el_appended = []
-    coor_weirdos_el_appended = []
-    file_weirdos_el_appended = []
+#     # col_xyz_coor = "xyz_coor"
 
-    for idx in range(dataframe["geometry"].size):
-        dist_weirdos_el = dataframe.at[idx, col_top1_sorted_idxweirdo_dist_el].values()
-        label_weirdos_el = dataframe.at[idx, col_top1_sorted_idxweirdo_label_el].values()
-        coor_weirdos_el = dataframe.at[idx, col_top1_sorted_idxweirdo_coor_el].values()
-        file_weirdos_el = dataframe.at[idx, col_top1_sorted_idxweirdo_file_el].values()
+#     # df_coor[col_xyz_coor] = None
 
-        for single_dist in dist_weirdos_el:
-            dist_weirdos_el_appendend.append(single_dist[0])
-            y_appended.append(np.zeros_like(single_dist[0]) + val)
+#     if geo == 0:
+#         path_geo = path_geo_0
+#     elif geo == 1:
+#         path_geo = path_geo_1
+#     elif geo == 2:
+#         path_geo = path_geo_2
+#     elif geo == 3:
+#         path_geo = path_geo_3
+#     elif geo == 4:
+#         path_geo = path_geo_4
+#     elif geo == 5:
+#         path_geo = path_geo_5
+#     elif geo == 6:
+#         path_geo = path_geo_6
+#     elif geo == 7:
+#         path_geo = path_geo_7
+#     elif geo == 8:
+#         path_geo = path_geo_8
 
-        for single_label in label_weirdos_el:
-            label_weirdos_el_appended.append(single_label[0])
+#     file_ref_24 = f"{geo}_0_{var_filename}.cif"
+#     file_path_ref_24 = os.path.join(destination_directory, file_ref_24)
 
-        for single_coor in coor_weirdos_el:
-            coor_weirdos_el_appended.append(single_coor[0])
+#     file_ref_72 = f"{filename_ref_72}.cif"
+#     file_path_ref_72 = os.path.join(destination_directory, file_ref_72)
+
+
+#     idx_coor_Li_dict_ref_24 = get_idx_coor_Li_dict(file_path_ref_24)    # key is the pointer to 24
+#     idx_coor_Li_dict_ref_72 = get_idx_coor_Li_dict(file_path_ref_72)    # key is the pointer to 24
+
+#     idx_coor_Li_dict_ref_triad = get_idx_coor_Li_dict_ref_triad(idx_coor_Li_dict_ref_24, idx_coor_Li_dict_ref_72)
+#     # idxs_Li_ref_24 = list(idx_coor_Li_dict_ref_24.keys())
+#     # idxs_Li_ref_72 = list(idx_coor_Li_dict_ref_72.keys())
+
+#     for i in path_geo:
+#         # coor_Li = []
+#         file = f"{geo}_{i}_{var_filename}.cif"
+#         file_path = os.path.join(destination_directory, file)
+
+#         idx_coor_Li_dict = get_idx_coor_Li_dict(file_path)
+#         # idxs_Li = list(idx_coor_Li_dict.keys())
+
+#         # # idx_coor_Li_triad_belonging_initial = defaultdict(list)
+#         # # idx_coor_Li_triad_belonging_initial_centroid = defaultdict(list)
+
+#         ### does the numeration of Li is important?
+#         ### 1) check which triad it does belong to initially
+
+#         idx_coor_Li_idx_centroid_triad_ref = get_idx_coor_Li_idx_centroid_triad(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_ref_24)
+#         idx_coor_Li_idx_centroid_triad = get_idx_coor_Li_idx_centroid_triad(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict)
+#         idxs_Li_dict = [i for i in range(24) if i in idx_coor_Li_idx_centroid_triad.keys()]
+
+#         ## get ratio of 24:48
+#         counter_48 = 0
+#         for Li_idx, val in idx_coor_Li_idx_centroid_triad.items():
+#             # print(Operation.Distance.mic_eucledian_distance(val['coor'], val['centroid_triad']))
+#             if val['structure'] == 48:
+#                 counter_48 = counter_48 + 1
+#         # print(f"path {i} has ratio of 48 of: {counter_48/len(idx_coor_Li_idx_centroid_triad)}")
+#         df_ratio.at[i, "ratio of 48"] = counter_48/len(idx_coor_Li_idx_centroid_triad)
+
+#         ## get li-to-li-distance 
+#         dist_ascending, sorted_coors_Li_dist_structures = get_dist_ascending(idx_coor_Li_idx_centroid_triad)
+#         # print(dist_ascending)
+#         df_dist.at[i, "dist"] = dist_ascending[1:6]
+
+#         for j in idxs_Li_dict:
+#             # df_triad.at[i, f"{j}"] = None  
+
+#             triad = idx_coor_Li_idx_centroid_triad[j]["idx_triad"]
+
+#             df_triad.at[i, f"{j}"] = triad
+
+#             if triad == df_triad.at[0, f"{j}"] and i != 0:
+#                 print(f"path: {i}, Li: {j}, triad: {triad}")
+
+#     return df_triad, df_ratio, df_dist, sorted_coors_Li_dist_structures
+
+
+
+# def get_triads_fullness(destination_directory, geo, var_filename, filename_ref_72):
+#     # df_idx_triad_counts = pd.DataFrame #(np.zeros((24, 1)))
+#     # df_idx_triad_counts["idx_triad_counts"] = None
+
+#     idx_coor_Li_idx_centroid_triad_weirdos_appended_dict = defaultdict(list)
+
+#     if geo == 0:
+#         path_geo = path_geo_0
+#     elif geo == 1:
+#         path_geo = path_geo_1
+#     elif geo == 2:
+#         path_geo = path_geo_2
+#     elif geo == 3:
+#         path_geo = path_geo_3
+#     elif geo == 4:
+#         path_geo = path_geo_4
+#     elif geo == 5:
+#         path_geo = path_geo_5
+#     elif geo == 6:
+#         path_geo = path_geo_6
+#     elif geo == 7:
+#         path_geo = path_geo_7
+#     elif geo == 8:
+#         path_geo = path_geo_8
+
+#     df_idx_triad_counts = pd.DataFrame(np.zeros((24, len(path_geo))))
+
+#     file_ref_24 = f"{geo}_0_{var_filename}.cif"
+#     file_path_ref_24 = os.path.join(destination_directory, file_ref_24)
+
+#     file_ref_72 = f"{filename_ref_72}.cif"
+#     file_path_ref_72 = os.path.join(destination_directory, file_ref_72)
+
+#     idx_coor_Li_dict_ref_24 = get_idx_coor_Li_dict(file_path_ref_24)    # key is the pointer to 24
+#     idx_coor_Li_dict_ref_72 = get_idx_coor_Li_dict(file_path_ref_72)    # key is the pointer to 24
+
+#     idx_coor_Li_dict_ref_triad = get_idx_coor_Li_dict_ref_triad(idx_coor_Li_dict_ref_24, idx_coor_Li_dict_ref_72)
+#     # idxs_Li_ref_24 = list(idx_coor_Li_dict_ref_24.keys())
+#     # idxs_Li_ref_72 = list(idx_coor_Li_dict_ref_72.keys())
+
+#     for i in path_geo:
+#         # coor_Li = []
+#         file = f"{geo}_{i}_{var_filename}.cif"
+#         file_path = os.path.join(destination_directory, file)
+
+#         idx_coor_Li_dict = get_idx_coor_Li_dict(file_path)
+
+#         file_weirdos_appended = f"{geo}_{i}_{var_filename}_weirdos_appended.cif"
+#         file_path_weirdos_appended = os.path.join(destination_directory, file_weirdos_appended)
+
+#         idx_coor_Li_dict_weirdos_appended = get_idx_coor_Li_dict(file_path_weirdos_appended)
+#         # idx_coor_Li_dict_ref_triad_weirdos_appended = get_idx_coor_Li_dict_ref_triad(idx_coor_Li_dict_weirdos_appended, idx_coor_Li_dict_ref_72)
+
+#         idxs_Li = list(idx_coor_Li_dict.keys())
+#         idxs_Li_not = sorted(i for i in range(24) if i not in idxs_Li)
+#         # idxs_Li = list(idx_coor_Li_dict.keys())
+
+#         # # idx_coor_Li_triad_belonging_initial = defaultdict(list)
+#         # # idx_coor_Li_triad_belonging_initial_centroid = defaultdict(list)
+
+#         ### does the numeration of Li is important?
+#         ### 1) check which triad it does belong to initially
+
+#         idx_coor_Li_idx_centroid_triad_ref = get_idx_coor_Li_idx_centroid_triad(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_ref_24)
+#         idx_coor_Li_idx_centroid_triad = get_idx_coor_Li_idx_centroid_triad_w_closest_dist(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict)
+#         idx_coor_Li_idx_centroid_triad_weirdos_appended = get_idx_coor_Li_idx_centroid_triad_w_closest_dist_weirdos_appended(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_weirdos_appended, idxs_Li_not)
+#         # idx_coor_Li_idx_centroid_triad_weirdos_appended = get_idx_coor_Li_idx_centroid_triad_w_closest_dist(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_weirdos_appended)
+#         idxs_Li_dict = [i for i in range(24) if i in idx_coor_Li_idx_centroid_triad.keys()]
         
-        for single_file in file_weirdos_el:
-            file_weirdos_el_appended.append(single_file[0])
-
-    df = pd.DataFrame({'dist': dist_weirdos_el_appendend, 'label': label_weirdos_el_appended, 'y': y_appended, 'coor': coor_weirdos_el_appended, 'file': file_weirdos_el_appended})
-
-    # fig = px.scatter(df, x = 'dist', y = 'y', color='label', color_discrete_map={'48htype1': 'red', '48htype2': 'blue', '24g': 'green'})
-    fig = px.scatter(df, 
-                    x = 'dist', 
-                    y = 'y', 
-                    color ='label', 
-                    hover_data = ['dist', 'label', 'coor', 'file'])
-
-    fig.show(config={'scrollZoom': True})
-
-
-def create_file_loc(direc_init_system, data_toten, file_new_system):
-    direc = os.getcwd()
-
-    col_excel_geo = "geometry"
-    col_excel_path = "path"
-    col_excel_toten = "toten [eV]"
-
-    geometry = np.array([])
-    path = np.array([])
-    subdir_col = np.array([])
-    subdir_col_init_system = np.array([])
-    subdir_col_perfect_poscar = np.array([])
-    for subdir, dirs, files in os.walk(direc,topdown=False):
-        # source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
-        for file in files:
-            filepath = subdir + os.sep
-            # get directory of CONTCAR
-            if os.path.basename(file) == file_new_system:
-                geometry_nr = Operation.File.splitall(subdir)[-2]
-                path_nr = Operation.File.splitall(subdir)[-1]
-                geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
-                geometry_ori = geometry
-                # geometry = geometry.applymap(func=replace)
-                geometry.dropna(axis=1)
-                path = pd.DataFrame(np.append(path, int(path_nr)), columns=["path"])
-                # path = path.applymap(func=replace)
-                path.dropna(axis=1)
-                path_sorted = path.sort_values(by="path",ascending=False)
-                subdir_file = os.path.join(subdir,file_new_system)
-                # # create directory of POSCAR of init system
-                subdir_init_system = direc_init_system + os.sep + geometry_nr + os.sep + path_nr
-                # # subdir_file_init_system = os.path.join(subdir_init_system,file_init_system)
-                # subdir_file_perfect_poscar = os.path.join()
-                subdir_col = pd.DataFrame(np.append(subdir_col, subdir_file), columns=["subdir_new_system"])
-                # # subdir_col_init_system = pd.DataFrame(np.append(subdir_col_init_system, subdir_file_init_system), columns=["subdir_init_system"])
-                # # subdir_col_perfect_poscar = pd.DataFrame(np.append(subdir_col_perfect_poscar, direc_perfect_system), columns=["subdir_perfect_poscar"])
-                file_loc = geometry.join(path)
-                file_loc["subdir_new_system"] = subdir_col
-                # # file_loc["subdir_init_system"] = subdir_col_init_system
-                # # file_loc["subdir_perfect_poscar"] = subdir_col_perfect_poscar
-                path_ori = path
-
-    file_loc_ori_notsorted = file_loc.copy()
-    # file_loc_ori_notsorted = file_loc
-    file_loc = file_loc.sort_values(by=["geometry","path"],ignore_index=True,ascending=False) # sort descendingly based on path
-
-    file_loc["g+p"] = (file_loc["geometry"] + file_loc["path"]).fillna(0) # replace NaN with 0
-    # file_loc["g+p"] = file_loc["geometry"] + file_loc["path"]
-    file_loc["g+p+1"] = file_loc["g+p"].shift(1)
-    file_loc["g+p+1"][0] = 0 # replace 1st element with 0
-    file_loc["g+p-1"] = file_loc["g+p"].shift(-1)
-    file_loc["g+p-1"][(file_loc["g+p-1"]).size - 1] = 0.0 # replace last element with 0
-    file_loc["perfect_system"] = file_loc["g+p"][(file_loc["g+p+1"] > file_loc["g+p"]) & (file_loc["g+p-1"] > file_loc["g+p"])]
-    file_loc["perfect_system"][file_loc["geometry"].size-1] = 0.0 # hardcode the path 0/0
-    file_loc["p_s_mask"] = [0 if np.isnan(item) else 1 for item in file_loc["perfect_system"]]
-    # # subdir_filtered = file_loc["subdir"] * file_loc["p_s_mask"]
-
-
-    if data_toten[col_excel_geo].all() == file_loc["geometry"].all() & data_toten[col_excel_path].all() == file_loc["path"].all():
-        file_loc[col_excel_toten] = data_toten[col_excel_toten]
-    else:
-        print("check the compatibility of column geometry and path between data_toten file and file_loc")
-
-    return file_loc
-
-
-def create_file_loc_compact_demo(direc_init_system, data_toten, file_new_system):
-    direc = os.getcwd()
-
-    col_excel_geo = "geometry"
-    col_excel_path = "path"
-    col_excel_toten = "toten [eV]"
-
-    geometry = np.array([])
-    path = np.array([])
-    subdir_col = np.array([])
-    for subdir, dirs, files in os.walk(direc,topdown=False):
-        # source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
-        for file in files:
-            filepath = subdir + os.sep
-            # get directory of CONTCAR
-            if os.path.basename(file) == file_new_system:
-                geometry_nr = Operation.File.splitall(subdir)[-2]
-                path_nr = Operation.File.splitall(subdir)[-1]
-                geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
-                geometry_ori = geometry
-                geometry.dropna(axis=1)
-                path = pd.DataFrame(np.append(path, int(path_nr)), columns=["path"])#
-                path.dropna(axis=1)
-                path_sorted = path.sort_values(by="path",ascending=False)
-                subdir_file = os.path.join(subdir,file_new_system)
-                # # create directory of POSCAR of init system
-                subdir_init_system = direc_init_system + os.sep + geometry_nr + os.sep + path_nr
-                subdir_col = pd.DataFrame(np.append(subdir_col, subdir_file), columns=["subdir_new_system"])
-                file_loc = geometry.join(path)
-                file_loc["subdir_new_system"] = subdir_col#
-                path_ori = path
-
-    file_loc_ori_notsorted = file_loc.copy()
-    file_loc = file_loc.sort_values(by=["geometry","path"],ignore_index=True,ascending=False) # sort descendingly based on path
-
-    file_loc["g+p"] = (file_loc["geometry"] + file_loc["path"]).fillna(0) # replace NaN with 0
-    file_loc["g+p+1"] = file_loc["g+p"].shift(1)
-    file_loc["g+p+1"][0] = 0 # replace 1st element with 0
-    file_loc["g+p-1"] = file_loc["g+p"].shift(-1)
-    file_loc["g+p-1"][(file_loc["g+p-1"]).size - 1] = 0.0 # replace last element with 0
-    file_loc["perfect_system"] = file_loc["g+p"][(file_loc["g+p+1"] > file_loc["g+p"]) & (file_loc["g+p-1"] > file_loc["g+p"])]
-    file_loc["perfect_system"][file_loc["geometry"].size-1] = 0.0 # hardcode the path 0/0
-    file_loc["p_s_mask"] = [0 if np.isnan(item) else 1 for item in file_loc["perfect_system"]]
-
-
-
-    if data_toten[col_excel_geo].all() == file_loc["geometry"].all() & data_toten[col_excel_path].all() == file_loc["path"].all():
-        file_loc[col_excel_toten] = data_toten[col_excel_toten]
-    else:
-        print("check the compatibility of column geometry and path between data_toten file and file_loc")
-
-    return file_loc
-
-
-
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-##############################################################################################################################################################
-
-
-def get_triads_movement(destination_directory, geo, var_filename, filename_ref_72):
-    # df_coor = pd.DataFrame()
-    df_triad = pd.DataFrame()
-    df_ratio = pd.DataFrame()
-    df_dist = pd.DataFrame()
-
-    df_dist["dist"] = None
-    # coor_Li_ref = []
-
-    # col_xyz_coor = "xyz_coor"
-
-    # df_coor[col_xyz_coor] = None
-
-    if geo == 0:
-        path_geo = path_geo_0
-    elif geo == 1:
-        path_geo = path_geo_1
-    elif geo == 2:
-        path_geo = path_geo_2
-    elif geo == 3:
-        path_geo = path_geo_3
-    elif geo == 4:
-        path_geo = path_geo_4
-    elif geo == 5:
-        path_geo = path_geo_5
-    elif geo == 6:
-        path_geo = path_geo_6
-    elif geo == 7:
-        path_geo = path_geo_7
-    elif geo == 8:
-        path_geo = path_geo_8
-
-    file_ref_24 = f"{geo}_0_{var_filename}.cif"
-    file_path_ref_24 = os.path.join(destination_directory, file_ref_24)
-
-    file_ref_72 = f"{filename_ref_72}.cif"
-    file_path_ref_72 = os.path.join(destination_directory, file_ref_72)
-
-
-    idx_coor_Li_dict_ref_24 = get_idx_coor_Li_dict(file_path_ref_24)    # key is the pointer to 24
-    idx_coor_Li_dict_ref_72 = get_idx_coor_Li_dict(file_path_ref_72)    # key is the pointer to 24
-
-    idx_coor_Li_dict_ref_triad = get_idx_coor_Li_dict_ref_triad(idx_coor_Li_dict_ref_24, idx_coor_Li_dict_ref_72)
-    # idxs_Li_ref_24 = list(idx_coor_Li_dict_ref_24.keys())
-    # idxs_Li_ref_72 = list(idx_coor_Li_dict_ref_72.keys())
-
-    for i in path_geo:
-        # coor_Li = []
-        file = f"{geo}_{i}_{var_filename}.cif"
-        file_path = os.path.join(destination_directory, file)
-
-        idx_coor_Li_dict = get_idx_coor_Li_dict(file_path)
-        # idxs_Li = list(idx_coor_Li_dict.keys())
-
-        # # idx_coor_Li_triad_belonging_initial = defaultdict(list)
-        # # idx_coor_Li_triad_belonging_initial_centroid = defaultdict(list)
-
-        ### does the numeration of Li is important?
-        ### 1) check which triad it does belong to initially
-
-        idx_coor_Li_idx_centroid_triad_ref = get_idx_coor_Li_idx_centroid_triad(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_ref_24)
-        idx_coor_Li_idx_centroid_triad = get_idx_coor_Li_idx_centroid_triad(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict)
-        idxs_Li_dict = [i for i in range(24) if i in idx_coor_Li_idx_centroid_triad.keys()]
-
-        ## get ratio of 24:48
-        counter_48 = 0
-        for Li_idx, val in idx_coor_Li_idx_centroid_triad.items():
-            # print(Operation.Distance.mic_eucledian_distance(val['coor'], val['centroid_triad']))
-            if val['structure'] == 48:
-                counter_48 = counter_48 + 1
-        # print(f"path {i} has ratio of 48 of: {counter_48/len(idx_coor_Li_idx_centroid_triad)}")
-        df_ratio.at[i, "ratio of 48"] = counter_48/len(idx_coor_Li_idx_centroid_triad)
-
-        ## get li-to-li-distance 
-        dist_ascending, sorted_coors_Li_dist_structures = get_dist_ascending(idx_coor_Li_idx_centroid_triad)
-        # print(dist_ascending)
-        df_dist.at[i, "dist"] = dist_ascending[1:6]
-
-        for j in idxs_Li_dict:
-            # df_triad.at[i, f"{j}"] = None  
-
-            triad = idx_coor_Li_idx_centroid_triad[j]["idx_triad"]
-
-            df_triad.at[i, f"{j}"] = triad
-
-            if triad == df_triad.at[0, f"{j}"] and i != 0:
-                print(f"path: {i}, Li: {j}, triad: {triad}")
-
-    return df_triad, df_ratio, df_dist, sorted_coors_Li_dist_structures
-
-
-
-def get_triads_fullness(destination_directory, geo, var_filename, filename_ref_72):
-    # df_idx_triad_counts = pd.DataFrame #(np.zeros((24, 1)))
-    # df_idx_triad_counts["idx_triad_counts"] = None
-
-    idx_coor_Li_idx_centroid_triad_weirdos_appended_dict = defaultdict(list)
-
-    if geo == 0:
-        path_geo = path_geo_0
-    elif geo == 1:
-        path_geo = path_geo_1
-    elif geo == 2:
-        path_geo = path_geo_2
-    elif geo == 3:
-        path_geo = path_geo_3
-    elif geo == 4:
-        path_geo = path_geo_4
-    elif geo == 5:
-        path_geo = path_geo_5
-    elif geo == 6:
-        path_geo = path_geo_6
-    elif geo == 7:
-        path_geo = path_geo_7
-    elif geo == 8:
-        path_geo = path_geo_8
-
-    df_idx_triad_counts = pd.DataFrame(np.zeros((24, len(path_geo))))
-
-    file_ref_24 = f"{geo}_0_{var_filename}.cif"
-    file_path_ref_24 = os.path.join(destination_directory, file_ref_24)
-
-    file_ref_72 = f"{filename_ref_72}.cif"
-    file_path_ref_72 = os.path.join(destination_directory, file_ref_72)
-
-    idx_coor_Li_dict_ref_24 = get_idx_coor_Li_dict(file_path_ref_24)    # key is the pointer to 24
-    idx_coor_Li_dict_ref_72 = get_idx_coor_Li_dict(file_path_ref_72)    # key is the pointer to 24
-
-    idx_coor_Li_dict_ref_triad = get_idx_coor_Li_dict_ref_triad(idx_coor_Li_dict_ref_24, idx_coor_Li_dict_ref_72)
-    # idxs_Li_ref_24 = list(idx_coor_Li_dict_ref_24.keys())
-    # idxs_Li_ref_72 = list(idx_coor_Li_dict_ref_72.keys())
-
-    for i in path_geo:
-        # coor_Li = []
-        file = f"{geo}_{i}_{var_filename}.cif"
-        file_path = os.path.join(destination_directory, file)
-
-        idx_coor_Li_dict = get_idx_coor_Li_dict(file_path)
-
-        file_weirdos_appended = f"{geo}_{i}_{var_filename}_weirdos_appended.cif"
-        file_path_weirdos_appended = os.path.join(destination_directory, file_weirdos_appended)
-
-        idx_coor_Li_dict_weirdos_appended = get_idx_coor_Li_dict(file_path_weirdos_appended)
-        # idx_coor_Li_dict_ref_triad_weirdos_appended = get_idx_coor_Li_dict_ref_triad(idx_coor_Li_dict_weirdos_appended, idx_coor_Li_dict_ref_72)
-
-        idxs_Li = list(idx_coor_Li_dict.keys())
-        idxs_Li_not = sorted(i for i in range(24) if i not in idxs_Li)
-        # idxs_Li = list(idx_coor_Li_dict.keys())
-
-        # # idx_coor_Li_triad_belonging_initial = defaultdict(list)
-        # # idx_coor_Li_triad_belonging_initial_centroid = defaultdict(list)
-
-        ### does the numeration of Li is important?
-        ### 1) check which triad it does belong to initially
-
-        idx_coor_Li_idx_centroid_triad_ref = get_idx_coor_Li_idx_centroid_triad(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_ref_24)
-        idx_coor_Li_idx_centroid_triad = get_idx_coor_Li_idx_centroid_triad_w_closest_dist(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict)
-        idx_coor_Li_idx_centroid_triad_weirdos_appended = get_idx_coor_Li_idx_centroid_triad_w_closest_dist_weirdos_appended(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_weirdos_appended, idxs_Li_not)
-        # idx_coor_Li_idx_centroid_triad_weirdos_appended = get_idx_coor_Li_idx_centroid_triad_w_closest_dist(idx_coor_Li_dict_ref_triad, idx_coor_Li_dict_weirdos_appended)
-        idxs_Li_dict = [i for i in range(24) if i in idx_coor_Li_idx_centroid_triad.keys()]
-        
-        idx_triad_array = sorted([val['idx_triad'] for val in idx_coor_Li_idx_centroid_triad.values()])
-        idx_triad_array_not = sorted(i for i in range(24) if i not in idx_triad_array)
-        # idxs_Li_triad_dict = [i for i in range(24) if i in idx_coor_Li_idx_centroid_triad()]
-
-        # idx_triad_series = pd.Series(idx_triad_array)
-        # df_idx_triad_counts[i] = idx_triad_series.value_counts()
-
-        idx_triad_counts = defaultdict(int)
-        # Count the occurrences of each idx_triad
-        # idx_triad_counts = pd.DataFrame(np.zeros((24, 1)))
-        for key, val in idx_coor_Li_idx_centroid_triad.items():
-            idx_triad = val['idx_triad']
-            idx_triad_counts[idx_triad] += 1
-        for j in idx_triad_array_not:
-            idx_triad_counts[j] = 0
-
-        # df_idx_triad_counts.at[i, "idx_triad_counts"] = dict(idx_triad_counts)
-        # df_idx_triad_counts = pd.DataFrame(np.zeros((24, 1)))
-        df_idx_triad_counts[i] = dict(idx_triad_counts)
-        # df_idx_triad_counts[i].fillna(0)
-
-        idx_coor_Li_idx_centroid_triad_weirdos_appended_dict[i] = dict(idx_coor_Li_idx_centroid_triad_weirdos_appended)
-
-    return df_idx_triad_counts, idx_coor_Li_idx_centroid_triad_weirdos_appended_dict
+#         idx_triad_array = sorted([val['idx_triad'] for val in idx_coor_Li_idx_centroid_triad.values()])
+#         idx_triad_array_not = sorted(i for i in range(24) if i not in idx_triad_array)
+#         # idxs_Li_triad_dict = [i for i in range(24) if i in idx_coor_Li_idx_centroid_triad()]
+
+#         # idx_triad_series = pd.Series(idx_triad_array)
+#         # df_idx_triad_counts[i] = idx_triad_series.value_counts()
+
+#         idx_triad_counts = defaultdict(int)
+#         # Count the occurrences of each idx_triad
+#         # idx_triad_counts = pd.DataFrame(np.zeros((24, 1)))
+#         for key, val in idx_coor_Li_idx_centroid_triad.items():
+#             idx_triad = val['idx_triad']
+#             idx_triad_counts[idx_triad] += 1
+#         for j in idx_triad_array_not:
+#             idx_triad_counts[j] = 0
+
+#         # df_idx_triad_counts.at[i, "idx_triad_counts"] = dict(idx_triad_counts)
+#         # df_idx_triad_counts = pd.DataFrame(np.zeros((24, 1)))
+#         df_idx_triad_counts[i] = dict(idx_triad_counts)
+#         # df_idx_triad_counts[i].fillna(0)
+
+#         idx_coor_Li_idx_centroid_triad_weirdos_appended_dict[i] = dict(idx_coor_Li_idx_centroid_triad_weirdos_appended)
+
+#     return df_idx_triad_counts, idx_coor_Li_idx_centroid_triad_weirdos_appended_dict
 
 
 ##############################################################################################################################################################
@@ -8304,4 +8152,186 @@ class Plot:
                 mpldatacursor.datacursor(display='multiple', draggable=True)
 
                 plt.show()
+
+
+    class NotYetClassified:
+        def plot_varying_radius_vs_sumweirdosLi(dataframe):
+            col_radius_type1 = "radius_type1"
+            col_radius_type2 = "radius_type2"
+            col_sumweirdosLi = "sumweirdosLi"
+
+            # # dataframe_to_float = dataframe.copy()
+            # dataframe_to_float[col_radius_type1] = dataframe_to_float[col_radius_type1].apply(lambda x: float(x[0]))
+            # dataframe_to_float[col_radius_type2] = dataframe_to_float[col_radius_type2].apply(lambda x: float(x[0]))
+            # dataframe_to_float[col_sumweirdosLi] = dataframe_to_float[col_sumweirdosLi].apply(lambda x: float(x[0]))
+
+            # # %matplotlib inline
+            matrix_map = dataframe.pivot_table(index=col_radius_type2, columns=col_radius_type1,values=col_sumweirdosLi)  
+            sns.heatmap(matrix_map)
+
+
+        def plot_distweirdos(dataframe):
+            col_top1_sorted_idxweirdo_dist_el = "top1_sorted_idxweirdo_dist_Li"
+            col_top1_sorted_idxweirdo_label_el = "top1_sorted_idxweirdo_label_Li"
+            col_top1_sorted_idxweirdo_coor_el = "top1_sorted_idxweirdo_coor_Li"
+            col_top1_sorted_idxweirdo_file_el = "top1_sorted_idxweirdo_file_Li"
+
+            val = 0.
+
+            dist_weirdos_el_appendend = []
+            y_appended = []
+            label_weirdos_el_appended = []
+            coor_weirdos_el_appended = []
+            file_weirdos_el_appended = []
+
+            for idx in range(dataframe["geometry"].size):
+                dist_weirdos_el = dataframe.at[idx, col_top1_sorted_idxweirdo_dist_el].values()
+                label_weirdos_el = dataframe.at[idx, col_top1_sorted_idxweirdo_label_el].values()
+                coor_weirdos_el = dataframe.at[idx, col_top1_sorted_idxweirdo_coor_el].values()
+                file_weirdos_el = dataframe.at[idx, col_top1_sorted_idxweirdo_file_el].values()
+
+                for single_dist in dist_weirdos_el:
+                    dist_weirdos_el_appendend.append(single_dist[0])
+                    y_appended.append(np.zeros_like(single_dist[0]) + val)
+
+                for single_label in label_weirdos_el:
+                    label_weirdos_el_appended.append(single_label[0])
+
+                for single_coor in coor_weirdos_el:
+                    coor_weirdos_el_appended.append(single_coor[0])
+                
+                for single_file in file_weirdos_el:
+                    file_weirdos_el_appended.append(single_file[0])
+
+            df = pd.DataFrame({'dist': dist_weirdos_el_appendend, 'label': label_weirdos_el_appended, 'y': y_appended, 'coor': coor_weirdos_el_appended, 'file': file_weirdos_el_appended})
+
+            # fig = px.scatter(df, x = 'dist', y = 'y', color='label', color_discrete_map={'48htype1': 'red', '48htype2': 'blue', '24g': 'green'})
+            fig = px.scatter(df, 
+                            x = 'dist', 
+                            y = 'y', 
+                            color ='label', 
+                            hover_data = ['dist', 'label', 'coor', 'file'])
+
+            fig.show(config={'scrollZoom': True})
+
+
+class CreateDataFrame:
+    def create_file_loc(direc_init_system, data_toten, file_new_system):
+        direc = os.getcwd()
+
+        col_excel_geo = "geometry"
+        col_excel_path = "path"
+        col_excel_toten = "toten [eV]"
+
+        geometry = np.array([])
+        path = np.array([])
+        subdir_col = np.array([])
+        subdir_col_init_system = np.array([])
+        subdir_col_perfect_poscar = np.array([])
+        for subdir, dirs, files in os.walk(direc,topdown=False):
+            # source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
+            for file in files:
+                filepath = subdir + os.sep
+                # get directory of CONTCAR
+                if os.path.basename(file) == file_new_system:
+                    geometry_nr = Operation.File.splitall(subdir)[-2]
+                    path_nr = Operation.File.splitall(subdir)[-1]
+                    geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
+                    geometry_ori = geometry
+                    # geometry = geometry.applymap(func=replace)
+                    geometry.dropna(axis=1)
+                    path = pd.DataFrame(np.append(path, int(path_nr)), columns=["path"])
+                    # path = path.applymap(func=replace)
+                    path.dropna(axis=1)
+                    path_sorted = path.sort_values(by="path",ascending=False)
+                    subdir_file = os.path.join(subdir,file_new_system)
+                    # # create directory of POSCAR of init system
+                    subdir_init_system = direc_init_system + os.sep + geometry_nr + os.sep + path_nr
+                    # # subdir_file_init_system = os.path.join(subdir_init_system,file_init_system)
+                    # subdir_file_perfect_poscar = os.path.join()
+                    subdir_col = pd.DataFrame(np.append(subdir_col, subdir_file), columns=["subdir_new_system"])
+                    # # subdir_col_init_system = pd.DataFrame(np.append(subdir_col_init_system, subdir_file_init_system), columns=["subdir_init_system"])
+                    # # subdir_col_perfect_poscar = pd.DataFrame(np.append(subdir_col_perfect_poscar, direc_perfect_system), columns=["subdir_perfect_poscar"])
+                    file_loc = geometry.join(path)
+                    file_loc["subdir_new_system"] = subdir_col
+                    # # file_loc["subdir_init_system"] = subdir_col_init_system
+                    # # file_loc["subdir_perfect_poscar"] = subdir_col_perfect_poscar
+                    path_ori = path
+
+        file_loc_ori_notsorted = file_loc.copy()
+        # file_loc_ori_notsorted = file_loc
+        file_loc = file_loc.sort_values(by=["geometry","path"],ignore_index=True,ascending=False) # sort descendingly based on path
+
+        file_loc["g+p"] = (file_loc["geometry"] + file_loc["path"]).fillna(0) # replace NaN with 0
+        # file_loc["g+p"] = file_loc["geometry"] + file_loc["path"]
+        file_loc["g+p+1"] = file_loc["g+p"].shift(1)
+        file_loc["g+p+1"][0] = 0 # replace 1st element with 0
+        file_loc["g+p-1"] = file_loc["g+p"].shift(-1)
+        file_loc["g+p-1"][(file_loc["g+p-1"]).size - 1] = 0.0 # replace last element with 0
+        file_loc["perfect_system"] = file_loc["g+p"][(file_loc["g+p+1"] > file_loc["g+p"]) & (file_loc["g+p-1"] > file_loc["g+p"])]
+        file_loc["perfect_system"][file_loc["geometry"].size-1] = 0.0 # hardcode the path 0/0
+        file_loc["p_s_mask"] = [0 if np.isnan(item) else 1 for item in file_loc["perfect_system"]]
+        # # subdir_filtered = file_loc["subdir"] * file_loc["p_s_mask"]
+
+
+        if data_toten[col_excel_geo].all() == file_loc["geometry"].all() & data_toten[col_excel_path].all() == file_loc["path"].all():
+            file_loc[col_excel_toten] = data_toten[col_excel_toten]
+        else:
+            print("check the compatibility of column geometry and path between data_toten file and file_loc")
+
+        return file_loc
+
+
+    def create_file_loc_compact_demo(direc_init_system, data_toten, file_new_system):
+        direc = os.getcwd()
+
+        col_excel_geo = "geometry"
+        col_excel_path = "path"
+        col_excel_toten = "toten [eV]"
+
+        geometry = np.array([])
+        path = np.array([])
+        subdir_col = np.array([])
+        for subdir, dirs, files in os.walk(direc,topdown=False):
+            # source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
+            for file in files:
+                filepath = subdir + os.sep
+                # get directory of CONTCAR
+                if os.path.basename(file) == file_new_system:
+                    geometry_nr = Operation.File.splitall(subdir)[-2]
+                    path_nr = Operation.File.splitall(subdir)[-1]
+                    geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
+                    geometry_ori = geometry
+                    geometry.dropna(axis=1)
+                    path = pd.DataFrame(np.append(path, int(path_nr)), columns=["path"])#
+                    path.dropna(axis=1)
+                    path_sorted = path.sort_values(by="path",ascending=False)
+                    subdir_file = os.path.join(subdir,file_new_system)
+                    # # create directory of POSCAR of init system
+                    subdir_init_system = direc_init_system + os.sep + geometry_nr + os.sep + path_nr
+                    subdir_col = pd.DataFrame(np.append(subdir_col, subdir_file), columns=["subdir_new_system"])
+                    file_loc = geometry.join(path)
+                    file_loc["subdir_new_system"] = subdir_col#
+                    path_ori = path
+
+        file_loc_ori_notsorted = file_loc.copy()
+        file_loc = file_loc.sort_values(by=["geometry","path"],ignore_index=True,ascending=False) # sort descendingly based on path
+
+        file_loc["g+p"] = (file_loc["geometry"] + file_loc["path"]).fillna(0) # replace NaN with 0
+        file_loc["g+p+1"] = file_loc["g+p"].shift(1)
+        file_loc["g+p+1"][0] = 0 # replace 1st element with 0
+        file_loc["g+p-1"] = file_loc["g+p"].shift(-1)
+        file_loc["g+p-1"][(file_loc["g+p-1"]).size - 1] = 0.0 # replace last element with 0
+        file_loc["perfect_system"] = file_loc["g+p"][(file_loc["g+p+1"] > file_loc["g+p"]) & (file_loc["g+p-1"] > file_loc["g+p"])]
+        file_loc["perfect_system"][file_loc["geometry"].size-1] = 0.0 # hardcode the path 0/0
+        file_loc["p_s_mask"] = [0 if np.isnan(item) else 1 for item in file_loc["perfect_system"]]
+
+
+
+        if data_toten[col_excel_geo].all() == file_loc["geometry"].all() & data_toten[col_excel_path].all() == file_loc["path"].all():
+            file_loc[col_excel_toten] = data_toten[col_excel_toten]
+        else:
+            print("check the compatibility of column geometry and path between data_toten file and file_loc")
+
+        return file_loc
 
