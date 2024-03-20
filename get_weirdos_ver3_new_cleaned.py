@@ -8217,81 +8217,44 @@ class Plot:
 
 class CreateDataFrame:
     def create_file_loc(direc_init_system, data_toten, file_new_system):
+        """
+        Generate a DataFrame with file geometries, paths, locations, and additional calculated columns.
+
+        This method walks through a directory structure starting from the current working
+        directory, looking for a specified file. For each file found, it generates a geometry
+        and path identifier based on the directory structure. It then combines this
+        information into a Pandas DataFrame, sorts it, and performs various operations to
+        calculate new columns. Finally, it checks for compatibility with an external DataFrame
+        and merges data if compatible.
+
+        Args:
+            direc_init_system (str): The base directory for the initial system files.
+            data_toten (pd.DataFrame): DataFrame containing total energy data to be merged.
+            file_new_system (str): The filename to search for in the directory walk.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the paths, geometries, directories of the new system
+            files, and calculated columns for further analysis.
+
+        Notes:
+            - The method assumes a specific directory naming convention to extract geometry and path
+              information.
+            - The compatibility check with `data_toten` relies on exact matches in 'geometry' and 'path'
+              columns between the newly created DataFrame and `data_toten`.
+        """
         direc = os.getcwd()
 
+        # Column names for the DataFrame
         col_excel_geo = "geometry"
         col_excel_path = "path"
         col_excel_toten = "toten [eV]"
 
+        # Initialize arrays for DataFrame construction
         geometry = np.array([])
         path = np.array([])
         subdir_col = np.array([])
-        subdir_col_init_system = np.array([])
-        subdir_col_perfect_poscar = np.array([])
-        for subdir, dirs, files in os.walk(direc,topdown=False):
-            # source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
-            for file in files:
-                filepath = subdir + os.sep
-                # get directory of CONTCAR
-                if os.path.basename(file) == file_new_system:
-                    geometry_nr = Operation.File.splitall(subdir)[-2]
-                    path_nr = Operation.File.splitall(subdir)[-1]
-                    geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
-                    geometry_ori = geometry
-                    # geometry = geometry.applymap(func=replace)
-                    geometry.dropna(axis=1)
-                    path = pd.DataFrame(np.append(path, int(path_nr)), columns=["path"])
-                    # path = path.applymap(func=replace)
-                    path.dropna(axis=1)
-                    path_sorted = path.sort_values(by="path",ascending=False)
-                    subdir_file = os.path.join(subdir,file_new_system)
-                    # # create directory of POSCAR of init system
-                    subdir_init_system = direc_init_system + os.sep + geometry_nr + os.sep + path_nr
-                    # # subdir_file_init_system = os.path.join(subdir_init_system,file_init_system)
-                    # subdir_file_perfect_poscar = os.path.join()
-                    subdir_col = pd.DataFrame(np.append(subdir_col, subdir_file), columns=["subdir_new_system"])
-                    # # subdir_col_init_system = pd.DataFrame(np.append(subdir_col_init_system, subdir_file_init_system), columns=["subdir_init_system"])
-                    # # subdir_col_perfect_poscar = pd.DataFrame(np.append(subdir_col_perfect_poscar, direc_perfect_system), columns=["subdir_perfect_poscar"])
-                    file_loc = geometry.join(path)
-                    file_loc["subdir_new_system"] = subdir_col
-                    # # file_loc["subdir_init_system"] = subdir_col_init_system
-                    # # file_loc["subdir_perfect_poscar"] = subdir_col_perfect_poscar
-                    path_ori = path
 
-        file_loc_ori_notsorted = file_loc.copy()
-        # file_loc_ori_notsorted = file_loc
-        file_loc = file_loc.sort_values(by=["geometry","path"],ignore_index=True,ascending=False) # sort descendingly based on path
-
-        file_loc["g+p"] = (file_loc["geometry"] + file_loc["path"]).fillna(0) # replace NaN with 0
-        # file_loc["g+p"] = file_loc["geometry"] + file_loc["path"]
-        file_loc["g+p+1"] = file_loc["g+p"].shift(1)
-        file_loc["g+p+1"][0] = 0 # replace 1st element with 0
-        file_loc["g+p-1"] = file_loc["g+p"].shift(-1)
-        file_loc["g+p-1"][(file_loc["g+p-1"]).size - 1] = 0.0 # replace last element with 0
-        file_loc["perfect_system"] = file_loc["g+p"][(file_loc["g+p+1"] > file_loc["g+p"]) & (file_loc["g+p-1"] > file_loc["g+p"])]
-        file_loc["perfect_system"][file_loc["geometry"].size-1] = 0.0 # hardcode the path 0/0
-        file_loc["p_s_mask"] = [0 if np.isnan(item) else 1 for item in file_loc["perfect_system"]]
-        # # subdir_filtered = file_loc["subdir"] * file_loc["p_s_mask"]
-
-
-        if data_toten[col_excel_geo].all() == file_loc["geometry"].all() & data_toten[col_excel_path].all() == file_loc["path"].all():
-            file_loc[col_excel_toten] = data_toten[col_excel_toten]
-        else:
-            print("check the compatibility of column geometry and path between data_toten file and file_loc")
-
-        return file_loc
-
-
-    def create_file_loc_compact_demo(direc_init_system, data_toten, file_new_system):
-        direc = os.getcwd()
-
-        col_excel_geo = "geometry"
-        col_excel_path = "path"
-        col_excel_toten = "toten [eV]"
-
-        geometry = np.array([])
-        path = np.array([])
-        subdir_col = np.array([])
+        # Walk through the directory structure
         for subdir, dirs, files in os.walk(direc,topdown=False):
             # source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
             for file in files:
