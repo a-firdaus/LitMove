@@ -5822,15 +5822,15 @@ class Optimizer:
 
             Parameters:
             - ref_positions_array
-            - max_mapping_radius
-            - max_mapping_radius_48htype2
+            + max_mapping_radius
+            + max_mapping_radius_48htype2
             - dataframe_init
-            - activate_radius
+            + activate_radius
             - file_perfect_poscar_24
             - file_ori_ref_48n24
-            - litype
-            - var_optitype
-            - iter_type
+            + litype
+            + var_optitype
+            + iter_type: "varying_dx_dz", "varying_radius", none
 
             Returns:
             - 
