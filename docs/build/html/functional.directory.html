@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>functional.directory module &mdash; Atomic Positionism 00.00.01 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=d7bb8d4d"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="functional.file module" href="functional.file.html" />
+    <link rel="prev" title="functional.dictionary module" href="functional.dictionary.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Atomic Positionism
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">project</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="functional.html">functional package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="functional.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="functional.calc_distance.html">functional.calc_distance module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.dictionary.html">functional.dictionary module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">functional.directory module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.file.html">functional.file module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.kmeans.html">functional.kmeans module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.operation.html">functional.operation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.string.html">functional.string module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="functional.html#module-functional">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mapping.html">mapping package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orientation.html">orientation package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing.html">preprocessing package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Atomic Positionism</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">project</a></li>
+          <li class="breadcrumb-item"><a href="functional.html">functional package</a></li>
+      <li class="breadcrumb-item active">functional.directory module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/functional.directory.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-functional.directory">
+<span id="functional-directory-module"></span><h1>functional.directory module<a class="headerlink" href="#module-functional.directory" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="functional.directory.check_folder_existance">
+<span class="sig-prename descclassname"><span class="pre">functional.directory.</span></span><span class="sig-name descname"><span class="pre">check_folder_existance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.directory.check_folder_existance" title="Link to this definition"></a></dt>
+<dd><p>Check if a folder exists, create it if not, and optionally empty it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>folder_name</strong> (<em>str</em>) – The name of the folder to check or create.</p></li>
+<li><p><strong>empty_folder</strong> (<em>bool</em>) – If True, empty the folder if it already exists.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="functional.directory.copy_rename_files">
+<span class="sig-prename descclassname"><span class="pre">functional.directory.</span></span><span class="sig-name descname"><span class="pre">copy_rename_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">savedir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.directory.copy_rename_files" title="Link to this definition"></a></dt>
+<dd><p>Copy and rename multiple files based on the contents of a DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> (<em>pd.DataFrame</em>) – DataFrame containing file information.</p></li>
+<li><p><strong>destination_directory</strong> (<em>str</em>) – The directory where files should be copied.</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – The base name of the files.</p></li>
+<li><p><strong>prefix</strong> (<em>str</em>) – An optional prefix to be added to the new filenames.</p></li>
+<li><p><strong>savedir</strong> (<em>bool</em>) – If True, save the new file paths to the DataFrame.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="functional.directory.copy_rename_single_file">
+<span class="sig-prename descclassname"><span class="pre">functional.directory.</span></span><span class="sig-name descname"><span class="pre">copy_rename_single_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">destination_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.directory.copy_rename_single_file" title="Link to this definition"></a></dt>
+<dd><p>Copy a file from the source directory to the destination directory with an optional filename prefix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>destination_directory</strong> (<em>str</em>) – The directory where the file should be copied.</p></li>
+<li><p><strong>source_directory</strong> (<em>str</em>) – The directory from which the file should be copied.</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – The name of the file to be copied.</p></li>
+<li><p><strong>prefix</strong> (<em>str</em>) – An optional prefix to be added to the new filename.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="functional.directory.delete_files">
+<span class="sig-prename descclassname"><span class="pre">functional.directory.</span></span><span class="sig-name descname"><span class="pre">delete_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name_w_format</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.directory.delete_files" title="Link to this definition"></a></dt>
+<dd><p>Delete files based in the specified folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> (<em>pd.DataFrame</em>) – A DataFrame containing information about files (‘geometry’ and ‘path’).</p></li>
+<li><p><strong>folder_name</strong> (<em>str</em>) – The directory where the files are located.</p></li>
+<li><p><strong>file_name_w_format</strong> (<em>str</em>) – The base name of the files with format information.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>OSError</strong> – If an error occurs during file deletion, an exception is caught,
+    and an error message is printed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="functional.directory.empty_folder">
+<span class="sig-prename descclassname"><span class="pre">functional.directory.</span></span><span class="sig-name descname"><span class="pre">empty_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.directory.empty_folder" title="Link to this definition"></a></dt>
+<dd><p>Empty the contents of a folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>folder_name</strong> (<em>str</em>) – The name of the folder to be emptied.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="functional.directory.splitall">
+<span class="sig-prename descclassname"><span class="pre">functional.directory.</span></span><span class="sig-name descname"><span class="pre">splitall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.directory.splitall" title="Link to this definition"></a></dt>
+<dd><p>Splitting path into its individual components of each sub-/folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – The input path to be split.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list containing the components of the path.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Source:</dt><dd><p><a class="reference external" href="https://www.oreilly.com/library/view/python-cookbook/0596001673/ch04s16.html">https://www.oreilly.com/library/view/python-cookbook/0596001673/ch04s16.html</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="functional.dictionary.html" class="btn btn-neutral float-left" title="functional.dictionary module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="functional.file.html" class="btn btn-neutral float-right" title="functional.file module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, A. Firdaus.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -5,22 +5,15 @@
 
 import os
 import sys
-
-import sphinx_rtd_theme
-
-# sys.path.insert(0, os.path.abspath('../MappingMovement/'))
-# sys.path.insert(0, os.path.abspath('../GetDataFrame/'))
-# sys.path.insert(0, os.path.abspath('..'))
-
-basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'functional'))
+basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'project'))
 sys.path.insert(0, basedir)
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'xyz'
-copyright = '2024, AF'
-author = 'AF'
+project = 'Atomic Positionism'
+copyright = '2024, A. Firdaus'
+author = 'A. Firdaus'
 release = '00.00.01'
 
 # -- General configuration ---------------------------------------------------
@@ -28,16 +21,16 @@ release = '00.00.01'
 
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.doctest',
-    'sphinx.ext.extlinks',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.intersphinx'
+    'sphinx.ext.napoleon'
+    # 'sphinx.ext.viewcode',
+    # 'sphinx.ext.doctest',
+    # 'sphinx.ext.extlinks',
+    # 'sphinx.ext.mathjax',
+    # 'sphinx.ext.intersphinx'
 ]
 
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = []
 
 
 
@@ -45,6 +38,4 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme'
-# html_theme = 'alabaster'
 html_static_path = ['_static']
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]

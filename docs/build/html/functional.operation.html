@@ -21,8 +21,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="orientation package" href="orientation.html" />
-    <link rel="prev" title="functional.create_dataframe module" href="functional.create_dataframe.html" /> 
+    <link rel="next" title="functional.string module" href="functional.string.html" />
+    <link rel="prev" title="functional.kmeans module" href="functional.kmeans.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -49,14 +49,21 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">project</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="functional.html">functional package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="functional.html#submodules">Submodules</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="functional.create_dataframe.html">functional.create_dataframe module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.calc_distance.html">functional.calc_distance module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.dictionary.html">functional.dictionary module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.directory.html">functional.directory module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.file.html">functional.file module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.kmeans.html">functional.kmeans module</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">functional.operation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.string.html">functional.string module</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="functional.html#module-functional">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="mapping.html">mapping package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="orientation.html">orientation package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing.html">preprocessing package</a></li>
 </ul>
 </li>
 </ul>
@@ -113,295 +120,6 @@
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="functional.operation.Dict">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functional.operation.</span></span><span class="sig-name descname"><span class="pre">Dict</span></span><a class="headerlink" href="#functional.operation.Dict" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py class">
-<dt class="sig sig-object py" id="functional.operation.Dict.Mapping">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Mapping</span></span><a class="headerlink" href="#functional.operation.Dict.Mapping" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.Dict.Mapping.get_atom_mapping_el_w_dist_closestduplicate">
-<span class="sig-name descname"><span class="pre">get_atom_mapping_el_w_dist_closestduplicate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.Dict.Mapping.get_atom_mapping_el_w_dist_closestduplicate" title="Link to this definition"></a></dt>
-<dd><p>Identifies and returns closest mapped atom with its distance</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.Dict.Mapping.get_duplicate_closest24_w_data">
-<span class="sig-name descname"><span class="pre">get_duplicate_closest24_w_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.Dict.Mapping.get_duplicate_closest24_w_data" title="Link to this definition"></a></dt>
-<dd><p>Identifies and returns a list of duplicate values (closest24 with its data: coor)</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.Dict.get_duplicate_values">
-<span class="sig-name descname"><span class="pre">get_duplicate_values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.Dict.get_duplicate_values" title="Link to this definition"></a></dt>
-<dd><p>Identifies and returns a list of duplicate values in the given dictionary. If a value appears
-more than once across all values in the dictionary, it will be included in the return list.</p>
-<p>Parameters:
-- dictionary (dict): The dictionary whose values are to be checked for duplicates.</p>
-<p>Returns:
-- list: A list of values that appear more than once in the dictionary.</p>
-<p>Note:
-This implementation is designed to work effectively with immutable value types (e.g.,
-integers, strings, tuples). For mutable types like lists, it treats the value as seen only once
-because lists cannot be used as dictionary keys or added to sets directly without conversion.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.Dict.merge_dictionaries">
-<span class="sig-name descname"><span class="pre">merge_dictionaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.Dict.merge_dictionaries" title="Link to this definition"></a></dt>
-<dd><p>Merges two dictionaries into a single dictionary, combining the values of
-any duplicate keys into lists.</p>
-<p>Parameters:
-- dict1 (dict): The first input dictionary.
-- dict2 (dict): The second input dictionary.</p>
-<p>Returns:
-- defaultdict(list): A dictionary where each key holds a list of values
-from both input dictionaries. If a key is present in both dict1 and dict2,
-both values will be in the list. Otherwise, the list will contain the
-single value from whichever dictionary the key originates from.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="functional.operation.Distance">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functional.operation.</span></span><span class="sig-name descname"><span class="pre">Distance</span></span><a class="headerlink" href="#functional.operation.Distance" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.Distance.apply_pbc">
-<span class="sig-name descname"><span class="pre">apply_pbc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.Distance.apply_pbc" title="Link to this definition"></a></dt>
-<dd><p>Apply Periodic Boundary Conditions to a given 1D distance.</p>
-<p>Parameters:
-- distance_1D (float): The value to apply the periodic boundary conditions to.</p>
-<p>Returns:
-- distance_1D (float): The adjusted value after applying the periodic boundary conditions, ensuring it remains within the normalized range [0, 0.5].</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.Distance.apply_pbc_cartesian">
-<span class="sig-name descname"><span class="pre">apply_pbc_cartesian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length_1D</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.Distance.apply_pbc_cartesian" title="Link to this definition"></a></dt>
-<dd><p>Apply Periodic Boundary Conditions to a given 1D distance in a Cartesian system.</p>
-<p>Parameters:
-- distance_1D (float): The original distance along one axis (X, Y, or Z).
-- length (float): The length of the domain along the same axis.</p>
-<p>Returns:
-- distance_1D (float): The adjusted distance considering PBC, ensuring it’s the shortest possible
-within the given domain length.</p>
-<p>Notes:
-- Angle is ignored in the calculation</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.Distance.mic_eucledian_distance">
-<span class="sig-name descname"><span class="pre">mic_eucledian_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coor2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.Distance.mic_eucledian_distance" title="Link to this definition"></a></dt>
-<dd><p>This function computes the minimum image convention (MIC) Euclidean distance
-between two points (coor1 and coor2),considering periodic boundary conditions.
-It ensures that the distance measured is the shortest possible path
-between these points in a periodic system.</p>
-<p>Parameters:
-- coor1 (tuple): The (x, y, z) coordinates of the first point.
-- coor2 (tuple): The (x, y, z) coordinates of the second point.</p>
-<p>Returns:
-- distance (float): The minimum image convention Euclidean distance between the two points.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.Distance.mic_eucledian_distance_cartesian">
-<span class="sig-name descname"><span class="pre">mic_eucledian_distance_cartesian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coor2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.Distance.mic_eucledian_distance_cartesian" title="Link to this definition"></a></dt>
-<dd><p>Calculates the minimum image convention (MIC) Euclidean distance between two points in 3D space
-with periodic boundary conditions in a Cartesian coordinate system,
-considering the box dimensions a, b, and c along the x, y, and z axes, respectively.</p>
-<p>Parameters:
-- coor1 (tuple): Coordinates (x, y, z) of the first point.
-- coor2 (tuple): Coordinates (x, y, z) of the second point.
-- a (float): Length of the simulation box along the x-axis.
-- b (float): Length of the simulation box along the y-axis.
-- c (float): Length of the simulation box along the z-axis.</p>
-<p>Returns:
-- distance (float): The MIC Euclidean distance between the two points.</p>
-<p>Notes:
-- I’m actually confused with this function</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="functional.operation.File">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functional.operation.</span></span><span class="sig-name descname"><span class="pre">File</span></span><a class="headerlink" href="#functional.operation.File" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.File.check_folder_existance">
-<span class="sig-name descname"><span class="pre">check_folder_existance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">empty_folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.File.check_folder_existance" title="Link to this definition"></a></dt>
-<dd><p>Check if a folder exists, create it if not, and optionally empty it.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>folder_name</strong> (<em>str</em>) – The name of the folder to check or create.</p></li>
-<li><p><strong>empty_folder</strong> (<em>bool</em>) – If True, empty the folder if it already exists.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.File.copy_rename_files">
-<span class="sig-name descname"><span class="pre">copy_rename_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">destination_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">savedir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.File.copy_rename_files" title="Link to this definition"></a></dt>
-<dd><p>Copy and rename multiple files based on the contents of a DataFrame.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataframe</strong> (<em>pd.DataFrame</em>) – DataFrame containing file information.</p></li>
-<li><p><strong>destination_directory</strong> (<em>str</em>) – The directory where files should be copied.</p></li>
-<li><p><strong>filename</strong> (<em>str</em>) – The base name of the files.</p></li>
-<li><p><strong>prefix</strong> (<em>str</em>) – An optional prefix to be added to the new filenames.</p></li>
-<li><p><strong>savedir</strong> (<em>bool</em>) – If True, save the new file paths to the DataFrame.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.File.copy_rename_single_file">
-<span class="sig-name descname"><span class="pre">copy_rename_single_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.File.copy_rename_single_file" title="Link to this definition"></a></dt>
-<dd><p>Copy a file from the source directory to the destination directory with an optional filename prefix.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>destination_directory</strong> (<em>str</em>) – The directory where the file should be copied.</p></li>
-<li><p><strong>source_directory</strong> (<em>str</em>) – The directory from which the file should be copied.</p></li>
-<li><p><strong>filename</strong> (<em>str</em>) – The name of the file to be copied.</p></li>
-<li><p><strong>prefix</strong> (<em>str</em>) – An optional prefix to be added to the new filename.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.File.delete_elements">
-<span class="sig-name descname"><span class="pre">delete_elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line_ranges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_numbers_edit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_contents</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.File.delete_elements" title="Link to this definition"></a></dt>
-<dd><p>Delete specified lines and edit others in a file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>file_path</strong> (<em>str</em>) – The path to the file to be modified.</p></li>
-<li><p><strong>line_ranges</strong> (<em>list</em>) – A list of tuples representing the ranges of lines to be deleted.</p></li>
-<li><p><strong>line_numbers_edit</strong> (<em>list</em>) – A list of line numbers to be edited.</p></li>
-<li><p><strong>new_contents</strong> (<em>list</em>) – A list of new contents for the edited lines.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.File.delete_files">
-<span class="sig-name descname"><span class="pre">delete_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name_w_format</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.File.delete_files" title="Link to this definition"></a></dt>
-<dd><p>Delete files based in the specified folder.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataframe</strong> (<em>pd.DataFrame</em>) – A DataFrame containing information about files (‘geometry’ and ‘path’).</p></li>
-<li><p><strong>folder_name</strong> (<em>str</em>) – The directory where the files are located.</p></li>
-<li><p><strong>file_name_w_format</strong> (<em>str</em>) – The base name of the files with format information.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>OSError</strong> – If an error occurs during file deletion, an exception is caught,
-    and an error message is printed.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.File.delete_lines">
-<span class="sig-name descname"><span class="pre">delete_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line_ranges</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.File.delete_lines" title="Link to this definition"></a></dt>
-<dd><p>Delete specified lines from a file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>file_path</strong> (<em>str</em>) – The path to the file to be modified.</p></li>
-<li><p><strong>line_ranges</strong> (<em>list</em>) – A list of tuples representing the ranges of lines to be deleted.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.File.edit_lines">
-<span class="sig-name descname"><span class="pre">edit_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line_numbers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_contents</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.File.edit_lines" title="Link to this definition"></a></dt>
-<dd><p>Edit specified lines in a file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>file_path</strong> (<em>str</em>) – The path to the file to be modified.</p></li>
-<li><p><strong>line_numbers</strong> (<em>list</em>) – A list of line numbers to be edited.</p></li>
-<li><p><strong>new_contents</strong> (<em>list</em>) – A list of new contents for the edited lines.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.File.empty_folder">
-<span class="sig-name descname"><span class="pre">empty_folder</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.File.empty_folder" title="Link to this definition"></a></dt>
-<dd><p>Empty the contents of a folder.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>folder_name</strong> (<em>str</em>) – The name of the folder to be emptied.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.File.splitall">
-<span class="sig-name descname"><span class="pre">splitall</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.File.splitall" title="Link to this definition"></a></dt>
-<dd><p>Splitting path into its individual components of each sub-/folder.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – The input path to be split.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A list containing the components of the path.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>Source:</dt><dd><p><a class="reference external" href="https://www.oreilly.com/library/view/python-cookbook/0596001673/ch04s16.html">https://www.oreilly.com/library/view/python-cookbook/0596001673/ch04s16.html</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="functional.operation.Float">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functional.operation.</span></span><span class="sig-name descname"><span class="pre">Float</span></span><a class="headerlink" href="#functional.operation.Float" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -413,95 +131,14 @@ considering the box dimensions a, b, and c along the x, y, and z axes, respectiv
 
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="functional.operation.KMeans">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functional.operation.</span></span><span class="sig-name descname"><span class="pre">KMeans</span></span><a class="headerlink" href="#functional.operation.KMeans" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.KMeans.create_POSCAR_atoms_centroids_appended">
-<span class="sig-name descname"><span class="pre">create_POSCAR_atoms_centroids_appended</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coor_centroids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice_constant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.KMeans.create_POSCAR_atoms_centroids_appended" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.KMeans.kmeans_cluster_atoms">
-<span class="sig-name descname"><span class="pre">kmeans_cluster_atoms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amount_clusters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.KMeans.kmeans_cluster_atoms" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="functional.operation.String">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functional.operation.</span></span><span class="sig-name descname"><span class="pre">String</span></span><a class="headerlink" href="#functional.operation.String" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.String.modify_line">
-<span class="sig-name descname"><span class="pre">modify_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old_part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.String.modify_line" title="Link to this definition"></a></dt>
-<dd><p>Replace a specific part of a line with a new label.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>line</strong> (<em>str</em>) – The original line of text.</p></li>
-<li><p><strong>old_part</strong> (<em>str</em>) – The part of the line to be replaced.</p></li>
-<li><p><strong>new_label</strong> (<em>str</em>) – The new label to insert in place of the old part.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The modified line with the new label.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.String.replace">
-<span class="sig-name descname"><span class="pre">replace</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.String.replace" title="Link to this definition"></a></dt>
-<dd><p>Replace a string with NaN if it cannot be converted to a float.</p>
-<p>Source: <a class="reference external" href="https://stackoverflow.com/questions/57048617/how-do-i-replace-all-string-values-with-nan-dynamically">https://stackoverflow.com/questions/57048617/how-do-i-replace-all-string-values-with-nan-dynamically</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>i</strong> (<em>str</em>) – The input string.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>i</strong> – The converted float or NaN.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float or np.nan</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="functional.operation.String.replace_values_in_series">
-<span class="sig-name descname"><span class="pre">replace_values_in_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">replacements</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.operation.String.replace_values_in_series" title="Link to this definition"></a></dt>
-<dd><p>Replace values in a Pandas Series according to a replacements dictionary.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>series</strong> (<em>pd.Series</em>) – The Pandas Series to modify.</p></li>
-<li><p><strong>replacements</strong> (<em>dict</em>) – A dictionary where keys are old values and values are new values.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The modified Series with replaced values.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pd.Series</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="functional.create_dataframe.html" class="btn btn-neutral float-left" title="functional.create_dataframe module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="orientation.html" class="btn btn-neutral float-right" title="orientation package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="functional.kmeans.html" class="btn btn-neutral float-left" title="functional.kmeans module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="functional.string.html" class="btn btn-neutral float-right" title="functional.string module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

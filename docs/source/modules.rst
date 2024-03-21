@@ -5,4 +5,6 @@ project
    :maxdepth: 4
 
    functional
+   mapping
    orientation
+   preprocessing

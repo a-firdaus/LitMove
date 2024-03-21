@@ -21,7 +21,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="functional.create_dataframe module" href="functional.create_dataframe.html" />
+    <link rel="next" title="functional.calc_distance module" href="functional.calc_distance.html" />
     <link rel="prev" title="project" href="modules.html" /> 
 </head>
 
@@ -49,14 +49,21 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">project</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">functional package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="functional.create_dataframe.html">functional.create_dataframe module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.calc_distance.html">functional.calc_distance module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.dictionary.html">functional.dictionary module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.directory.html">functional.directory module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.file.html">functional.file module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.kmeans.html">functional.kmeans module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="functional.operation.html">functional.operation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.string.html">functional.string module</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#module-functional">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="mapping.html">mapping package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="orientation.html">orientation package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing.html">preprocessing package</a></li>
 </ul>
 </li>
 </ul>
@@ -92,9 +99,41 @@
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="functional.create_dataframe.html">functional.create_dataframe module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="functional.create_dataframe.html#functional.create_dataframe.base"><code class="docutils literal notranslate"><span class="pre">base()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="functional.create_dataframe.html#functional.create_dataframe.columns_perfectsystem"><code class="docutils literal notranslate"><span class="pre">columns_perfectsystem()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="functional.calc_distance.html">functional.calc_distance module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functional.calc_distance.html#functional.calc_distance.apply_pbc"><code class="docutils literal notranslate"><span class="pre">apply_pbc()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.calc_distance.html#functional.calc_distance.apply_pbc_cartesian"><code class="docutils literal notranslate"><span class="pre">apply_pbc_cartesian()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.calc_distance.html#functional.calc_distance.mic_eucledian_distance"><code class="docutils literal notranslate"><span class="pre">mic_eucledian_distance()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.calc_distance.html#functional.calc_distance.mic_eucledian_distance_cartesian"><code class="docutils literal notranslate"><span class="pre">mic_eucledian_distance_cartesian()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="functional.dictionary.html">functional.dictionary module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functional.dictionary.html#functional.dictionary.Mapping"><code class="docutils literal notranslate"><span class="pre">Mapping</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="functional.dictionary.html#functional.dictionary.Mapping.get_atom_mapping_el_w_dist_closestduplicate"><code class="docutils literal notranslate"><span class="pre">Mapping.get_atom_mapping_el_w_dist_closestduplicate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="functional.dictionary.html#functional.dictionary.Mapping.get_duplicate_closest24_w_data"><code class="docutils literal notranslate"><span class="pre">Mapping.get_duplicate_closest24_w_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="functional.dictionary.html#functional.dictionary.get_duplicate_values"><code class="docutils literal notranslate"><span class="pre">get_duplicate_values()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.dictionary.html#functional.dictionary.merge_dictionaries"><code class="docutils literal notranslate"><span class="pre">merge_dictionaries()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="functional.directory.html">functional.directory module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functional.directory.html#functional.directory.check_folder_existance"><code class="docutils literal notranslate"><span class="pre">check_folder_existance()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.directory.html#functional.directory.copy_rename_files"><code class="docutils literal notranslate"><span class="pre">copy_rename_files()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.directory.html#functional.directory.copy_rename_single_file"><code class="docutils literal notranslate"><span class="pre">copy_rename_single_file()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.directory.html#functional.directory.delete_files"><code class="docutils literal notranslate"><span class="pre">delete_files()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.directory.html#functional.directory.empty_folder"><code class="docutils literal notranslate"><span class="pre">empty_folder()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.directory.html#functional.directory.splitall"><code class="docutils literal notranslate"><span class="pre">splitall()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="functional.file.html">functional.file module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functional.file.html#functional.file.delete_elements"><code class="docutils literal notranslate"><span class="pre">delete_elements()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.file.html#functional.file.delete_lines"><code class="docutils literal notranslate"><span class="pre">delete_lines()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.file.html#functional.file.edit_lines"><code class="docutils literal notranslate"><span class="pre">edit_lines()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="functional.kmeans.html">functional.kmeans module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functional.kmeans.html#functional.kmeans.create_POSCAR_atoms_centroids_appended"><code class="docutils literal notranslate"><span class="pre">create_POSCAR_atoms_centroids_appended()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.kmeans.html#functional.kmeans.kmeans_cluster_atoms"><code class="docutils literal notranslate"><span class="pre">kmeans_cluster_atoms()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="functional.operation.html">functional.operation module</a><ul>
@@ -104,50 +143,16 @@
 <li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.Cartesian.get_fractional_to_cartesian_matrix"><code class="docutils literal notranslate"><span class="pre">Cartesian.get_fractional_to_cartesian_matrix()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="functional.operation.html#functional.operation.Dict"><code class="docutils literal notranslate"><span class="pre">Dict</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.Dict.Mapping"><code class="docutils literal notranslate"><span class="pre">Dict.Mapping</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="functional.operation.html#functional.operation.Dict.Mapping.get_atom_mapping_el_w_dist_closestduplicate"><code class="docutils literal notranslate"><span class="pre">Dict.Mapping.get_atom_mapping_el_w_dist_closestduplicate()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="functional.operation.html#functional.operation.Dict.Mapping.get_duplicate_closest24_w_data"><code class="docutils literal notranslate"><span class="pre">Dict.Mapping.get_duplicate_closest24_w_data()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.Dict.get_duplicate_values"><code class="docutils literal notranslate"><span class="pre">Dict.get_duplicate_values()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.Dict.merge_dictionaries"><code class="docutils literal notranslate"><span class="pre">Dict.merge_dictionaries()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="functional.operation.html#functional.operation.Distance"><code class="docutils literal notranslate"><span class="pre">Distance</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.Distance.apply_pbc"><code class="docutils literal notranslate"><span class="pre">Distance.apply_pbc()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.Distance.apply_pbc_cartesian"><code class="docutils literal notranslate"><span class="pre">Distance.apply_pbc_cartesian()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.Distance.mic_eucledian_distance"><code class="docutils literal notranslate"><span class="pre">Distance.mic_eucledian_distance()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.Distance.mic_eucledian_distance_cartesian"><code class="docutils literal notranslate"><span class="pre">Distance.mic_eucledian_distance_cartesian()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="functional.operation.html#functional.operation.File"><code class="docutils literal notranslate"><span class="pre">File</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.File.check_folder_existance"><code class="docutils literal notranslate"><span class="pre">File.check_folder_existance()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.File.copy_rename_files"><code class="docutils literal notranslate"><span class="pre">File.copy_rename_files()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.File.copy_rename_single_file"><code class="docutils literal notranslate"><span class="pre">File.copy_rename_single_file()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.File.delete_elements"><code class="docutils literal notranslate"><span class="pre">File.delete_elements()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.File.delete_files"><code class="docutils literal notranslate"><span class="pre">File.delete_files()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.File.delete_lines"><code class="docutils literal notranslate"><span class="pre">File.delete_lines()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.File.edit_lines"><code class="docutils literal notranslate"><span class="pre">File.edit_lines()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.File.empty_folder"><code class="docutils literal notranslate"><span class="pre">File.empty_folder()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.File.splitall"><code class="docutils literal notranslate"><span class="pre">File.splitall()</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="functional.operation.html#functional.operation.Float"><code class="docutils literal notranslate"><span class="pre">Float</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.Float.format_float"><code class="docutils literal notranslate"><span class="pre">Float.format_float()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="functional.operation.html#functional.operation.KMeans"><code class="docutils literal notranslate"><span class="pre">KMeans</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.KMeans.create_POSCAR_atoms_centroids_appended"><code class="docutils literal notranslate"><span class="pre">KMeans.create_POSCAR_atoms_centroids_appended()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.KMeans.kmeans_cluster_atoms"><code class="docutils literal notranslate"><span class="pre">KMeans.kmeans_cluster_atoms()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="functional.operation.html#functional.operation.String"><code class="docutils literal notranslate"><span class="pre">String</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.String.modify_line"><code class="docutils literal notranslate"><span class="pre">String.modify_line()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.String.replace"><code class="docutils literal notranslate"><span class="pre">String.replace()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="functional.operation.html#functional.operation.String.replace_values_in_series"><code class="docutils literal notranslate"><span class="pre">String.replace_values_in_series()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="functional.string.html">functional.string module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functional.string.html#functional.string.modify_line"><code class="docutils literal notranslate"><span class="pre">modify_line()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.string.html#functional.string.replace"><code class="docutils literal notranslate"><span class="pre">replace()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional.string.html#functional.string.replace_values_in_series"><code class="docutils literal notranslate"><span class="pre">replace_values_in_series()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -163,7 +168,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="modules.html" class="btn btn-neutral float-left" title="project" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="functional.create_dataframe.html" class="btn btn-neutral float-right" title="functional.create_dataframe module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="functional.calc_distance.html" class="btn btn-neutral float-right" title="functional.calc_distance module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -7,8 +7,13 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   functional.create_dataframe
+   functional.calc_distance
+   functional.dictionary
+   functional.directory
+   functional.file
+   functional.kmeans
    functional.operation
+   functional.string
 
 Module contents
 ---------------
