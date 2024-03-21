@@ -1,5 +1,13 @@
+import os
+import pandas as pd
+import numpy as np
 
-def get_CONTCAR_normal_elements(dataframe, destination_directory, filename, prefix=None):
+from pymatgen.core.structure import Structure
+from pymatgen.io.cif import CifWriter
+
+
+def edit_to_normal_elements(dataframe, destination_directory, filename, prefix=None):
+    # rename from: get_CONTCAR_normal_elements
     """
     Modifies CONTCAR files to include standard elemental labels for each site configuration, instead of `Li_sv_GW/24a6a  P_GW/715c28f22  S_GW/357db9cfb  Cl_GW/3ef3b316` from the result of NEB calculation.
 
@@ -42,7 +50,8 @@ def get_CONTCAR_normal_elements(dataframe, destination_directory, filename, pref
             contcar_file.writelines(contcar_lines)
 
 
-def get_positive_lessthan1_poscarorcontcar(dataframe, destination_directory, poscarorcontcar_line_nr_start, poscarorcontcar_line_nr_end, poscarorcontcar_columns_type2, file_type, var_name_in, var_name_out, n_decimal):
+def positive_lessthan1(dataframe, destination_directory, poscarorcontcar_line_nr_start, poscarorcontcar_line_nr_end, poscarorcontcar_columns_type2, file_type, var_name_in, var_name_out, n_decimal):
+    # rename from: get_positive_lessthan1_poscarorcontcar
     """
     Creates positive POSCAR/CONTCAR files that have normalized value within the range [0, 1]
     (based on specified data transformations).
@@ -138,7 +147,8 @@ def get_positive_lessthan1_poscarorcontcar(dataframe, destination_directory, pos
         dataframe[col_subdir_positive_file][idx] = destination_path
 
 
-def create_cif_pymatgen(dataframe, destination_directory, file_restructure, var_name):
+def convert_to_cif_pymatgen(dataframe, destination_directory, file_restructure, var_name):
+    # rename from: create_cif_pymatgen
     for idx in range(dataframe["geometry"].size):
         source_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{file_restructure}"
         source_filename_path = os.path.join(destination_directory, source_filename)
@@ -153,7 +163,8 @@ def create_cif_pymatgen(dataframe, destination_directory, file_restructure, var_
         cif.write_file(output_filename_path)
 
 
-def get_latticeconstant_structure_dict_iterated(dataframe, destination_directory, proceed_XDATCAR, var_filename):
+def get_latticeconstant_dict(dataframe, destination_directory, proceed_XDATCAR, var_filename):
+    # rename from: get_latticeconstant_structure_dict_iterated
     col_latticeconstant_structure_dict = f"latticeconstant_structure_dict_{var_filename}"
     col_latticeconstant_structure_dict_flag = f"latticeconstant_structure_dict_{var_filename}_flag"
 
@@ -196,7 +207,9 @@ def get_latticeconstant_structure_dict_iterated(dataframe, destination_directory
         dataframe.at[idx, col_latticeconstant_structure_dict_flag] = latticeconstant_structure_dict_flag
 
 
-def diagonalizing_latticeconstantsmatrix(dataframe, destination_directory, latticeconstantsmatrix_line_nr_start, var_name_in, var_name_out, n_decimal):
+def diagonalize_latticeconstantsmatrix(dataframe, destination_directory, latticeconstantsmatrix_line_nr_start, var_name_in, var_name_out, n_decimal):
+    # rename from: diagonalizing_latticeconstantsmatrix
+    
     # # dataframe['subdir_orientated_positive_poscar'] = None
     for idx in range(dataframe["geometry"].size):
         filename_to_transform = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_POSCAR_{var_name_in}"
