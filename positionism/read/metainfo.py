@@ -396,7 +396,8 @@ def idx_cage_coor_24g(coor_24g_array, labels, idx_coor_cage_order, amount_cluste
     return updated_idx_cage_coor_24g
 
 
-def get_tuple_cage_metainfo(tuple_metainfo, idx_cage_coor_24g):
+def tuple_cage(tuple_metainfo, idx_cage_coor_24g):
+    # rename from: get_tuple_cage_metainfo
     """
     Note
     ====

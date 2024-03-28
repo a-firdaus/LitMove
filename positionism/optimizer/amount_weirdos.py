@@ -2,6 +2,15 @@ import pandas as pd
 import numpy as np
 import os
 
+from functional import directory
+from positionism.preprocessing import CONTCARorPOSCAR
+from preprocessing import create_dataframe, CONTCARorPOSCAR
+from read import parameter, coordinate_and_el
+from orientation import propagate
+from optimizer import position
+from mapping import flag_and_map, atom_indexing, labelling, output_CIF, output_weirdos
+from plot import structure_analysis
+
 from pymatgen.core.structure import Structure
 from pymatgen.io.cif import CifWriter
 
@@ -60,7 +69,7 @@ def get_sum_weirdos_Li_var_not_complete(max_mapping_radius, max_mapping_radius_4
     path_ori_ref_48n24 = direc+str(file_path_ori_ref_48n24)
     path_reference_folder = direc+"/"+str(reference_folder)
 
-    ref_positions_array_all = np.array(ReadStructure.Parameter.get_dx_dz(path_ori_ref_48n24, litype))
+    ref_positions_array_all = np.array(parameter.dx_dz(path_ori_ref_48n24, litype))
 
     if litype == 0:
         dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
@@ -159,7 +168,7 @@ def get_sum_weirdos_Li_var_not_complete(max_mapping_radius, max_mapping_radius_4
 
     folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_perfect_poscar_48n24_wo_cif}/"
     path_folder_name_iter_type = direc+str(folder_name_iter_type)
-    Operation.File.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
+    directory.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
 
 
     if foldermapping_namestyle_all == True:
@@ -269,18 +278,18 @@ def get_sum_weirdos_Li_var_not_complete(max_mapping_radius, max_mapping_radius_4
     data_toten_ori = data_toten
     data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
 
-    file_loc = CreateDataFrame.base(data_toten, file_new_system)
+    file_loc = create_dataframe.base(data_toten, file_new_system)
 
     # just refreshing folder
-    Operation.File.check_folder_existance(direc_restructure_destination, empty_folder=True)
+    directory.check_folder_existance(direc_restructure_destination, empty_folder=True)
 
     # copy ref.cif inside _results/../.. 
-    Operation.File.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_perfect_poscar_48n24, prefix=None)
+    directory.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_perfect_poscar_48n24, prefix=None)
 
-    Operation.File.copy_rename_files(file_loc, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
-    PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    directory.copy_rename_files(file_loc, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
+    CONTCARorPOSCAR.positive_lessthan1(file_loc, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
 
-    file_loc_mask_1, file_loc_important_cols = Orientation.calculate(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
+    file_loc_mask_1, file_loc_important_cols = propagate.calculate(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
     
     if modif_all_litype == True:
         ref_positions_array = ref_positions_array_all
@@ -298,16 +307,16 @@ def get_sum_weirdos_Li_var_not_complete(max_mapping_radius, max_mapping_radius_4
         ref_positions_array_filename = ref_positions_array_all_compactform
 
     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-    # path_perfect_poscar_48n24 = Optimizer.Position.Modify.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
-    path_perfect_poscar_48n24 = Optimizer.Position.Modify.modif_dx_dz_get_filepath(path_folder_name_iter_type, path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
+    # path_perfect_poscar_48n24 = position.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
+    path_perfect_poscar_48n24 = position.modif_dx_dz_get_filepath(path_folder_name_iter_type, path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
 
     # just copy file
-    # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+    # directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
     # !!! had to copy file_perfect_poscar_48n24 into Li1
-    # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_48n24, prefix=None)
-    Operation.File.copy_rename_single_file(direc_restructure_destination, path_folder_name_iter_type, file_perfect_poscar_48n24, prefix=None)
+    # directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_48n24, prefix=None)
+    directory.copy_rename_single_file(direc_restructure_destination, path_folder_name_iter_type, file_perfect_poscar_48n24, prefix=None)
 
-    # Operation.File.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None,  savedir = True)
+    # directory.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None,  savedir = True)
 
     # # var_c = "trf_w_linalg_orientated"
     # # Orientation.get_structure_with_linalg_orientated(file_loc_important_cols, direc_restructure_destination, file_restructure, var_c)
@@ -327,36 +336,36 @@ def get_sum_weirdos_Li_var_not_complete(max_mapping_radius, max_mapping_radius_4
     cif = CifWriter(cif_structure)
     cif.write_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif")
 
-    coor_structure_init_dict = ReadStructure.Coor.get_coor_structure_init_dict(ref_structure_48n24)
-    coor_structure_init_dict_expanded = ReadStructure.Coor.get_coor_structure_init_dict(Structure.from_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif"))
+    coor_structure_init_dict = coordinate_and_el.single_structure(ref_structure_48n24)
+    coor_structure_init_dict_expanded = coordinate_and_el.single_structure(Structure.from_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif"))
 
-    # PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-    ReadStructure.Coor.get_coor_structure_init_dict_wholedataframe(file_loc_important_cols, mapping = "False")
+    # CONTCAR.positive_lessthan1(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    coordinate_and_el.structures(file_loc_important_cols, mapping = "False")
 
     # if activate_radius == 3:
-    #     get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
+    #     flag_and_map.all_atoms_of_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
     #     get_flag_map_weirdos_48htype1_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype1_48htype2)
     #     get_flag_map_weirdos_48htypesmerged_level1_el(file_loc_important_cols, "Li")
-    #     get_flag_map_weirdos_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
-    #     get_flag_map_48htypesmerged_el(file_loc_important_cols, "Li", activate_radius)
+    #     flag_and_map.li_48htype2(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
+    #     flag_and_map.li_48htypesmerged(file_loc_important_cols, "Li", activate_radius)
     if activate_radius == 2:
-        get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
-        get_flag_map_weirdos_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
-        get_flag_map_48htypesmerged_el(file_loc_important_cols, "Li", activate_radius)
+        flag_and_map.all_atoms_of_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
+        flag_and_map.li_48htype2(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
+        flag_and_map.li_48htypesmerged(file_loc_important_cols, "Li", activate_radius)
     elif activate_radius == 1:
-        get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
+        flag_and_map.all_atoms_of_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
 
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "P", max_mapping_radius)
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "S", max_mapping_radius)
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Cl", max_mapping_radius)
+    # flag_and_map.all_atoms_of_el(file_loc_important_cols, coor_structure_init_dict, "P", max_mapping_radius)
+    # flag_and_map.all_atoms_of_el(file_loc_important_cols, coor_structure_init_dict, "S", max_mapping_radius)
+    # flag_and_map.all_atoms_of_el(file_loc_important_cols, coor_structure_init_dict, "Cl", max_mapping_radius)
 
-    Mapping.AtomIndexing.get_idx_weirdos_el(file_loc_important_cols, "Li", activate_radius)
+    atom_indexing.weirdos_el(file_loc_important_cols, "Li", activate_radius)
 
-    # Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, el="Li")
-    Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, "Li", activate_radius)
-    # # Mapping.OutputCIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
+    # atom_indexing.correcting_idx_and_order_mapped_el(file_loc_important_cols, el="Li")
+    atom_indexing.correcting_idx_and_order_mapped_el(file_loc_important_cols, "Li", activate_radius)
+    # # output_CIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
     
-    Mapping.Labelling.get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
+    labelling.get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
 
     # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
     # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
@@ -372,30 +381,30 @@ def get_sum_weirdos_Li_var_not_complete(max_mapping_radius, max_mapping_radius_4
     if full_calculation == False:
         pass
     elif full_calculation == True:
-        Mapping.OutputCIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, activate_radius, var_savefilename = "mapLi")
-        Mapping.OutputCIF.rewrite_cif_w_correct_Li_idx(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed")
-        Mapping.OutputCIF.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed", var_savefilename_new = "mapLi_reindexed")
+        output_CIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, activate_radius, var_savefilename = "mapLi")
+        output_CIF.rewrite_cif_w_correct_Li_idx(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed")
+        output_CIF.Edit.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed", var_savefilename_new = "mapLi_reindexed")
         # # # # Operation.File.delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed.cif")
 
-        Mapping.OutputCIF.rewrite_cif_w_correct_Li_idx_weirdos_appended(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, activate_radius,var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
-        Mapping.OutputCIF.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
+        output_CIF.rewrite_cif_w_correct_Li_idx_weirdos_appended(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, activate_radius,var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
+        output_CIF.Edit.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
         # # # Operation.File.delete_files(file_loc_important_cols, direc_restructure_destination, file_name_w_format = "mapLi_reindexed_weirdos_appended.cif")
 
-        PreProcessingCONTCAR.create_cif_pymatgen(file_loc_important_cols, direc_restructure_destination, file_restructure = "CONTCAR_positive", var_name = "CONTCAR_positive_pymatgen")
+        CONTCARorPOSCAR.convert_to_cif_pymatgen(file_loc_important_cols, direc_restructure_destination, file_restructure = "CONTCAR_positive", var_name = "CONTCAR_positive_pymatgen")
 
-        # # # Mapping.OutputCIF.ascending_Li(file_loc_important_cols, direc_restructure_destination, var_filename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
-        # # # Mapping.OutputCIF.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended_reordered", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
+        # # # output_CIF.ascending_Li(file_loc_important_cols, direc_restructure_destination, var_filename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
+        # # # output_CIF.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended_reordered", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
 
-        Mapping.AtomIndexing.get_idx_coor_limapped_weirdos_dict_litype(file_loc_important_cols, coor_structure_init_dict, activate_radius, litype, el="Li")
+        atom_indexing.get_idx_coor_limapped_weirdos_dict_litype(file_loc_important_cols, coor_structure_init_dict, activate_radius, litype, el="Li")
 
-        PreProcessingCONTCAR.get_latticeconstant_structure_dict_iterated(file_loc_important_cols, direc_restructure_destination, var_filename = "CONTCAR")
+        CONTCARorPOSCAR.get_latticeconstant_dict(file_loc_important_cols, direc_restructure_destination, var_filename = "CONTCAR")
         # Plot.StructureAnalysis.energy_vs_latticeconstant(file_loc_important_cols, var_filename = "CONTCAR")
-        Plot.StructureAnalysis.weirdos_directcoor(file_loc_important_cols, activate_radius)
+        structure_analysis.weirdos_directcoor(file_loc_important_cols, activate_radius)
 
-        coor_weirdos_Li = Mapping.OutputWeirdos.get_coor_weirdos_array(file_loc_important_cols, activate_radius)
-        Mapping.OutputWeirdos.create_POSCAR_weirdos(coor_weirdos_Li, direc_restructure_destination, lattice_constant, filename = "POSCAR_weirdos")
+        coor_weirdos_Li = output_weirdos.get_coor_weirdos_array(file_loc_important_cols, activate_radius)
+        output_weirdos.create_POSCAR_weirdos(coor_weirdos_Li, direc_restructure_destination, lattice_constant, filename = "POSCAR_weirdos")
 
-        Mapping.Labelling.get_label_mapping(file_loc_important_cols, coor_structure_init_dict, "Li", activate_radius, litype)
+        labelling.get_label_mapping(file_loc_important_cols, coor_structure_init_dict, "Li", activate_radius, litype)
 
     if litype == 0:
         file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
@@ -554,7 +563,8 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
     """
     dataframe = dataframe_init
 
-    formatted_positions = [Operation.Float.format_float(pos) for pos in ref_positions_array]
+    # formatted_positions = [Operation.Float.format_float(pos) for pos in ref_positions_array]
+    formatted_positions = [pos for pos in ref_positions_array]
     new_dx1_type, new_dx2_type, new_dz_type = formatted_positions
     
     direc = os.getcwd() # get current working directory
@@ -573,10 +583,10 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
 
     folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_ori_ref_48n24}/"
     path_folder_name_iter_type = direc+str(folder_name_iter_type)
-    Operation.File.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
+    directory.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
 
     # copy ref.cif inside _results/../.. 
-    Operation.File.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_ori_ref_48n24, prefix=None)
+    directory.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_ori_ref_48n24, prefix=None)
 
     if activate_radius == 2:
         folder_name_destination_restructure = f"{path_folder_name_iter_type}restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}_optimizer/"
@@ -598,7 +608,7 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
     direc_restructure_destination = direc+str(folder_name_destination_restructure)
     direc_perfect_poscar = direc+str(folder_name_perfect_poscar)
     path_perfect_poscar_24 = os.path.join(direc_perfect_poscar, file_perfect_poscar_24)
-    direc_init_system = direc+str(folder_name_init_system)
+    # direc_init_system = direc+str(folder_name_init_system)
 
     dtype = {col_excel_geo: float, col_excel_path: float}
 
@@ -607,20 +617,20 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
     data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
 
     # just refreshing folder
-    Operation.File.check_folder_existance(direc_restructure_destination, empty_folder=True)
+    directory.check_folder_existance(direc_restructure_destination, empty_folder=True)
 
     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
     # path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-    path_perfect_poscar_48n24 = Optimizer.Position.Modify.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array, litype, var_optitype, modif_all_litype = False)
+    path_perfect_poscar_48n24 = position.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array, litype, var_optitype, modif_all_litype = False)
 
     # just copy file
-    # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+    # directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
     # !!! had to copy file_ori_ref_48n24 into Li1
-    Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
+    directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
 
-    # file_loc_mask_1, dataframe = Orientation.calculate(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
+    # file_loc_mask_1, dataframe = CONTCAR.positive_lessthan1(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-    Operation.File.copy_rename_files(dataframe, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+    directory.copy_rename_files(dataframe, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
     # # var_c = "trf_w_linalg_orientated"
@@ -638,28 +648,28 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
     # max_mapping_radius = 0.04197083906
     ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
 
-    coor_structure_init_dict = ReadStructure.Coor.get_coor_structure_init_dict(ref_structure_48n24)
-    PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(dataframe, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-    ReadStructure.Coor.get_coor_structure_init_dict_wholedataframe(dataframe, mapping = "False")
+    coor_structure_init_dict = coordinate_and_el.single_structure(ref_structure_48n24)
+    CONTCARorPOSCAR.positive_lessthan1(dataframe, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    coordinate_and_el.structures(dataframe, mapping = "False")
 
     if activate_radius == 2:
-        get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, "Li", max_mapping_radius)
-        get_flag_map_weirdos_48htype2_el(dataframe, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
-        get_flag_map_48htypesmerged_el(dataframe, "Li", activate_radius)
+        flag_and_map.all_atoms_of_el(dataframe, coor_structure_init_dict, "Li", max_mapping_radius)
+        flag_and_map.li_48htype2(dataframe, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
+        flag_and_map.li_48htypesmerged(dataframe, "Li", activate_radius)
     elif activate_radius == 1:
-        get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, "Li", max_mapping_radius)
+        flag_and_map.all_atoms_of_el(dataframe, coor_structure_init_dict, "Li", max_mapping_radius)
 
-    # get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, "P", max_mapping_radius)
-    # get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, "S", max_mapping_radius)
-    # get_flag_map_weirdos_el(dataframe, coor_structure_init_dict, "Cl", max_mapping_radius)
+    # flag_and_map.all_atoms_of_el(dataframe, coor_structure_init_dict, "P", max_mapping_radius)
+    # flag_and_map.all_atoms_of_el(dataframe, coor_structure_init_dict, "S", max_mapping_radius)
+    # flag_and_map.all_atoms_of_el(dataframe, coor_structure_init_dict, "Cl", max_mapping_radius)
 
-    Mapping.AtomIndexing.get_idx_weirdos_el(dataframe, "Li", activate_radius)
+    atom_indexing.weirdos_el(dataframe, "Li", activate_radius)
 
-    # Mapping.AtomIndexing.idx_correcting_mapped_el(dataframe, el="Li")
-    Mapping.AtomIndexing.idx_correcting_mapped_el(dataframe, "Li", activate_radius)
-    # # Mapping.OutputCIF.create_combine_structure(dataframe, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
+    # atom_indexing.correcting_idx_and_order_mapped_el(dataframe, el="Li")
+    atom_indexing.correcting_idx_and_order_mapped_el(dataframe, "Li", activate_radius)
+    # # output_CIF.create_combine_structure(dataframe, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
     
-    Mapping.Labelling.get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, "Li", litype)
+    labelling.get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, "Li", litype)
 
     # dataframe_sorted_toten = dataframe[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
     # dataframe_sorted_toten = dataframe[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
@@ -723,7 +733,8 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
     Returns:
     - 
     """
-    formatted_positions = [Operation.Float.format_float(pos) for pos in ref_positions_array]
+    # formatted_positions = [Operation.Float.format_float(pos) for pos in ref_positions_array]
+    formatted_positions = [pos for pos in ref_positions_array]
     new_dx1_type, new_dx2_type, new_dz_type = formatted_positions
 
     direc = os.getcwd() # get current working directory
@@ -776,8 +787,8 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
             filepath = subdir + os.sep
             # get directory of CONTCAR
             if os.path.basename(file) == file_new_system:
-                geometry_nr = Operation.File.splitall(subdir)[-2]
-                path_nr = Operation.File.splitall(subdir)[-1]
+                geometry_nr = directory.splitall(subdir)[-2]
+                path_nr = directory.splitall(subdir)[-1]
                 geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
                 geometry_ori = geometry
                 geometry.dropna(axis=1)
@@ -812,19 +823,19 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
         print("check the compatibility of column geometry and path between data_toten file and file_loc")
 
     # just refreshing folder
-    Operation.File.check_folder_existance(direc_restructure_destination, empty_folder=True)
+    directory.check_folder_existance(direc_restructure_destination, empty_folder=True)
 
     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-    path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype, litype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
+    path_perfect_poscar_48n24 = position.modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype, litype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
 
     # just copy file
-    # Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+    # directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
     # !!! had to copy file_ori_ref_48n24 into Li1
-    Operation.File.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
+    directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
 
-    file_loc_mask_1, file_loc_important_cols = Orientation.calculate(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
+    file_loc_mask_1, file_loc_important_cols = CONTCARorPOSCAR.positive_lessthan1(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
 
-    Operation.File.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+    directory.copy_rename_files(file_loc_important_cols, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
 
 
     # # var_c = "trf_w_linalg_orientated"
@@ -842,28 +853,28 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
     # max_mapping_radius = 0.04197083906
     ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
 
-    coor_structure_init_dict = ReadStructure.Coor.get_coor_structure_init_dict(ref_structure_48n24)
-    PreProcessingCONTCAR.get_positive_lessthan1_poscarorcontcar(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
-    ReadStructure.Coor.get_coor_structure_init_dict_wholedataframe(file_loc_important_cols, mapping = "False")
+    coor_structure_init_dict = coordinate_and_el.single_structure(ref_structure_48n24)
+    CONTCARorPOSCAR.positive_lessthan1(file_loc_important_cols, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    coordinate_and_el.structures(file_loc_important_cols, mapping = "False")
 
     if activate_radius == 2:
-        get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
-        get_flag_map_weirdos_48htype2_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
-        get_flag_map_48htypesmerged_el(file_loc_important_cols, "Li", activate_radius)
+        flag_and_map.all_atoms_of_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
+        flag_and_map.li_48htype2(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
+        flag_and_map.li_48htypesmerged(file_loc_important_cols, "Li", activate_radius)
     elif activate_radius == 1:
-        get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
+        flag_and_map.all_atoms_of_el(file_loc_important_cols, coor_structure_init_dict, "Li", max_mapping_radius)
 
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "P", max_mapping_radius)
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "S", max_mapping_radius)
-    # get_flag_map_weirdos_el(file_loc_important_cols, coor_structure_init_dict, "Cl", max_mapping_radius)
+    # flag_and_map.all_atoms_of_el(file_loc_important_cols, coor_structure_init_dict, "P", max_mapping_radius)
+    # flag_and_map.all_atoms_of_el(file_loc_important_cols, coor_structure_init_dict, "S", max_mapping_radius)
+    # flag_and_map.all_atoms_of_el(file_loc_important_cols, coor_structure_init_dict, "Cl", max_mapping_radius)
 
-    Mapping.AtomIndexing.get_idx_weirdos_el(file_loc_important_cols, "Li", activate_radius)
+    atom_indexing.weirdos_el(file_loc_important_cols, "Li", activate_radius)
 
-    # Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, el="Li")
-    Mapping.AtomIndexing.idx_correcting_mapped_el(file_loc_important_cols, "Li", activate_radius)
-    # # Mapping.OutputCIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
+    # atom_indexing.correcting_idx_and_order_mapped_el(file_loc_important_cols, el="Li")
+    atom_indexing.correcting_idx_and_order_mapped_el(file_loc_important_cols, "Li", activate_radius)
+    # # output_CIF.create_combine_structure(file_loc_important_cols, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
     
-    Mapping.Labelling.get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
+    labelling.get_distance_weirdos_label_el(file_loc_important_cols, coor_structure_init_dict, "Li", litype)
 
     # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
     # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)

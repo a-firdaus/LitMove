@@ -150,15 +150,15 @@ class Cartesian:
             dataframe.at[idx, col_distance_el] = distance_el
             dataframe.at[idx, col_closest_neighbors_w_dist_el] = closest_neighbors_w_dist_el
 
-class Float:
-    def format_float(number):
-        """
-        format float
-        """
-        # # basically nothing is formatted here
-        # if number < 0:
-        #     # return f'{(number*-1):.5f}0'
-        #     return f'{number:.5f}'
-        # else:
-        #     return f'{number:.5f}'
-        return number
+# class Float:
+#     def format_float(number):
+#         """
+#         format float
+#         """
+#         # # basically nothing is formatted here
+#         # if number < 0:
+#         #     # return f'{(number*-1):.5f}0'
+#         #     return f'{number:.5f}'
+#         # else:
+#         #     return f'{number:.5f}'
+#         return number

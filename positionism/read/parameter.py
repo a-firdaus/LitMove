@@ -1,6 +1,7 @@
 
 # class Parameter:
-def get_dx_dz(file_path, litype):
+def dx_dz(file_path, litype):
+    # rename from: get_dx_dz
     """
     Get position (dx, dz) from a CIF file.
 

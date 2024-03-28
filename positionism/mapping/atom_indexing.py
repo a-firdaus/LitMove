@@ -3,7 +3,8 @@ import numpy as np
 from functional import calc_distance
 
 
-def get_idx_weirdos_el(dataframe, el, activate_radius):
+def weirdos_el(dataframe, el, activate_radius):
+    # rename from: get_idx_weirdos_el
     """
     Identifies indexes of weirdo for a specific element within structures.
 
@@ -54,7 +55,8 @@ def get_idx_weirdos_el(dataframe, el, activate_radius):
         dataframe.at[idx, col_idx_coor_weirdos_el] = idx_coor_weirdos_el
 
 
-def idx_correcting_mapped_el(dataframe, el, activate_radius):
+def correcting_idx_and_order_mapped_el(dataframe, el, activate_radius):
+    # rename from: idx_correcting_mapped_el
     """
     Given list of reference structure's coordinate (that's considered already for mapping), 
     then they're re-ordered again aka being corrected for its indexing.
@@ -148,7 +150,8 @@ def idx_correcting_mapped_el(dataframe, el, activate_radius):
         dataframe.at[idx, col_coor_reducedreference_sorted_el] = sorted_coor
 
 
-def get_idx_coor_limapped_weirdos_dict_litype(dataframe, coor_structure_init_dict, activate_radius, litype, el):
+def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, activate_radius, litype, el):
+    # rename from: get_idx_coor_limapped_weirdos_dict_litype
     coor_reference_el_init = coor_structure_init_dict[el]
 
     col_idx_without_weirdos = "idx_without_weirdos"

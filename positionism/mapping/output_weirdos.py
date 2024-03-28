@@ -1,3 +1,5 @@
+import numpy as np
+import os
 
 
 def get_coor_weirdos_array(dataframe, activate_radius):

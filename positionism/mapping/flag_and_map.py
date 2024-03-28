@@ -1,7 +1,51 @@
 import numpy as np
 import sys
 
-from functional import calc_distance, dictionary, operation
+from functional import calc_distance, dictionary
+
+
+class DictionaryFunctional:
+    def get_duplicate_closest24_w_data(dict):
+        """
+        Identifies and returns a list of duplicate values (closest24 with its data: coor)
+        """
+        duplicate_closest24 = {}
+        for coorreference, values in dict.items():
+            for entry in values:
+                closest24 = entry["closest24"]
+                dist = entry["dist"]
+
+            if closest24 in duplicate_closest24:
+                duplicate_closest24[closest24].append({"coorreference": coorreference, "dist": dist})
+            else:
+                duplicate_closest24[closest24] = [{"coorreference": coorreference, "dist": dist}]
+
+        duplicate_closest24_w_data = {}
+        for closest24, coorreferences_dists in duplicate_closest24.items():
+            if len(coorreferences_dists) > 1:
+                duplicate_closest24_w_data[f"Duplicate closest24: {closest24}"] = [{"coorreferences and dists": coorreferences_dists}]
+
+        return duplicate_closest24_w_data
+
+
+    def get_atom_mapping_el_w_dist_closestduplicate(dict):
+        """
+        Identifies and returns closest mapped atom with its distance
+        """
+        filtered_data = {}
+        for coorreference, values in dict.items():
+            for entry in values:
+                closest24 = entry["closest24"]
+                dist = entry["dist"]
+                
+            if closest24 in filtered_data:
+                if dist < filtered_data[closest24]["dist"]:
+                    filtered_data[closest24] = {"coorreference": coorreference, "dist": dist}
+            else:
+                filtered_data[closest24] = {"coorreference": coorreference, "dist": dist}
+
+        atom_mapping_el_w_dist_closestduplicate = {entry["coorreference"]: {"closest24": key, "dist": entry["dist"]} for key, entry in filtered_data.items()}
+        return atom_mapping_el_w_dist_closestduplicate
 
 
 def all_atoms_of_el(dataframe, coor_structure_init_dict, el, max_mapping_radius):
@@ -124,11 +168,11 @@ def all_atoms_of_el(dataframe, coor_structure_init_dict, el, max_mapping_radius)
             if counter == 0:
                 coor_reducedreference_el = [arr for arr in coor_reducedreference_el if not np.array_equal(arr, coorreference)]
 
-        duplicate_closest24_w_data = dictionary.Mapping.get_duplicate_closest24_w_data(atom_mapping_el_w_dist)
+        duplicate_closest24_w_data = DictionaryFunctional.get_duplicate_closest24_w_data(atom_mapping_el_w_dist)
 
         # get the new reduced coorreference, based on the closest distance if it has multiple close coorreference within the radius
         if len(duplicate_closest24_w_data) > 0:
-            atom_mapping_el_w_dist_closestduplicate = dictionary.Mapping.get_atom_mapping_el_w_dist_closestduplicate(atom_mapping_el_w_dist)
+            atom_mapping_el_w_dist_closestduplicate = DictionaryFunctional.get_atom_mapping_el_w_dist_closestduplicate(atom_mapping_el_w_dist)
             coor_reducedreference_el_closestduplicate = [list(key) for key in atom_mapping_el_w_dist_closestduplicate.keys()]
         else:
             atom_mapping_el_w_dist_closestduplicate = atom_mapping_el_w_dist.copy()
@@ -282,12 +326,12 @@ def li_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_radius_48ht
                 if counter == 0:
                     coor_reducedreference_el = [arr for arr in coor_reducedreference_el if not np.array_equal(arr, coorreference)]
 
-            duplicate_closest24_w_data = dictionary.Mapping.get_duplicate_closest24_w_data(atom_mapping_el_w_dist)
+            duplicate_closest24_w_data = DictionaryFunctional.get_duplicate_closest24_w_data(atom_mapping_el_w_dist)
 
             # get atom_mapping_el_closestduplicate
             # if duplicate_closest24_w_data != {}:
             if len(duplicate_closest24_w_data) > 0:
-                atom_mapping_el_w_dist_closestduplicate = dictionary.Mapping.get_atom_mapping_el_w_dist_closestduplicate(atom_mapping_el_w_dist)
+                atom_mapping_el_w_dist_closestduplicate = DictionaryFunctional.get_atom_mapping_el_w_dist_closestduplicate(atom_mapping_el_w_dist)
                 coor_reducedreference_el_closestduplicate = [list(key) for key in atom_mapping_el_w_dist_closestduplicate.keys()]
             else:
                 atom_mapping_el_w_dist_closestduplicate = atom_mapping_el_w_dist.copy()
@@ -433,12 +477,12 @@ def li_48htype1_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_ra
                 if counter == 0:
                     coor_reducedreference_el = [arr for arr in coor_reducedreference_el if not np.array_equal(arr, coorreference)]
 
-            duplicate_closest24_w_data = dictionary.Mapping.get_duplicate_closest24_w_data(atom_mapping_el_w_dist)
+            duplicate_closest24_w_data = DictionaryFunctional.get_duplicate_closest24_w_data(atom_mapping_el_w_dist)
 
             # get atom_mapping_el_closestduplicate
             # if duplicate_closest24_w_data != {}:
             if len(duplicate_closest24_w_data) > 0:
-                atom_mapping_el_w_dist_closestduplicate = dictionary.Mapping.get_atom_mapping_el_w_dist_closestduplicate(atom_mapping_el_w_dist)
+                atom_mapping_el_w_dist_closestduplicate = DictionaryFunctional.get_atom_mapping_el_w_dist_closestduplicate(atom_mapping_el_w_dist)
                 coor_reducedreference_el_closestduplicate = [list(key) for key in atom_mapping_el_w_dist_closestduplicate.keys()]
             else:
                 atom_mapping_el_w_dist_closestduplicate = atom_mapping_el_w_dist.copy()
