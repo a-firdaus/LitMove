@@ -1,10 +1,10 @@
 import pandas as pd
 import plotly.express as px
 
-from functional import string
+from positionism.functional import func_string
 
 
-def amount_type(dataframe, litype, el, style, category_labels = None):
+def plot_amount_type(dataframe, litype, el, style, category_labels = None):
     # rename from: plot_amount_type
     """
         style: scatter, bar
@@ -63,7 +63,7 @@ def amount_type(dataframe, litype, el, style, category_labels = None):
 
     if category_labels:
         # # long_df['category'] = long_df['category'].replace(category_labels)
-        long_df['category'] = string.replace_values_in_series(long_df['category'], category_labels)
+        long_df['category'] = func_string.replace_values_in_series(long_df['category'], category_labels)
 
     if style == "bar":
         fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx file vs Li type")
@@ -74,7 +74,7 @@ def amount_type(dataframe, litype, el, style, category_labels = None):
     return df
 
 
-def mapped_label_vs_dist_and_histogram(dataframe, litype, category_data, el):
+def plot_mapped_label_vs_dist_and_histogram(dataframe, litype, category_data, el):
     # rename from: plot_mapped_label_vs_dist_and_histogram
     """
         category_data: mapping, weirdo

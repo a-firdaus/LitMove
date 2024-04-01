@@ -5,7 +5,7 @@ import mpldatacursor
 import plotly.express as px
 from adjustText import adjust_text
 
-from functional import string
+from positionism.functional import func_string
 
 
 # class Distance:
@@ -116,7 +116,7 @@ def plot_occupancy(dataframe, category_labels = None):
 
     if category_labels:
         # # long_df['category'] = long_df['category'].replace(category_labels)
-        long_df['category'] = string.replace_values_in_series(long_df['category'], category_labels)
+        long_df['category'] = func_string.replace_values_in_series(long_df['category'], category_labels)
 
     fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx of file vs Occupancy")
     fig.show()

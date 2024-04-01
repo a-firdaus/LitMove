@@ -1,7 +1,7 @@
 import numpy as np
 from collections import defaultdict
 
-from functional import calc_distance
+from positionism.functional import func_distance
 
 
 # class Metainfo:
@@ -72,7 +72,7 @@ def tuple(coor_structure_init_dict_expanded, litype, el):
 
         if litype == 1:
             for j in coor_li48htype1_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
@@ -80,14 +80,14 @@ def tuple(coor_structure_init_dict_expanded, litype, el):
         
         elif litype == 2:
             for j in coor_li48htype1_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype2_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
@@ -95,21 +95,21 @@ def tuple(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 3:
             for j in coor_li48htype1_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
@@ -117,28 +117,28 @@ def tuple(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 4:
             for j in coor_li48htype1_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
@@ -146,35 +146,35 @@ def tuple(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 5:
             for j in coor_li48htype1_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype5_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
 
@@ -182,42 +182,42 @@ def tuple(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 6:
             for j in coor_li48htype1_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype5_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype6_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype6'}
 
@@ -225,49 +225,49 @@ def tuple(coor_structure_init_dict_expanded, litype, el):
 
         elif litype == 7:
             for j in coor_li48htype1_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype5_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype6_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype6'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype7_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype7'}
 
@@ -275,56 +275,56 @@ def tuple(coor_structure_init_dict_expanded, litype, el):
                 
         elif litype == 8:
             for j in coor_li48htype1_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype1'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
                 
             for j in coor_li48htype2_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype2'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype3_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype3'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype4_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype4'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype5_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype5'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype6_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype6'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype7_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype7'}
 
                 tuple_metainfo_all[idx_i].append(tuple_metainfo_all_dict)
 
             for j in coor_li48htype8_ref:
-                distance = calc_distance.mic_eucledian_distance(i, j)
+                distance = func_distance.mic_eucledian_distance(i, j)
 
                 tuple_metainfo_all_dict = {'coor': j, 'dist': distance, 'type': '48htype8'}
 

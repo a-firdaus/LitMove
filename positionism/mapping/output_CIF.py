@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-from functional import string
+from positionism.functional import func_string
 
 from pymatgen.core.structure import Structure
 from pymatgen.io.cif import CifWriter
@@ -120,7 +120,7 @@ def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, am
                     # modified_line = lines[idx_line].file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
                     # modified_line = lines[idx_line](func=replace(lines[idx_line].split()[1], new_label))
                     # # modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
-                    modified_line = string.modify_line(lines[idx_line], lines[idx_line].split()[1], new_label)
+                    modified_line = func_string.modify_line(lines[idx_line], lines[idx_line].split()[1], new_label)
                     new_text.append(modified_line)
                     
             lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
@@ -188,7 +188,7 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
                     # file_operations_instance = Operation.File()
                     # modified_line = file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
                     # # modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
-                    modified_line = string.modify_line(lines[idx_line], lines[idx_line].split()[1], new_label)
+                    modified_line = func_string.modify_line(lines[idx_line], lines[idx_line].split()[1], new_label)
                     new_text.append(modified_line)
 
             lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
@@ -230,7 +230,7 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
                     # file_operations_instance = Operation.File()
                     # modified_line = file_operations_instance.replace(lines[idx_line_P].split()[1], new_label)     
                     # # modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
-                    modified_line = string.modify_line(lines[idx_line_P], lines[idx_line_P].split()[1], new_label)
+                    modified_line = func_string.modify_line(lines[idx_line_P], lines[idx_line_P].split()[1], new_label)
                     new_text_P_S_Cl.append(modified_line)
             for i in range(amount_S):
                 idx_line_S = idx_P_S_Cl_line_new_start + amount_P + i
@@ -240,7 +240,7 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
                     # file_operations_instance = Operation.File()
                     # modified_line = file_operations_instance.replace(lines[idx_line_S].split()[1], new_label)     
                     # # modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
-                    modified_line = string.modify_line(lines[idx_line_S], lines[idx_line_S].split()[1], new_label)
+                    modified_line = func_string.modify_line(lines[idx_line_S], lines[idx_line_S].split()[1], new_label)
                     new_text_P_S_Cl.append(modified_line)
             for i in range(amount_Cl):
                 idx_line_Cl = idx_P_S_Cl_line_new_start + amount_P + amount_S + i
@@ -250,7 +250,7 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
                     # file_operations_instance = Operation.File()
                     # modified_line = file_operations_instance.replace(lines[idx_line_Cl].split()[1], new_label)     
                     # # modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
-                    modified_line = string.modify_line(lines[idx_line_Cl], lines[idx_line_Cl].split()[1], new_label)
+                    modified_line = func_string.modify_line(lines[idx_line_Cl], lines[idx_line_Cl].split()[1], new_label)
                     new_text_P_S_Cl.append(modified_line)
 
             lines[idx_P_S_Cl_line_new_start : amount_P + amount_S + amount_Cl + idx_P_S_Cl_line_new_start] = new_text_P_S_Cl
@@ -310,7 +310,7 @@ class Edit:
                 # file_operations_instance = Operation.File()
                 # modified_line = file_operations_instance.replace(lines[idx_line_P].split()[1], new_label)
                 # # modified_line = lines[idx_line_P].replace(lines[idx_line_P].split()[1], new_label)
-                modified_line = string.modify_line(lines[idx_line_P], lines[idx_line_P].split()[1], new_label)
+                modified_line = func_string.modify_line(lines[idx_line_P], lines[idx_line_P].split()[1], new_label)
                 new_text_P_S_Cl.append(modified_line)
         for i in range(amount_S):
             idx_line_S = idx_P_S_Cl_line_new_start + amount_P + i
@@ -320,7 +320,7 @@ class Edit:
                 # file_operations_instance = Operation.File()
                 # modified_line = file_operations_instance.replace(lines[idx_line_S].split()[1], new_label)            
                 # # modified_line = lines[idx_line_S].replace(lines[idx_line_S].split()[1], new_label)
-                modified_line = string.modify_line(lines[idx_line_S], lines[idx_line_S].split()[1], new_label)
+                modified_line = func_string.modify_line(lines[idx_line_S], lines[idx_line_S].split()[1], new_label)
                 new_text_P_S_Cl.append(modified_line)
         for i in range(amount_Cl):
             idx_line_Cl = idx_P_S_Cl_line_new_start + amount_P + amount_S + i
@@ -330,7 +330,7 @@ class Edit:
                 # file_operations_instance = Operation.File()
                 # modified_line = file_operations_instance.replace(lines[idx_line_Cl].split()[1], new_label)     
                 # # modified_line = lines[idx_line_Cl].replace(lines[idx_line_Cl].split()[1], new_label)
-                modified_line = string.modify_line(lines[idx_line_Cl], lines[idx_line_Cl].split()[1], new_label)
+                modified_line = func_string.modify_line(lines[idx_line_Cl], lines[idx_line_Cl].split()[1], new_label)
                 new_text_P_S_Cl.append(modified_line)
 
         lines[idx_P_S_Cl_line_new_start : amount_P + amount_S + amount_Cl + idx_P_S_Cl_line_new_start] = new_text_P_S_Cl

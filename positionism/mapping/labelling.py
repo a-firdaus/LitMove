@@ -1,4 +1,4 @@
-from functional import calc_distance
+from positionism.functional import func_distance
 
 
 def get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, el, litype):
@@ -205,7 +205,7 @@ def get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, el, lityp
                 for idxreference, coorreference in enumerate(coor_reference_el_init):
                     coorweirdo_dist_label_coorreference_val_el = {}
             
-                    distance_weirdo = calc_distance.mic_eucledian_distance(coorreference, coor_weirdo)
+                    distance_weirdo = func_distance.mic_eucledian_distance(coorreference, coor_weirdo)
 
                     coorweirdo_dist_label_coorreference_val_el['dist'] = distance_weirdo
 

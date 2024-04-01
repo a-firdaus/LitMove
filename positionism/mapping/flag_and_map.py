@@ -1,7 +1,8 @@
 import numpy as np
 import sys
 
-from functional import calc_distance, dictionary
+from positionism.functional import func_dictionary
+from positionism.functional import func_distance
 
 
 class DictionaryFunctional:
@@ -129,7 +130,7 @@ def all_atoms_of_el(dataframe, coor_structure_init_dict, el, max_mapping_radius)
             closest24 = None
 
             for idx24, coor24 in enumerate(coor_origin24_el_init):
-                distance = calc_distance.mic_eucledian_distance(coorreference, coor24)
+                distance = func_distance.mic_eucledian_distance(coorreference, coor24)
 
                 if distance < max_mapping_radius:
                     counter = counter + 1
@@ -289,7 +290,7 @@ def li_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_radius_48ht
                 closest24 = None
 
                 for idx24, coor24 in enumerate(coor_origin24_el_init):
-                    distance = calc_distance.mic_eucledian_distance(coorreference, coor24)
+                    distance = func_distance.mic_eucledian_distance(coorreference, coor24)
                     
                     if distance < max_mapping_radius_48htype2:
                         counter = counter + 1
@@ -440,7 +441,7 @@ def li_48htype1_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_ra
                 closest24 = None
 
                 for idx24, coor24 in enumerate(coor_origin24_el_init):
-                    distance = calc_distance.mic_eucledian_distance(coorreference, coor24)
+                    distance = func_distance.mic_eucledian_distance(coorreference, coor24)
                     
                     if distance < max_mapping_radius_48htype1_48htype2:
                         counter = counter + 1
@@ -591,8 +592,8 @@ def li_48htypesmerged_level1(dataframe, el):
         # coor_reducedreference_48htypesmerged_level1_el_closestduplicate = dataframe.at[idx, col_coor_reducedreference_48htype1_48htype2_el_closestduplicate]
         # coor_reducedreference_48htypesmerged_level1_el = []
 
-        atom_mapping_48htypesmerged_level1_el = dictionary.merge_dictionaries(atom_mapping_el_closestduplicate, atom_mapping_48htype1_48htype2_el_closestduplicate)
-        duplicate_coor24s = dictionary.get_duplicate_values(atom_mapping_48htypesmerged_level1_el)
+        atom_mapping_48htypesmerged_level1_el = func_dictionary.merge_dictionaries(atom_mapping_el_closestduplicate, atom_mapping_48htype1_48htype2_el_closestduplicate)
+        duplicate_coor24s = func_dictionary.get_duplicate_values(atom_mapping_48htypesmerged_level1_el)
         if len(duplicate_coor24s) > 1:        
             dataframe.at[idx, col_flag_48htypesmerged_level1_el] = "True"        
         # for coorreference in atom_mapping_48htypesmerged_level1_el:
@@ -761,8 +762,8 @@ def li_48htypesmerged(dataframe, el, activate_radius):
         # coor_reducedreference_48htypesmerged_el_closestduplicate = dataframe.at[idx, col_coor_reducedreference_48htype2_el_closestduplicate]
         coor_reducedreference_48htypesmerged_el = []
 
-        atom_mapping_48htypesmerged_el = dictionary.merge_dictionaries(atom_mapping_el_closestduplicate, atom_mapping_48htype2_el_closestduplicate)
-        duplicate_coor24s = dictionary.get_duplicate_values(atom_mapping_48htypesmerged_el)
+        atom_mapping_48htypesmerged_el = func_dictionary.merge_dictionaries(atom_mapping_el_closestduplicate, atom_mapping_48htype2_el_closestduplicate)
+        duplicate_coor24s = func_dictionary.get_duplicate_values(atom_mapping_48htypesmerged_el)
         if len(duplicate_coor24s) > 1:        
             dataframe.at[idx, col_flag_48htypesmerged_el] = "True"        
         # for coorreference in atom_mapping_48htypesmerged_el:

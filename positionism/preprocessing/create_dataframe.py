@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 
-from functional import operation
+from positionism.functional import func_directory
 
 
 def base(data_toten, file_name):
@@ -56,8 +56,8 @@ def base(data_toten, file_name):
             # get directory of CONTCARs/ POSCARs
             if os.path.basename(file) == file_name:
                 # Extract geometry and path numbers from the directory structure
-                geometry_nr = operation.File.splitall(subdir)[-2]
-                path_nr = operation.File.splitall(subdir)[-1]
+                geometry_nr = func_directory.splitall(subdir)[-2]
+                path_nr = func_directory.splitall(subdir)[-1]
 
                 # Construct geometry and path DataFrames
                 geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])

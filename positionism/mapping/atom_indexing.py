@@ -1,6 +1,6 @@
 import numpy as np
 
-from functional import calc_distance
+from positionism.functional import func_distance
 
 
 def weirdos_el(dataframe, el, activate_radius):
@@ -106,7 +106,7 @@ def correcting_idx_and_order_mapped_el(dataframe, el, activate_radius):
             # atom_mapping_el_w_dist_idx24[tuple(coorreference)] = []
 
             for idx24, coor24 in enumerate(coor_origin24_el_init):
-                distance = calc_distance.mic_eucledian_distance(coorreference, coor24)
+                distance = func_distance.mic_eucledian_distance(coorreference, coor24)
 
                 # if distance != 0:
                 if distance < distance_prev:
