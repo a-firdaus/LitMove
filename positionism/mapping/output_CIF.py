@@ -7,8 +7,32 @@ from pymatgen.core.structure import Structure
 from pymatgen.io.cif import CifWriter
 
 
-def create_combine_structure(dataframe, destination_directory, amount_Li, amount_P, amount_S, activate_radius, var_savefilename):
-    ## TO DO: under maintenance for disambled into el
+def write_merged_structure(dataframe, destination_directory, amount_Li, amount_P, amount_S, activate_radius, var_savefilename):
+    # rename from: create_combine_structure
+    """
+    Write structure files by merging mapped Li atoms with original P, S, and Cl atoms.
+
+    Args
+    ====
+    dataframe: pandas.DataFrame
+        DataFrame containing coordinate information.
+    destination_directory: str
+        The directory where the structure files will be saved.
+    amount_Li: int
+        The amount of Lithium atoms in the structure.
+    amount_P: int
+        The amount of Phosphorus atoms in the structure.
+    amount_S: int
+        The amount of Sulfur atoms in the structure.
+    activate_radius: int
+        The activation radius.
+    var_savefilename: str
+        The variable save filename.
+
+    Note
+    ====
+    -  TO DO: under maintenance for disambled into el
+    """
     # CHANGED FOR INDEXING
     # # # # # if activate_radius == 2 or activate_radius == 3:
     # # # # #     col_coor_reducedreference_el = f"coor_reducedreference_48htypesmerged_Li"
@@ -76,7 +100,30 @@ def create_combine_structure(dataframe, destination_directory, amount_Li, amount
         cif_combined.write_file(source_filename_path)
 
 
-def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, amount_P, amount_S, amount_Cl, var_savefilename_init, var_savefilename_new):
+def correct_Li_idx(dataframe, destination_directory, amount_Li, amount_P, amount_S, amount_Cl, var_savefilename_init, var_savefilename_new):
+    # rename from: rewrite_cif_w_correct_Li_idx
+    """
+    Rewrite CIF files with correct Li atom indices.
+
+    Parameters
+    ==========
+    dataframe: pd.DataFrame
+        DataFrame containing the necessary data.
+    destination_directory: str
+        Path to the directory where the rewritten CIF files will be saved.
+    amount_Li: int
+        Number of Li atoms.
+    amount_P: int
+        Number of P atoms.
+    amount_S: int
+        Number of S atoms.
+    amount_Cl: int
+        Number of Cl atoms.
+    var_savefilename_init: str
+        Variable to save the initial filename.
+    var_savefilename_new: str
+        Variable to save the new filename.
+    """
     col_idx0_weirdos_Li = "idx0_weirdos_Li"
     
     col_idx_without_weirdos = "idx_without_weirdos"
@@ -116,26 +163,13 @@ def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, am
                 idx_line = idx_Li_start + i
                 if lines[idx_line].strip().startswith("Li"):
                     new_label = f"Li{idx_without_weirdos[i]}"
-                    # file_operations_instance = Operation.File()
-                    # modified_line = lines[idx_line].file_operations_instance.replace(lines[idx_line].split()[1], new_label)     
-                    # modified_line = lines[idx_line](func=replace(lines[idx_line].split()[1], new_label))
-                    # # modified_line = lines[idx_line].replace(lines[idx_line].split()[1], new_label)
                     modified_line = func_string.modify_line(lines[idx_line], lines[idx_line].split()[1], new_label)
                     new_text.append(modified_line)
                     
             lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
 
-            # idx_weirdo_line_start   = len(idx_without_weirdos) + idx_Li_start
-            # idx_weirdo_line_end     = idx_weirdo_line_start + len(idx0_weirdos_Li)
-            # lines[idx_weirdo_line_start : idx_weirdo_line_end] = weirdos_text
-
             idx_P_S_Cl_line_new_start    = len(idx_without_weirdos) + idx_Li_start
             Edit.reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_Li, amount_P, amount_S, amount_Cl)
-
-            # dataframe.at[idx, col_idx_without_weirdos] = idx_without_weirdos
-
-            # with open(destination_path_combined_new, "w") as f:
-            #     f.write("\n".join(line.strip() for line in lines))
 
         dataframe.at[idx, col_idx_without_weirdos] = idx_without_weirdos
 
@@ -143,8 +177,33 @@ def rewrite_cif_w_correct_Li_idx(dataframe, destination_directory, amount_Li, am
             f.write("\n".join(line.strip() for line in lines))
 
 
-# new needed variables: amount_P, amount_S, amount_Cl
-def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directory, amount_Li, amount_P, amount_S, amount_Cl, activate_radius, var_savefilename_init, var_savefilename_new):
+
+def correct_Li_idx_weirdos_appended(dataframe, destination_directory, amount_Li, amount_P, amount_S, amount_Cl, activate_radius, var_savefilename_init, var_savefilename_new):
+    """
+    Rewrite CIF files with correct Li atom indices and weirdos appended
+
+    Parameters
+    ==========
+    dataframe: pd.DataFrame
+        DataFrame containing the necessary data.
+    destination_directory: str
+        Path to the directory where the rewritten CIF files will be saved.
+    amount_Li: int
+        Number of Li atoms.
+    amount_P: int
+        Number of P atoms.
+    amount_S: int
+        Number of S atoms.
+    amount_Cl: int
+        Number of Cl atoms.
+    activate_radius: int
+        Type of radius
+    var_savefilename_init: str
+        Variable to save the initial filename.
+    var_savefilename_new: str
+        Variable to save the new filename.
+    """
+    # rename from: rewrite_cif_w_correct_Li_idx_weirdos_appended
     if activate_radius == 2 or activate_radius == 3:
         col_coor_weirdos_el = f"coor_weirdos_48htype2_Li"
     elif activate_radius == 1:
@@ -263,6 +322,20 @@ def rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, destination_directo
 
 
 def ascending_Li(dataframe, destination_directory, var_filename_init, var_savefilename_new):
+    """
+    Rewrite CIF files with ascending Li atom indices (weirdos included).
+
+    Parameters
+    ==========
+    dataframe: pd.DataFrame
+        DataFrame containing the necessary data.
+    destination_directory: str
+        Path to the directory where the rewritten CIF files will be saved.
+    var_filename_init: str
+        Variable of the initial filename.
+    var_savefilename_new: str
+        Variable to save the new filename.
+    """    
     search_string = "  Li  "
 
     for idx in range(dataframe["geometry"].size):
@@ -294,7 +367,30 @@ def ascending_Li(dataframe, destination_directory, var_filename_init, var_savefi
 
 
 class Edit:
-    def reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_Li, amount_P, amount_S, amount_Cl):
+    def correct_P_S_Cl_idx(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_Li, amount_P, amount_S, amount_Cl):
+        # rename from: reindex_P_S_Cl
+        """
+        This function modifies the CIF file lines for P, S, and Cl atoms to reflect updated indices. It ensures that after Li atoms index have been corrected and potentially filtered out, the subsequent atom types (P, S, Cl) receive new, sequentially increasing indices starting immediately after the last Li index.
+
+        Parameters
+        ==========
+        lines: list of str
+            The original lines of the CIF file, where each line corresponds to a string representing a line in the file.
+        idx_Li_start: int
+            The starting index in `lines` where lithium (Li) atoms begin.
+        idx_without_weirdos: list of int
+            The indices of Li atoms after removing specific "weirdo" atoms, used to calculate new starting positions for P, S, and Cl.
+        idx_P_S_Cl_line_new_start: int
+            The new starting index for P, S, and Cl atom lines in the modified `lines` list.
+        amount_Li: int
+            The total number of Li atoms considered for indexing, influencing the new indices of P, S, and Cl atoms.
+        amount_P: int
+            The total number of phosphorus (P) atoms in the structure.
+        amount_S: int
+            The total number of sulfur (S) atoms in the structure.
+        amount_Cl: int
+            The total number of chlorine (Cl) atoms in the structure.
+        """
         old_text_P_S_Cl = lines[len(idx_without_weirdos) + idx_Li_start :]
 
         idx_P_S_Cl_line_new_end      = idx_P_S_Cl_line_new_start + len(old_text_P_S_Cl)
@@ -339,6 +435,21 @@ class Edit:
 
 
     def format_spacing_cif(dataframe, destination_directory, var_savefilename_init, var_savefilename_new):
+        """
+        This function reads CIF files specified in a DataFrame and adjusts the spacing of lines starting with atom labels ('Li', 'P', 'S', 'Cl'). 
+        The purpose is to ensure that these lines have a consistent formatting, which might be required for compatibility with certain software or for readability.
+        
+        Parameters
+        ==========
+        dataframe: pandas.DataFrame
+            A pandas DataFrame containing at least the columns 'geometry' and 'path', which are used to construct the filenames of the CIF files to be processed.
+        destination_directory: str
+            The directory path where the CIF files are located and where the modified files will be saved.
+        var_savefilename_init: str
+            The filename for source CIF files to be read.
+        var_savefilename_new: str
+            The filename for new CIF files to be saved.
+        """
         for idx in range(dataframe["geometry"].size):
             source_filename = f"{int(dataframe['geometry'][idx])}_{int(dataframe['path'][idx])}_{var_savefilename_init}.cif"
             source_filename_path = os.path.join(destination_directory, source_filename)

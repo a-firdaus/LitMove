@@ -8,15 +8,23 @@ def weirdos_el(dataframe, el, activate_radius):
     """
     Identifies indexes of weirdo for a specific element within structures.
 
-    Parameters:
-    - dataframe (pandas.DataFrame): DataFrame containing necessary data columns.
-    - el (str): Element symbol for which anomalies to be identified.
-    - activate_radius (int): Number indicating how many level of mapping radius to be used.
+    Parameters
+    ==========
+    dataframe: pandas.DataFrame
+        DataFrame containing necessary data columns.
+    el: str
+        Element symbol for which anomalies to be identified.
+    activate_radius: int
+        Number indicating how many level of mapping radius to be used.
 
-    Returns:
-    - idx0_weirdos_el: List of indexes of weirdos. Numeration starts from 0.
-    - #weirdos_el: Amount of weirdos.
-    - idx_coor_weirdos_el: Dictionary, key: index of weirdo, value: coordinate of weirdo.
+    Returns
+    =======
+    idx0_weirdos_el: list
+        List of indexes of weirdos. Numeration starts from 0.
+    #weirdos_el: int
+        Amount of weirdos.
+    idx_coor_weirdos_el: dict
+        Whose key: index of weirdo, value: coordinate of weirdo.
     """
     col_coor_structure_init_dict = "coor_structure_init_dict"
 
@@ -55,7 +63,7 @@ def weirdos_el(dataframe, el, activate_radius):
         dataframe.at[idx, col_idx_coor_weirdos_el] = idx_coor_weirdos_el
 
 
-def correcting_idx_and_order_mapped_el(dataframe, el, activate_radius):
+def correct_idx_and_order_mapped_el(dataframe, el, activate_radius):
     # rename from: idx_correcting_mapped_el
     """
     Given list of reference structure's coordinate (that's considered already for mapping), 
@@ -63,14 +71,21 @@ def correcting_idx_and_order_mapped_el(dataframe, el, activate_radius):
     Correcting done by calculating the distance of given reference to each atom of the structures,
     for which the closest one is considered.
 
-    Parameters:
-    - dataframe (pandas.DataFrame): DataFrame containing necessary data columns.
-    - el (str): Element symbol for which anomalies to be identified.
-    - activate_radius (int): Number indicating how many level of mapping radius to be used.
+    Parameters
+    ==========
+    dataframe: pandas.DataFrame
+        DataFrame containing necessary data columns.
+    el: str
+        Element symbol for which anomalies to be identified.
+    activate_radius: int
+        Number indicating how many level of mapping radius to be used.
 
-    Returns:
-    - idx_correcting_el (list): Corrected index
-    - coor_reducedreference_sorted_el (list): Reference coordinate with corrected ordering
+    Returns
+    =======
+    idx_correcting_el: list
+        Corrected index
+    coor_reducedreference_sorted_el: list
+        Reference coordinate with corrected ordering
     """
     col_coor_structure_init_dict = "coor_structure_init_dict"
 
@@ -152,6 +167,27 @@ def correcting_idx_and_order_mapped_el(dataframe, el, activate_radius):
 
 def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, activate_radius, litype, el):
     # rename from: get_idx_coor_limapped_weirdos_dict_litype
+    """
+    Generates a dictionary mapping each index to its corresponding coordinates and label, 
+    considering different Li types and weirdos, and computes various statistics.
+
+    Args
+    ====
+    dataframe: pandas.DataFrame 
+        DataFrame containing the data
+    coor_structure_init_dict: dict
+        Dictionary containing initial coordinate structures
+    activate_radius: int
+        Radius activation flag (1, 2, or 3)
+    litype: int
+        Lithium type (int from 0 to 8)
+    el: str
+        Element symbol
+
+    Returns
+    =======
+    None
+    """
     coor_reference_el_init = coor_structure_init_dict[el]
 
     col_idx_without_weirdos = "idx_without_weirdos"
@@ -435,7 +471,7 @@ def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, acti
         # dataframe.at[idx, col_ratio_24g_Li] = ratio_24g_Li
         # dataframe.at[idx, col_ratio_weirdo_Li] = ratio_weirdo_Li
         dataframe.at[idx, col_sum_amount] = sum_amount
-        dataframe.at[idx, col_idx_coor_limapped_weirdos_dict_init] = idx_coor_limapped_weirdos_dict_init
+        # # dataframe.at[idx, col_idx_coor_limapped_weirdos_dict_init] = idx_coor_limapped_weirdos_dict_init
         dataframe.at[idx, col_ndim_coor_reducedreference_Li] = ndim_coor_reducedreference_Li
         dataframe.at[idx, col_ndim_coor_weirdos_el] = ndim_coor_weirdos_el
         dataframe.at[idx, col_len_coor_weirdos_el] = len_coor_weirdos_el
@@ -443,209 +479,4 @@ def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, acti
         dataframe.at[idx, col_len_idx0_weirdos_Li] = len_idx0_weirdos_Li
         dataframe.at[idx, col_len_idx_without_weirdos] = len_idx_without_weirdos
 
-
-# def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, activate_radius, el):
-#     coor_reference_el_init = coor_structure_init_dict[el]
-
-#     col_idx_without_weirdos = "idx_without_weirdos"
-#     col_idx_coor_weirdos_el = f"idx_coor_weirdos_{el}"
-#     col_idx0_weirdos_Li = "idx0_weirdos_Li"
-#     col_sum_of_weirdos_Li = f"#weirdos_Li"
-#     if activate_radius == 2 or activate_radius == 3:
-#         #col_coor_reducedreference_Li = "coor_reducedreference_Li"
-#         col_coor_reducedreference_Li = f"coor_reducedreference_48htypesmerged_{el}"
-#         # col_coor_weirdos_48htypesmerged_Li = "coor_weirdos_48htypesmerged_Li"
-#         # col_coor_weirdos_el = f"coor_weirdos_48htype2_{el}"
-#         col_sum_sanitycheck_Li = "sum_sanitycheck_48htypesmerged_Li"
-#     elif activate_radius == 1:
-#         col_coor_reducedreference_Li = f"coor_reducedreference_{el}_closestduplicate"
-#         col_sum_sanitycheck_Li = f"sum_sanitycheck_{el}_closestduplicate"
-
-
-#     col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
-#     col_sum_label_and_weirdo_flag = "#label_and_#weirdo_flag"
-#     col_amount_types_and_weirdo = "amount_types_and_weirdo"
-#     col_ratio_48htype1_Li = "ratio_48htype1_Li"
-#     col_ratio_48htype2_Li = "ratio_48htype2_Li"
-#     col_ratio_24g_Li = "ratio_24g_Li"
-#     col_ratio_weirdo_Li = "ratio_weirdo_Li"
-#     col_sum_amount = "sum_amount"
-#     col_idx_coor_limapped_weirdos_dict_init = "idx_coor_limapped_weirdos_dict_init"
-#     col_ndim_coor_reducedreference_Li = "ndim_coor_reducedreference_Li"
-#     col_ndim_coor_weirdos_el = "ndim_coor_weirdos_el"
-#     col_len_coor_weirdos_el = "len_coor_weirdos_el"
-#     col_len_coor_reducedreference_Li = "len_coor_reducedreference_Li"
-#     col_len_idx0_weirdos_Li = "len_idx0_weirdos_Li"
-#     col_len_idx_without_weirdos = "len_idx_without_weirdos"
-#     col_ndim_flag_coor = "ndim_flag_coor"
-
-#     dataframe[col_idx_coor_limapped_weirdos_dict] = [{} for _ in range(len(dataframe.index))]
-#     dataframe[col_sum_label_and_weirdo_flag] = "False"
-#     dataframe[col_amount_types_and_weirdo] = [0 for _ in range(len(dataframe.index))]
-#     dataframe[col_sum_amount] = [0 for _ in range(len(dataframe.index))]
-#     dataframe[col_idx_coor_limapped_weirdos_dict_init] = [{} for _ in range(len(dataframe.index))]
-#     dataframe[col_ndim_coor_reducedreference_Li] = [0 for _ in range(len(dataframe.index))]
-#     dataframe[col_ndim_coor_weirdos_el] = [0 for _ in range(len(dataframe.index))]
-#     dataframe[col_len_coor_weirdos_el] = [0 for _ in range(len(dataframe.index))]
-#     dataframe[col_len_coor_reducedreference_Li] = [0 for _ in range(len(dataframe.index))]
-#     dataframe[col_len_idx0_weirdos_Li] = [0 for _ in range(len(dataframe.index))]
-#     dataframe[col_len_idx_without_weirdos] = [0 for _ in range(len(dataframe.index))]
-#     dataframe[col_ndim_flag_coor] = "False"
-
-#     coor_li48htype1_ref = coor_reference_el_init[0:48]
-#     coor_li48htype2_ref = coor_reference_el_init[48:96]
-#     coor_li24g_ref = coor_reference_el_init[96:120]
-
-#     for idx in range(dataframe["geometry"].size):
-#         coor_limapped_weirdos = []
-#         idx0_limapped_weirdos = []
-#         idx_coor_limapped_weirdos_dict_init = {}
-#         idx_coor_limapped_weirdos_dict = {}
-
-#         idx_without_weirdos = dataframe.at[idx, col_idx_without_weirdos]
-#         coor_reducedreference_Li = np.array(dataframe.at[idx, col_coor_reducedreference_Li])
-#         idx_coor_weirdos_el = dataframe.at[idx, col_idx_coor_weirdos_el]
-#         # coor_weirdos_48htype2_el = np.array(dataframe.at[idx, col_coor_weirdos_48htype2_el])
-#         coor_weirdos_el = np.array(list(idx_coor_weirdos_el.values()))
-#         idx0_weirdos_Li = dataframe.at[idx, col_idx0_weirdos_Li]
-#         nr_of_weirdos_Li = dataframe.at[idx, col_sum_of_weirdos_Li]
-#         sum_sanitycheck_48htypesmerged_Li = dataframe.at[idx, col_sum_sanitycheck_Li]
-
-#         ndim_coor_reducedreference_Li = coor_reducedreference_Li.ndim
-#         ndim_coor_weirdos_el = coor_weirdos_el.ndim
-#         len_coor_weirdos_el = len(coor_weirdos_el)
-#         len_coor_reducedreference_Li = len(coor_reducedreference_Li)
-#         len_idx0_weirdos_Li = len(idx0_weirdos_Li)
-#         len_idx_without_weirdos = len(idx_without_weirdos)
-
-#         # # # # if coor_weirdos_el.ndim == 2:
-#         # # # if len(coor_weirdos_el) > 0:
-#         # # #     coor_limapped_weirdos = np.concatenate((coor_reducedreference_Li, coor_weirdos_el), axis=0)
-#         # # # # elif coor_weirdos_el.ndim == 1:
-#         # # # elif len(coor_weirdos_el) == 0:
-#         # # #     coor_limapped_weirdos = np.array(coor_reducedreference_Li.copy())
-#         # # # else:
-#         # # #     print(f"coor_weirdos_el has no correct dimension at idx: {idx}")
-#         # # #     # break
-
-#         # # # if len(idx0_weirdos_Li) > 0:
-#         # # #     idx0_limapped_weirdos = np.concatenate((idx_without_weirdos, idx0_weirdos_Li), axis=0)
-#         # # # elif len(idx0_weirdos_Li) == 0:
-#         # # #     idx0_limapped_weirdos = np.array(idx_without_weirdos.copy())
-#         # # # else:
-#         # # #     print(f"idx0_weirdos_Li has no correct len at idx: {idx}")
-#         # # #     # break
-    
-#         # if coor_weirdos_el.ndim == 2:
-#         if ndim_coor_reducedreference_Li == ndim_coor_weirdos_el & ndim_coor_weirdos_el == 2:
-#             coor_limapped_weirdos = np.concatenate((coor_reducedreference_Li, coor_weirdos_el), axis=0)
-#             dataframe.at[idx, col_ndim_flag_coor] = "True"
-#         # elif coor_weirdos_el.ndim == 1:
-#         elif ndim_coor_weirdos_el == 1:
-#             coor_limapped_weirdos = np.array(coor_reducedreference_Li.copy())
-#         elif ndim_coor_reducedreference_Li == 1:
-#             coor_limapped_weirdos = np.array(coor_weirdos_el.copy())
-#         else:
-#             print(f"coor_weirdos_el or coor_reducedreference_Li has no correct dimension at idx: {idx}")
-#             # break
-
-#         if len(idx0_weirdos_Li) > 0:
-#             idx0_limapped_weirdos = np.concatenate((idx_without_weirdos, idx0_weirdos_Li), axis=0)
-#         elif len(idx0_weirdos_Li) == 0:
-#             idx0_limapped_weirdos = np.array(idx_without_weirdos.copy())
-#         elif len(idx_without_weirdos) == 0:
-#             idx0_limapped_weirdos = np.array(idx0_weirdos_Li.copy())
-#         else:
-#             print(f"idx0_weirdos_Li or idx_without_weirdos has no correct len at idx: {idx}")
-#             # break
-
-#         idx_coor_limapped_weirdos_dict_init = dict(zip(idx0_limapped_weirdos, coor_limapped_weirdos))
-#         # if idx == 52:
-#         #     # print(f"type = {type(idx_coor_limapped_weirdos_dict_init)}")
-#         #     # print(f"idx_coor_limapped_weirdos_dict_init = {idx_coor_limapped_weirdos_dict_init}")
-
-#         #     coor_48htype1_Li = []; coor_48htype2_Li = []; coor_24g_Li = []; coor_weirdo_Li = []
-#         #     for key, value in idx_coor_limapped_weirdos_dict_init.items():
-#         #         print(f"key: {key}, value: {value}")
-#         #         if (value == coor_li48htype1_ref).all():
-
-#         coor_48htype1_Li = []; coor_48htype2_Li = []; coor_24g_Li = []; coor_weirdo_Li = []
-#         for key, value in idx_coor_limapped_weirdos_dict_init.items():
-#             idx_coor_limapped_weirdos_dict_val = {}
-
-#             idx_coor_limapped_weirdos_dict_val['coor'] = tuple(value)
-
-#             for idx_li48htype1_temp, coor_li48htype1_ref_temp in enumerate(coor_li48htype1_ref):
-#                 if (value == coor_li48htype1_ref_temp).all():
-#                     idx_coor_limapped_weirdos_dict_val["label"] = "48htype1"
-#                     coor_48htype1_Li.append(np.array(list(value)))
-#                     if int(key) in idx_coor_limapped_weirdos_dict:
-#                         idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
-#                     else:
-#                         idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
-#             for idx_li48htype2_temp, coor_li48htype2_ref_temp in enumerate(coor_li48htype2_ref):
-#                 if (value == coor_li48htype2_ref_temp).all():
-#                     idx_coor_limapped_weirdos_dict_val["label"] = "48htype2"
-#                     coor_48htype2_Li.append(np.array(list(value)))
-#                     if int(key) in idx_coor_limapped_weirdos_dict:
-#                         idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
-#                     else:
-#                         idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
-#             for idx_24g_temp, coor_li24g_ref_temp in enumerate(coor_li24g_ref):
-#                 if (value == coor_li24g_ref_temp).all():
-#                     idx_coor_limapped_weirdos_dict_val["label"] = "24g"
-#                     coor_24g_Li.append(np.array(list(value)))
-#                     if int(key) in idx_coor_limapped_weirdos_dict:
-#                         idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
-#                     else:
-#                         idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
-#             for idx_weirdos_temp, coor_weirdos_ref_temp in enumerate(coor_weirdos_el):
-#                 if (value == coor_weirdos_ref_temp).all():
-#                     idx_coor_limapped_weirdos_dict_val["label"] = "weirdos"
-#                     coor_weirdo_Li.append(np.array(list(value)))
-#                     if int(key) in idx_coor_limapped_weirdos_dict:
-#                         idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
-#                     else:
-#                         idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
-
-#             # if int(key) in idx_coor_limapped_weirdos_dict:
-#             #     idx_coor_limapped_weirdos_dict[int(key)].append(idx_coor_limapped_weirdos_dict_val)
-#             # else:
-#             #     idx_coor_limapped_weirdos_dict[int(key)] = idx_coor_limapped_weirdos_dict_val
-
-#         # amount of each type
-#         amount_48htype1_Li = len(coor_48htype1_Li)
-#         amount_48htype2_Li = len(coor_48htype2_Li)
-#         amount_24g_Li = len(coor_24g_Li)
-#         amount_weirdo = len(coor_weirdo_Li)
-#         sum_amount = amount_48htype1_Li + amount_48htype2_Li + amount_24g_Li + amount_weirdo
-
-#         # sanity check for the amount
-#         # if amount_weirdo == nr_of_weirdos_Li & sum_amount == sum_sanitycheck_48htypesmerged_Li:
-#         # if int(amount_weirdo) == int(nr_of_weirdos_Li) & int(sum_amount) == int(sum_sanitycheck_48htypesmerged_Li):
-#         if int(amount_weirdo) == int(nr_of_weirdos_Li):
-#             if int(sum_amount) == int(sum_sanitycheck_48htypesmerged_Li):
-#                 dataframe.at[idx, col_sum_label_and_weirdo_flag] = "True"
-
-#         amount_types_and_weirdo = f"48htype1: {amount_48htype1_Li}, 48htype2: {amount_48htype2_Li}, 24g: {amount_24g_Li}, weirdo: {amount_weirdo}"
-
-#         # ratio_48htype1_Li = amount_48htype1_Li / sum_amount
-#         # ratio_48htype2_Li = amount_48htype2_Li / sum_amount
-#         # ratio_24g_Li = amount_24g_Li / sum_amount
-#         # ratio_weirdo_Li = amount_weirdo / sum_amount
-
-#         dataframe.at[idx, col_idx_coor_limapped_weirdos_dict] = idx_coor_limapped_weirdos_dict
-#         dataframe.at[idx, col_amount_types_and_weirdo] = amount_types_and_weirdo
-#         # dataframe.at[idx, col_ratio_48htype1_Li] = ratio_48htype1_Li
-#         # dataframe.at[idx, col_ratio_48htype2_Li] = ratio_48htype2_Li
-#         # dataframe.at[idx, col_ratio_24g_Li] = ratio_24g_Li
-#         # dataframe.at[idx, col_ratio_weirdo_Li] = ratio_weirdo_Li
-#         dataframe.at[idx, col_sum_amount] = sum_amount
-#         dataframe.at[idx, col_idx_coor_limapped_weirdos_dict_init] = idx_coor_limapped_weirdos_dict_init
-#         dataframe.at[idx, col_ndim_coor_reducedreference_Li] = ndim_coor_reducedreference_Li
-#         dataframe.at[idx, col_ndim_coor_weirdos_el] = ndim_coor_weirdos_el
-#         dataframe.at[idx, col_len_coor_weirdos_el] = len_coor_weirdos_el
-#         dataframe.at[idx, col_len_coor_reducedreference_Li] = len_coor_reducedreference_Li
-#         dataframe.at[idx, col_len_idx0_weirdos_Li] = len_idx0_weirdos_Li
-#         dataframe.at[idx, col_len_idx_without_weirdos] = len_idx_without_weirdos
 

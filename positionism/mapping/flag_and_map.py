@@ -57,32 +57,41 @@ def all_atoms_of_el(dataframe, coor_structure_init_dict, el, max_mapping_radius)
     - In the correct case, no multiple atom should belong to a same reference atom, otherwise flag stated "True". 
     - Get weirdos that don't belong to any closest reference.
 
-    Parameters:
-    - dataframe (pandas.DataFrame): DataFrame containing necessary data columns.
-    - coor_structure_init_dict (dict): Dictionary containing initial fractional coordinates of elements.
-    - el (str): Element symbol for which mapping is performed.
-    - max_mapping_radius (float): Maximum mapping radius for identifying nearby atomic positions.
+    Parameters
+    ==========
+    dataframe: pandas.DataFrame
+        DataFrame containing necessary data columns.
+    coor_structure_init_dict: dict
+        Dictionary containing initial fractional coordinates of elements.
+    el: str
+        Element symbol for which mapping is performed.
+    max_mapping_radius: float
+        Maximum mapping radius for identifying nearby atomic positions.
 
-    Returns:
-    - flag_el: By default False. True if there's > 1 atom belong to a same reference. 
-    - coor_weirdos_el: Coordinate of weirdos
-    - sum_weirdos_el: Sum amount of weirdos
-    - duplicate_closest24_w_data_el: Dictionary, whose key is coor24 and values are multiple coorreference it belongs to and dist.
-    - atom_mapping_el_w_dist_closestduplicate: Dictionary, whose key is coorreference and its value is THE CLOSEST coor24 and dist
-    - coor_reducedreference_el_closestduplicate: List of coorreference based on atom_mapping_el_w_dist_closestduplicate, so its the closest only.
-    - atom_mapping_el_closestduplicate: Dictionary, key: coorreference, value: coor24
-    - sum_mapped_el_closestduplicate: Sum amount of coor_reducedreference_el_closestduplicate
-    - sum_sanitycheck_el_closestduplicate: sum_mapped_el_closestduplicate + sum_weirdos_el
+    Returns
+    =======
+    flag_el: bool
+        By default False. True if there's > 1 atom belong to a same reference. 
+    coor_weirdos_el: list
+        Coordinate of weirdos
+    sum_weirdos_el: int
+        Sum amount of weirdos
+    duplicate_closest24_w_data_el: dict
+        Whose key is coor24 and values are multiple coorreference it belongs to and dist.
+    atom_mapping_el_w_dist_closestduplicate: dict
+        whose key is coorreference and its value is THE CLOSEST coor24 and dist
+    coor_reducedreference_el_closestduplicate: list
+        List of coorreference based on atom_mapping_el_w_dist_closestduplicate, so its the closest only.
+    atom_mapping_el_closestduplicate: dict
+        Key: coorreference, value: coor24
+    sum_mapped_el_closestduplicate: int
+        Sum amount of coor_reducedreference_el_closestduplicate
+    sum_sanitycheck_el_closestduplicate: int
+        sum_mapped_el_closestduplicate + sum_weirdos_el
     """
     coor_reference_el_init = coor_structure_init_dict[el]
     col_coor_structure_init_dict = "coor_structure_init_dict"
 
-    # col_atom_mapping_el = f"atom_mapping_{el}"
-    # col_atom_mapping_el_w_dist = f"atom_mapping_{el}_w_dist"
-    # col_coor_weirdos_el_dict = f"coor_weirdos_{el}_dict"            # just added
-    # col_coor_reducedreference_el = f"coor_reducedreference_{el}"
-    # col_sum_mapped_el = f"sum_mapped_{el}"
-    # col_sum_sanitycheck_el = f"sum_sanitycheck_{el}"
     col_flag_el = f"flag_{el}"
     col_coor_weirdos_el = f"coor_weirdos_{el}"
     col_sum_weirdos_el = f"sum_weirdos_{el}"
@@ -93,12 +102,6 @@ def all_atoms_of_el(dataframe, coor_structure_init_dict, el, max_mapping_radius)
     col_atom_mapping_el_closestduplicate = f"atom_mapping_{el}_closestduplicate"
     col_atom_mapping_el_w_dist_closestduplicate = f"atom_mapping_{el}_w_dist_closestduplicate"
 
-    # dataframe[col_atom_mapping_el] = [{} for _ in range(len(dataframe.index))] 
-    # dataframe[col_atom_mapping_el_w_dist] = [{} for _ in range(len(dataframe.index))]
-    # dataframe[col_coor_weirdos_el_dict] = [{el: []} for _ in range(len(dataframe.index))]                       # just added
-    # dataframe[col_coor_reducedreference_el] = [np.array([]) for _ in range(len(dataframe.index))]
-    # dataframe[col_sum_mapped_el] = [0 for _ in range(len(dataframe.index))]
-    # dataframe[col_sum_sanitycheck_el] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_flag_el] = "False"
     dataframe[col_coor_weirdos_el] = [np.array([]) for _ in range(len(dataframe.index))]
     dataframe[col_sum_weirdos_el] = [0 for _ in range(len(dataframe.index))]
@@ -209,12 +212,6 @@ def all_atoms_of_el(dataframe, coor_structure_init_dict, el, max_mapping_radius)
             print(f'sum of mapped atom and weirdos are not 24 at idx: {idx}')
             sys.exit()
 
-        # dataframe.at[idx, col_atom_mapping_el] = atom_mapping_el
-        # dataframe.at[idx, col_atom_mapping_el_w_dist] = atom_mapping_el_w_dist
-        # dataframe.at[idx, col_coor_weirdos_el_dict] = coor_weirdos_el_dict          # just added
-        # dataframe.at[idx, col_coor_reducedreference_el] = np.array(coor_reducedreference_el)
-        # dataframe.at[idx, col_sum_mapped_el] = sum_mapped_el
-        # dataframe.at[idx, col_sum_sanitycheck_el] = sum_weirdos_el + sum_mapped_el
         dataframe.at[idx, col_coor_weirdos_el] = coor_weirdos_el
         dataframe.at[idx, col_sum_weirdos_el] = sum_weirdos_el
         dataframe.at[idx, col_duplicate_closest24_w_data_el] = duplicate_closest24_w_data

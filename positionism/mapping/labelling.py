@@ -1,10 +1,26 @@
 from positionism.functional import func_distance
 
 
-def get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, el, litype):
+def weirdos_to_top_n_closestcoorref_el(dataframe, coor_structure_init_dict, el, litype):
+    # rename from: get_distance_weirdos_label_el
     """
+    Calculate WEIRDOS to top 3 or 1 closest coor reference. Get distances, and labels.
+
+    Args
+    ====
+    dataframe: pandas.DataFrame
+        The DataFrame containing the data.
+    coor_structure_init_dict: dict
+        Dictionary containing the initial coordinate structure.
+    el: str
+        Element for which distances and labels are calculated.
+    litype: int
+        Lithium type (int from 0 to 8)
+
+    Note
+    ====
+    - TO DO: add idx of weirdo and coorreference
     """
-    # to do: add idx of weirdo and coorreference
     coor_reference_el_init = coor_structure_init_dict[el]
     col_idx_coor_weirdos_el = f"idx_coor_weirdos_{el}"
 
