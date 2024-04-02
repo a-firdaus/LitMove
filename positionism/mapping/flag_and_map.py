@@ -1,8 +1,8 @@
 import numpy as np
 import sys
 
-from positionism.functional import func_dictionary
-from positionism.functional import func_distance
+from functional import func_dictionary
+from functional import func_distance
 
 
 class DictionaryFunctional:

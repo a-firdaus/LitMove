@@ -3,7 +3,7 @@ import os
 
 from pymatgen.core.structure import Structure
 
-from positionism.functional import func_distance
+from functional import func_distance
 
 
 def get_fractional_to_cartesian_matrix(dataframe, var_filename, angle_in_degrees=True): 

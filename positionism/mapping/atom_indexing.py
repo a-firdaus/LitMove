@@ -1,6 +1,6 @@
 import numpy as np
 
-from positionism.functional import func_distance
+from functional import func_distance
 
 
 def weirdos_el(dataframe, el, activate_radius):

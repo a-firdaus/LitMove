@@ -96,8 +96,79 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="mapping-flag-and-map-module">
-<h1>mapping.flag_and_map module<a class="headerlink" href="#mapping-flag-and-map-module" title="Link to this heading"></a></h1>
+  <section id="module-mapping.flag_and_map">
+<span id="mapping-flag-and-map-module"></span><h1>mapping.flag_and_map module<a class="headerlink" href="#module-mapping.flag_and_map" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="mapping.flag_and_map.DictionaryFunctional">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mapping.flag_and_map.</span></span><span class="sig-name descname"><span class="pre">DictionaryFunctional</span></span><a class="headerlink" href="#mapping.flag_and_map.DictionaryFunctional" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mapping.flag_and_map.DictionaryFunctional.get_atom_mapping_el_w_dist_closestduplicate">
+<span class="sig-name descname"><span class="pre">get_atom_mapping_el_w_dist_closestduplicate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mapping.flag_and_map.DictionaryFunctional.get_atom_mapping_el_w_dist_closestduplicate" title="Link to this definition"></a></dt>
+<dd><p>Identifies and returns closest mapped atom with its distance</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mapping.flag_and_map.DictionaryFunctional.get_duplicate_closest24_w_data">
+<span class="sig-name descname"><span class="pre">get_duplicate_closest24_w_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mapping.flag_and_map.DictionaryFunctional.get_duplicate_closest24_w_data" title="Link to this definition"></a></dt>
+<dd><p>Identifies and returns a list of duplicate values (closest24 with its data: coor)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mapping.flag_and_map.all_atoms_of_el">
+<span class="sig-prename descclassname"><span class="pre">mapping.flag_and_map.</span></span><span class="sig-name descname"><span class="pre">all_atoms_of_el</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coor_structure_init_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_mapping_radius</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.flag_and_map.all_atoms_of_el" title="Link to this definition"></a></dt>
+<dd><p>This function does:
+- Mapping to the closest reference by the radius given.
+- In the correct case, no multiple atom should belong to a same reference atom, otherwise flag stated “True”.
+- Get weirdos that don’t belong to any closest reference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> (<em>pandas.DataFrame</em>) – DataFrame containing necessary data columns.</p></li>
+<li><p><strong>coor_structure_init_dict</strong> (<em>dict</em>) – Dictionary containing initial fractional coordinates of elements.</p></li>
+<li><p><strong>el</strong> (<em>str</em>) – Element symbol for which mapping is performed.</p></li>
+<li><p><strong>max_mapping_radius</strong> (<em>float</em>) – Maximum mapping radius for identifying nearby atomic positions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>flag_el</strong> (<em>bool</em>) – By default False. True if there’s &gt; 1 atom belong to a same reference.</p></li>
+<li><p><strong>coor_weirdos_el</strong> (<em>list</em>) – Coordinate of weirdos</p></li>
+<li><p><strong>sum_weirdos_el</strong> (<em>int</em>) – Sum amount of weirdos</p></li>
+<li><p><strong>duplicate_closest24_w_data_el</strong> (<em>dict</em>) – Whose key is coor24 and values are multiple coorreference it belongs to and dist.</p></li>
+<li><p><strong>atom_mapping_el_w_dist_closestduplicate</strong> (<em>dict</em>) – whose key is coorreference and its value is THE CLOSEST coor24 and dist</p></li>
+<li><p><strong>coor_reducedreference_el_closestduplicate</strong> (<em>list</em>) – List of coorreference based on atom_mapping_el_w_dist_closestduplicate, so its the closest only.</p></li>
+<li><p><strong>atom_mapping_el_closestduplicate</strong> (<em>dict</em>) – Key: coorreference, value: coor24</p></li>
+<li><p><strong>sum_mapped_el_closestduplicate</strong> (<em>int</em>) – Sum amount of coor_reducedreference_el_closestduplicate</p></li>
+<li><p><strong>sum_sanitycheck_el_closestduplicate</strong> (<em>int</em>) – sum_mapped_el_closestduplicate + sum_weirdos_el</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mapping.flag_and_map.li_48htype1_48htype2">
+<span class="sig-prename descclassname"><span class="pre">mapping.flag_and_map.</span></span><span class="sig-name descname"><span class="pre">li_48htype1_48htype2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coor_structure_init_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_mapping_radius_48htype1_48htype2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.flag_and_map.li_48htype1_48htype2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mapping.flag_and_map.li_48htype2">
+<span class="sig-prename descclassname"><span class="pre">mapping.flag_and_map.</span></span><span class="sig-name descname"><span class="pre">li_48htype2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coor_structure_init_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_mapping_radius_48htype2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_radius</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.flag_and_map.li_48htype2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mapping.flag_and_map.li_48htypesmerged">
+<span class="sig-prename descclassname"><span class="pre">mapping.flag_and_map.</span></span><span class="sig-name descname"><span class="pre">li_48htypesmerged</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_radius</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.flag_and_map.li_48htypesmerged" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mapping.flag_and_map.li_48htypesmerged_level1">
+<span class="sig-prename descclassname"><span class="pre">mapping.flag_and_map.</span></span><span class="sig-name descname"><span class="pre">li_48htypesmerged_level1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.flag_and_map.li_48htypesmerged_level1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
 
 

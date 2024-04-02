@@ -94,8 +94,73 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="optimizer-opti-amount-weirdos-module">
-<h1>optimizer.opti_amount_weirdos module<a class="headerlink" href="#optimizer-opti-amount-weirdos-module" title="Link to this heading"></a></h1>
+  <section id="module-optimizer.opti_amount_weirdos">
+<span id="optimizer-opti-amount-weirdos-module"></span><h1>optimizer.opti_amount_weirdos module<a class="headerlink" href="#module-optimizer.opti_amount_weirdos" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="optimizer.opti_amount_weirdos.get_sum_weirdos_Li">
+<span class="sig-prename descclassname"><span class="pre">optimizer.opti_amount_weirdos.</span></span><span class="sig-name descname"><span class="pre">get_sum_weirdos_Li</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_positions_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_mapping_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_mapping_radius_48htype2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataframe_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_perfect_poscar_24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_ori_ref_48n24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">litype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_optitype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#optimizer.opti_amount_weirdos.get_sum_weirdos_Li" title="Link to this definition"></a></dt>
+<dd><p>Parameters:
+- ref_positions_array
++ max_mapping_radius
++ max_mapping_radius_48htype2
+- dataframe_init
++ activate_radius
+- file_perfect_poscar_24
+- file_ori_ref_48n24
++ litype
++ var_optitype
++ iter_type: “varying_dx_dz”, “varying_radius”, none</p>
+<p>Returns:
+-</p>
+<p>Notes:
+- Only tested for activate_radius max 2</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="optimizer.opti_amount_weirdos.get_sum_weirdos_Li_var_litype">
+<span class="sig-prename descclassname"><span class="pre">optimizer.opti_amount_weirdos.</span></span><span class="sig-name descname"><span class="pre">get_sum_weirdos_Li_var_litype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_positions_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_mapping_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_mapping_radius_48htype2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_perfect_poscar_24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_ori_ref_48n24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">litype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_optitype</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#optimizer.opti_amount_weirdos.get_sum_weirdos_Li_var_litype" title="Link to this definition"></a></dt>
+<dd><p>Parameters:
+- ref_positions_array (str):
+- max_mapping_radius
+- max_mapping_radius_48htype2
+- activate_radius
+- file_perfect_poscar_24
+- file_ori_ref_48n24
+- litype
+- var_optitype</p>
+<p>Returns:
+-</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="optimizer.opti_amount_weirdos.get_sum_weirdos_Li_var_not_complete">
+<span class="sig-prename descclassname"><span class="pre">optimizer.opti_amount_weirdos.</span></span><span class="sig-name descname"><span class="pre">get_sum_weirdos_Li_var_not_complete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_mapping_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_mapping_radius_48htype2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_perfect_poscar_24_wo_cif</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_perfect_poscar_48n24_wo_cif</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">litype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_optitype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">foldermapping_namestyle_all</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cif_namestyle_all</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modif_all_litype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_calculation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#optimizer.opti_amount_weirdos.get_sum_weirdos_Li_var_not_complete" title="Link to this definition"></a></dt>
+<dd><p>Parameters:
++ max_mapping_radius
++ max_mapping_radius_48htype2
++ activate_radius
+- file_perfect_poscar_24_wo_cif
+- file_perfect_poscar_48n24_wo_cif
++ litype
++ var_optitype
++ iter_type: “varying_dx_dz”, “varying_radius”, none
+- foldermapping_namestyle_all
+- cif_namestyle_all
+- modif_all_litype
+- full_calculation</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>ref_positions_array</p></li>
+<li><p>dataframe_init</p></li>
+<li><p>file_perfect_poscar_24</p></li>
+<li><p>file_ori_ref_48n24</p></li>
+</ul>
+</div></blockquote>
+<p>iter_type: varying_dx_dz, varying_radius, none
+cif_namestyle_all: True, False, None
+full_calculation: True, False</p>
+</dd></dl>
+
 </section>
 
 

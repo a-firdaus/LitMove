@@ -2,12 +2,11 @@ import pandas as pd
 import numpy as np
 import os
 
-from positionism.functional import func_directory
-from positionism.preprocessing import CONTCARorPOSCAR
+from functional import func_directory
 from preprocessing import create_dataframe, CONTCARorPOSCAR
 from read import parameter, coordinate_and_el
-from orientation import propagate
-from optimizer import position
+from orientation import orient_propagate
+from optimizer import opti_position
 from mapping import flag_and_map, atom_indexing, labelling, output_CIF, output_weirdos
 from plot import structure_analysis
 
@@ -289,7 +288,7 @@ def get_sum_weirdos_Li_var_not_complete(max_mapping_radius, max_mapping_radius_4
     func_directory.copy_rename_files(file_loc, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
     CONTCARorPOSCAR.positive_lessthan1(file_loc, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
 
-    file_loc_mask_1, file_loc_important_cols = propagate.calculate(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
+    file_loc_mask_1, file_loc_important_cols = orient_propagate.calculate(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
     
     if modif_all_litype == True:
         ref_positions_array = ref_positions_array_all
@@ -307,8 +306,8 @@ def get_sum_weirdos_Li_var_not_complete(max_mapping_radius, max_mapping_radius_4
         ref_positions_array_filename = ref_positions_array_all_compactform
 
     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type1, dx2_48h_type1, dz_48h_type1, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-    # path_perfect_poscar_48n24 = position.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
-    path_perfect_poscar_48n24 = position.modif_dx_dz_get_filepath(path_folder_name_iter_type, path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
+    # path_perfect_poscar_48n24 = opti_position.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
+    path_perfect_poscar_48n24 = opti_position.modif_dx_dz_get_filepath(path_folder_name_iter_type, path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, var_optitype, modif_all_litype)
 
     # just copy file
     # directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
@@ -621,7 +620,7 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
 
     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
     # path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-    path_perfect_poscar_48n24 = position.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array, litype, var_optitype, modif_all_litype = False)
+    path_perfect_poscar_48n24 = opti_position.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array, litype, var_optitype, modif_all_litype = False)
 
     # just copy file
     # directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
@@ -826,7 +825,7 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
     func_directory.check_folder_existance(direc_restructure_destination, empty_folder=True)
 
     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-    path_perfect_poscar_48n24 = position.modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype, litype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
+    path_perfect_poscar_48n24 = opti_position.modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype, litype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
 
     # just copy file
     # directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)

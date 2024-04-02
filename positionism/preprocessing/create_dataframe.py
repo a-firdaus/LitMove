@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 
-from positionism.functional import func_directory
+from functional import func_directory
 
 
 def base(data_toten, file_name):

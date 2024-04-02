@@ -93,8 +93,35 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="orientation-orient-propagate-module">
-<h1>orientation.orient_propagate module<a class="headerlink" href="#orientation-orient-propagate-module" title="Link to this heading"></a></h1>
+  <section id="module-orientation.orient_propagate">
+<span id="orientation-orient-propagate-module"></span><h1>orientation.orient_propagate module<a class="headerlink" href="#module-orientation.orient_propagate" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="orientation.orient_propagate.calculate">
+<span class="sig-prename descclassname"><span class="pre">orientation.orient_propagate.</span></span><span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direc_restructure_destination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_restructure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_perfect_poscar_24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#orientation.orient_propagate.calculate" title="Link to this definition"></a></dt>
+<dd><p>Processes the orientation of structures based on a reference structure.
+It identifies perfect systems (file with path number 0) denoted in DataFrame as <cite>p_s_mask=1</cite>
+and applies necessary transformations to align them with the reference structure.
+The transformations are then propagated to other related systems.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df_file</strong> (<em>pd.DataFrame</em>) – DataFrame containing the file locations and all other metadata.</p></li>
+<li><p><strong>direc_restructure_destination</strong> (<em>str</em>) – Directory path where the restructured files will be saved.</p></li>
+<li><p><strong>file_restructure</strong> (<em>str</em>) – Name of the file after restructuring.</p></li>
+<li><p><strong>path_perfect_poscar_24</strong> (<em>str</em>) – File path to the reference structure, which the orientation is based on.</p></li>
+<li><p><strong>orientation</strong> (<em>str</em>) – Flag indicating whether to process the orientation (‘True’) or skip it (‘False’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>df_file_mask_1</strong> (<em>pd.DataFrame</em>) – DataFrame with rows where ‘p_s_mask’ is 1, indicating perfect systems.</p></li>
+<li><p><strong>df_file_important_cols</strong> (<em>pd.DataFrame</em>) – DataFrame with important columns  and possibly updated with transformations of all systems.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

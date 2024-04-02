@@ -96,8 +96,77 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="mapping-atom-indexing-module">
-<h1>mapping.atom_indexing module<a class="headerlink" href="#mapping-atom-indexing-module" title="Link to this heading"></a></h1>
+  <section id="module-mapping.atom_indexing">
+<span id="mapping-atom-indexing-module"></span><h1>mapping.atom_indexing module<a class="headerlink" href="#module-mapping.atom_indexing" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="mapping.atom_indexing.correct_idx_and_order_mapped_el">
+<span class="sig-prename descclassname"><span class="pre">mapping.atom_indexing.</span></span><span class="sig-name descname"><span class="pre">correct_idx_and_order_mapped_el</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_radius</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.atom_indexing.correct_idx_and_order_mapped_el" title="Link to this definition"></a></dt>
+<dd><p>Given list of reference structure’s coordinate (that’s considered already for mapping),
+then they’re re-ordered again aka being corrected for its indexing.
+Correcting done by calculating the distance of given reference to each atom of the structures,
+for which the closest one is considered.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> (<em>pandas.DataFrame</em>) – DataFrame containing necessary data columns.</p></li>
+<li><p><strong>el</strong> (<em>str</em>) – Element symbol for which anomalies to be identified.</p></li>
+<li><p><strong>activate_radius</strong> (<em>int</em>) – Number indicating how many level of mapping radius to be used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>idx_correcting_el</strong> (<em>list</em>) – Corrected index</p></li>
+<li><p><strong>coor_reducedreference_sorted_el</strong> (<em>list</em>) – Reference coordinate with corrected ordering</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mapping.atom_indexing.get_idx_coor_limapped_weirdos_dict">
+<span class="sig-prename descclassname"><span class="pre">mapping.atom_indexing.</span></span><span class="sig-name descname"><span class="pre">get_idx_coor_limapped_weirdos_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coor_structure_init_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">litype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.atom_indexing.get_idx_coor_limapped_weirdos_dict" title="Link to this definition"></a></dt>
+<dd><p>Generates a dictionary mapping each index to its corresponding coordinates and label,
+considering different Li types and weirdos, and computes various statistics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> (<em>pandas.DataFrame</em>) – DataFrame containing the data</p></li>
+<li><p><strong>coor_structure_init_dict</strong> (<em>dict</em>) – Dictionary containing initial coordinate structures</p></li>
+<li><p><strong>activate_radius</strong> (<em>int</em>) – Radius activation flag (1, 2, or 3)</p></li>
+<li><p><strong>litype</strong> (<em>int</em>) – Lithium type (int from 0 to 8)</p></li>
+<li><p><strong>el</strong> (<em>str</em>) – Element symbol</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mapping.atom_indexing.weirdos_el">
+<span class="sig-prename descclassname"><span class="pre">mapping.atom_indexing.</span></span><span class="sig-name descname"><span class="pre">weirdos_el</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_radius</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.atom_indexing.weirdos_el" title="Link to this definition"></a></dt>
+<dd><p>Identifies indexes of weirdo for a specific element within structures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> (<em>pandas.DataFrame</em>) – DataFrame containing necessary data columns.</p></li>
+<li><p><strong>el</strong> (<em>str</em>) – Element symbol for which anomalies to be identified.</p></li>
+<li><p><strong>activate_radius</strong> (<em>int</em>) – Number indicating how many level of mapping radius to be used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>idx0_weirdos_el</strong> (<em>list</em>) – List of indexes of weirdos. Numeration starts from 0.</p></li>
+<li><p><strong>#weirdos_el</strong> (<em>int</em>) – Amount of weirdos.</p></li>
+<li><p><strong>idx_coor_weirdos_el</strong> (<em>dict</em>) – Whose key: index of weirdo, value: coordinate of weirdo.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 

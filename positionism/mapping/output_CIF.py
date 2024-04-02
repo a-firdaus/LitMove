@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-from positionism.functional import func_string
+from functional import func_string
 
 from pymatgen.core.structure import Structure
 from pymatgen.io.cif import CifWriter
