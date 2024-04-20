@@ -262,10 +262,10 @@ CONTCARorPOSCAR.get_latticeconstant_dict(file_loc_important_cols, direc_restruct
                                          proceed_XDATCAR, 
                                          var_filename = "CONTCAR")
 
-structure_analysis.energy_vs_latticeconstant(file_loc_important_cols, 
-                                             var_filename = "CONTCAR")
+# # # structure_analysis.energy_vs_latticeconstant(file_loc_important_cols, 
+# # #                                              var_filename = "CONTCAR")    # commented out
 
-structure_analysis.weirdos_directcoor(file_loc_important_cols, activate_radius)
+# # # structure_analysis.weirdos_directcoor(file_loc_important_cols, activate_radius)
 
 
 tuple_metainfo = metainfo.tuple(coor_ref_structure_48n24_expanded, litype, el = "Li")
