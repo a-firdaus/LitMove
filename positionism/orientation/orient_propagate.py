@@ -1,7 +1,7 @@
 import numpy as np
 
-from functional import func_cartesian
-from orientation import orient_perfect_structure
+from positionism.functional import func_cartesian
+from positionism.orientation import orient_perfect_structure
 
 from pymatgen.core.structure import Structure
 

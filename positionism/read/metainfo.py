@@ -1,7 +1,7 @@
 import numpy as np
 from collections import defaultdict
 
-from functional import func_distance
+from positionism.functional import func_distance
 
 
 # class Metainfo:

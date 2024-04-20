@@ -3,7 +3,7 @@ import numpy as np
 import os
 from collections import defaultdict
 
-from functional import func_distance
+from positionism.functional import func_distance
 
 from pymatgen.core.structure import Structure
 

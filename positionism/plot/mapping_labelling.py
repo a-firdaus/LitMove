@@ -1,7 +1,7 @@
 import pandas as pd
 import plotly.express as px
 
-from functional import func_string
+from positionism.functional import func_string
 
 
 def plot_amount_type(dataframe, litype, el, style, category_labels = None):

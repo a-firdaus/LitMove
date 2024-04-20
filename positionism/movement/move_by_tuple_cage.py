@@ -2,7 +2,7 @@ import pandas as pd
 import plotly.express as px
 from collections import defaultdict
 
-from functional import func_distance
+from positionism.functional import func_distance
 
 
     # class TupleCage:

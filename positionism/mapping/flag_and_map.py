@@ -1,8 +1,7 @@
 import numpy as np
 import sys
 
-from functional import func_dictionary
-from functional import func_distance
+from positionism.functional import func_dictionary, func_distance
 
 
 class DictionaryFunctional:
@@ -223,6 +222,29 @@ def all_atoms_of_el(dataframe, coor_structure_init_dict, el, max_mapping_radius)
 
 
 def li_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_radius_48htype2, activate_radius):
+    """
+    This function does:
+    - Map all weirdos' results from flag_and_map.all_atoms_of_el() with the defined 'max_mapping_radius_48htype2',
+    which should be larger than the radius for flag_and_map.all_atoms_of_el()
+    - It maps ONLY into 48htype2 as its name
+
+    Parameters
+    ==========
+    dataframe: pd.DataFrame
+        The DataFrame containing structure information.
+    coor_structure_init_dict: dict
+        A dictionary of reference structure with elements as keys and their coordinates as values.
+    el: str
+        The element symbol (e.g., "Li") to process within the DataFrame.
+    max_mapping_radius_48htype2: float
+        The maximum radius within which atoms are considered to be mapping to the 48htype2 reference structure.
+    activate_radius: int
+        Determines which columns are used for processing; this should be either 2 or 3, indicating different types of structural coordination.
+
+    Returns
+    =======
+    - same as flag_and_map.all_atoms_of_el() but renamed as '48htype2'
+    """
     # rename from: get_flag_map_weirdos_48htype2_el
     coor_reference_el_init = coor_structure_init_dict[el]         
     if activate_radius == 3:              
@@ -241,11 +263,11 @@ def li_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_radius_48ht
     col_coor_weirdos_48htype2_el = f"coor_weirdos_48htype2_{el}"
     col_sum_weirdos_48htype2_el = f"sum_weirdos_48htype2_{el}"
     col_duplicate_closest24_w_data_48htype2_el = f"duplicate_closest24_w_data_48htype2_{el}"
+    col_atom_mapping_48htype2_el_w_dist_closestduplicate = f"atom_mapping_48htype2_{el}_w_dist_closestduplicate"
     col_coor_reducedreference_48htype2_el_closestduplicate = f"coor_reducedreference_48htype2_{el}_closestduplicate"
+    col_atom_mapping_48htype2_el_closestduplicate = f"atom_mapping_48htype2_{el}_closestduplicate"
     col_sum_mapped_48htype2_el_closestduplicate = f"sum_mapped_48htype2_{el}_closestduplicate"
     col_sum_sanitycheck_48htype2_el_closestduplicate = f"sum_sanitycheck_48htype2_{el}_closestduplicate"
-    col_atom_mapping_48htype2_el_closestduplicate = f"atom_mapping_48htype2_{el}_closestduplicate"
-    col_atom_mapping_48htype2_el_w_dist_closestduplicate = f"atom_mapping_48htype2_{el}_w_dist_closestduplicate"
 
     # dataframe[col_atom_mapping_48htype2_el] = [{} for _ in range(len(dataframe.index))]
     # dataframe[col_atom_mapping_48htype2_el_w_dist] = [{} for _ in range(len(dataframe.index))]
@@ -256,15 +278,13 @@ def li_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_radius_48ht
     dataframe[col_coor_weirdos_48htype2_el] = [np.array([]) for _ in range(len(dataframe.index))]
     dataframe[col_sum_weirdos_48htype2_el] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_duplicate_closest24_w_data_48htype2_el] = [{} for _ in range(len(dataframe.index))]
+    dataframe[col_atom_mapping_48htype2_el_w_dist_closestduplicate] = [{} for _ in range(len(dataframe.index))]
     dataframe[col_coor_reducedreference_48htype2_el_closestduplicate] = [np.array([]) for _ in range(len(dataframe.index))]
+    dataframe[col_atom_mapping_48htype2_el_closestduplicate] = [{} for _ in range(len(dataframe.index))]
     dataframe[col_sum_mapped_48htype2_el_closestduplicate] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_sum_sanitycheck_48htype2_el_closestduplicate] = [0 for _ in range(len(dataframe.index))]
-    dataframe[col_atom_mapping_48htype2_el_closestduplicate] = [{} for _ in range(len(dataframe.index))]
-    dataframe[col_atom_mapping_48htype2_el_w_dist_closestduplicate] = [{} for _ in range(len(dataframe.index))]
 
-    coor_li48htype1_ref = coor_reference_el_init[0:48]
     coor_li48htype2_ref = coor_reference_el_init[48:96]
-    coor_li24g_ref = coor_reference_el_init[96:120]
 
     for idx in range(dataframe["geometry"].size):
         atom_mapping_el_w_dist = {} 
@@ -366,11 +386,11 @@ def li_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_radius_48ht
             dataframe.at[idx, col_coor_weirdos_48htype2_el] = coor_weirdos_el
             dataframe.at[idx, col_sum_weirdos_48htype2_el] = sum_weirdos_el
             dataframe.at[idx, col_duplicate_closest24_w_data_48htype2_el] = duplicate_closest24_w_data
+            dataframe.at[idx, col_atom_mapping_48htype2_el_w_dist_closestduplicate] = atom_mapping_el_w_dist_closestduplicate
             dataframe.at[idx, col_coor_reducedreference_48htype2_el_closestduplicate] = np.array(coor_reducedreference_el_closestduplicate)
+            dataframe.at[idx, col_atom_mapping_48htype2_el_closestduplicate] = atom_mapping_el_closestduplicate
             dataframe.at[idx, col_sum_mapped_48htype2_el_closestduplicate] = sum_mapped_el_closestduplicate
             dataframe.at[idx, col_sum_sanitycheck_48htype2_el_closestduplicate] = sum_mapped_el_closestduplicate + sum_weirdos_el
-            dataframe.at[idx, col_atom_mapping_48htype2_el_closestduplicate] = atom_mapping_el_closestduplicate
-            dataframe.at[idx, col_atom_mapping_48htype2_el_w_dist_closestduplicate] = atom_mapping_el_w_dist_closestduplicate
 
         # elif coor_origin24_el_init == []:
         #     dataframe.at[idx, col_atom_mapping_48htype2_el] = {} 
@@ -662,6 +682,29 @@ def li_48htypesmerged_level1(dataframe, el):
 
 
 def li_48htypesmerged(dataframe, el, activate_radius):
+    """
+    This function does:
+    - Map all weirdos' results from flag_and_map.all_atoms_of_el() with the defined 'max_mapping_radius_48htype2',
+    which should be larger than the radius for flag_and_map.all_atoms_of_el()
+    - It maps ONLY into 48htype2 as its name
+
+    Parameters
+    ==========
+    dataframe: pd.DataFrame
+        The DataFrame containing structure information.
+    coor_structure_init_dict: dict
+        A dictionary of reference structure with elements as keys and their coordinates as values.
+    el: str
+        The element symbol (e.g., "Li") to process within the DataFrame.
+    max_mapping_radius_48htype2: float
+        The maximum radius within which atoms are considered to be mapping to the 48htype2 reference structure.
+    activate_radius: int
+        Determines which columns are used for processing; this should be either 2 or 3, indicating different types of structural coordination.
+
+    Returns
+    =======
+    - same as flag_and_map.all_atoms_of_el() but renamed as '48htype2'
+    """
     # rename from: get_flag_map_48htypesmerged_el
     if activate_radius == 3:
         # # col_flag_48htype1_48htype2_el = f"flag_48htype1_48htype2_{el}"

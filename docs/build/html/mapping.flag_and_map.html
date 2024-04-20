@@ -157,7 +157,28 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="mapping.flag_and_map.li_48htype2">
 <span class="sig-prename descclassname"><span class="pre">mapping.flag_and_map.</span></span><span class="sig-name descname"><span class="pre">li_48htype2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coor_structure_init_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_mapping_radius_48htype2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_radius</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.flag_and_map.li_48htype2" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>This function does:
+- Map all weirdos’ results from flag_and_map.all_atoms_of_el() with the defined ‘max_mapping_radius_48htype2’,
+which should be larger than the radius for flag_and_map.all_atoms_of_el()
+- It maps into 48htype2 only as its name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataframe</strong> (<em>pd.DataFrame</em>) – The DataFrame containing structure information.</p></li>
+<li><p><strong>coor_structure_init_dict</strong> (<em>dict</em>) – A dictionary of reference structure with elements as keys and their coordinates as values.</p></li>
+<li><p><strong>el</strong> (<em>str</em>) – The element symbol (e.g., “Li”) to process within the DataFrame.</p></li>
+<li><p><strong>max_mapping_radius_48htype2</strong> (<em>float</em>) – The maximum radius within which atoms are considered to be mapping to the 48htype2 reference structure.</p></li>
+<li><p><strong>activate_radius</strong> (<em>int</em>) – Determines which columns are used for processing; this should be either 2 or 3, indicating different types of structural coordination.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>same as flag_and_map.all_atoms_of_el() but renamed as 48htype2</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mapping.flag_and_map.li_48htypesmerged">

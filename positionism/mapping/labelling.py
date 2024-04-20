@@ -1,4 +1,4 @@
-from functional import func_distance
+from positionism.functional import func_distance
 
 
 def weirdos_to_top_n_closestcoorref_el(dataframe, coor_structure_init_dict, el, litype):

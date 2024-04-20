@@ -5,7 +5,7 @@ import mpldatacursor
 import plotly.express as px
 from adjustText import adjust_text
 
-from functional import func_string
+from positionism.functional import func_string
 
 
 # class Distance:
