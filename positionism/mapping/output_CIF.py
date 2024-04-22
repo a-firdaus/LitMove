@@ -169,7 +169,7 @@ def correct_Li_idx(dataframe, destination_directory, amount_Li, amount_P, amount
             lines[idx_Li_start : len(idx_without_weirdos) + idx_Li_start] = new_text
 
             idx_P_S_Cl_line_new_start    = len(idx_without_weirdos) + idx_Li_start
-            Edit.reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_Li, amount_P, amount_S, amount_Cl)
+            Edit.correct_P_S_Cl_idx(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_Li, amount_P, amount_S, amount_Cl)
 
         dataframe.at[idx, col_idx_without_weirdos] = idx_without_weirdos
 
@@ -241,20 +241,21 @@ def correct_Li_idx_weirdos_appended(dataframe, destination_directory, amount_Li,
             # pass
             idx0_weirdos_Li = list(range(0,24))
             
-            search_string = "P  P0"
-            # added: check if the search_string is found
-            search_string_found = False
-            for idx_line, line in enumerate(lines):
-                if search_string in line:
-                    search_string_found = True
-                    idx_Li_start = idx_line
+            search_string_P = "P  P0"
+            # added: check if the search_string_P is found
+            search_string_P_found = False
+            for idx_line_P, line in enumerate(lines):
+                if search_string_P in line:
+                    search_string_P_found = True
+                    idx_Li_start = idx_line_P
                     break
             
-            createing_new_text(idx0_weirdos_Li, coor_weirdos, lines, idx_Li_start, amount_Li, amount_P, amount_S, amount_Cl)
+            # if search_string_P_found == True:
+            creating_new_text(idx0_weirdos_Li, coor_weirdos, lines, idx_Li_start, amount_Li, amount_P, amount_S, amount_Cl)
             with open(destination_path_combined_new, "w") as f:
                 f.write("\n".join(line.strip() for line in lines))
         else:
-            createing_new_text(idx0_weirdos_Li, coor_weirdos, lines, idx_Li_start, amount_Li, amount_P, amount_S, amount_Cl)
+            creating_new_text(idx0_weirdos_Li, coor_weirdos, lines, idx_Li_start, amount_Li, amount_P, amount_S, amount_Cl)
             # new_text = []
             # for i in range(len(idx_without_weirdos)):
             #     idx_line = idx_Li_start + i
@@ -290,7 +291,7 @@ def correct_Li_idx_weirdos_appended(dataframe, destination_directory, amount_Li,
             # idx_P_S_Cl_line_new_start    = idx_weirdo_line_end
 
             # # !!!: for the moment not using the function because P is gone
-            # # Edit.reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_P, amount_S, amount_Cl)
+            # # Edit.correct_P_S_Cl_idx(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_P, amount_S, amount_Cl)
             
             # idx_P_S_Cl_line_new_end      = idx_P_S_Cl_line_new_start + len(old_text_P_S_Cl)
             # lines[idx_P_S_Cl_line_new_start : idx_P_S_Cl_line_new_end] = old_text_P_S_Cl
@@ -337,7 +338,7 @@ def correct_Li_idx_weirdos_appended(dataframe, destination_directory, amount_Li,
                 f.write("\n".join(line.strip() for line in lines))
 
 
-def createing_new_text(idx0_weirdos_Li, coor_weirdos, lines, idx_Li_start, amount_Li, amount_P, amount_S, amount_Cl):
+def creating_new_text(idx0_weirdos_Li, coor_weirdos, lines, idx_Li_start, amount_Li, amount_P, amount_S, amount_Cl):
 
     idx_without_weirdos = [i for i in range(amount_Li) if i not in idx0_weirdos_Li]
 
@@ -374,7 +375,7 @@ def createing_new_text(idx0_weirdos_Li, coor_weirdos, lines, idx_Li_start, amoun
     idx_P_S_Cl_line_new_start    = idx_weirdo_line_end
 
     # !!!: for the moment not using the function because P is gone
-    # Edit.reindex_P_S_Cl(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_P, amount_S, amount_Cl)
+    # Edit.correct_P_S_Cl_idx(lines, idx_Li_start, idx_without_weirdos, idx_P_S_Cl_line_new_start, amount_P, amount_S, amount_Cl)
     
     idx_P_S_Cl_line_new_end      = idx_P_S_Cl_line_new_start + len(old_text_P_S_Cl)
     lines[idx_P_S_Cl_line_new_start : idx_P_S_Cl_line_new_end] = old_text_P_S_Cl
