@@ -352,7 +352,9 @@ def get_df_movement_category(dataframe, activate_closest_tuple):
     return df_to_plot
 
 
-def get_and_plot_df_movement_category_counted(df_movement):
+def get_df_movement_category_counted(df_movement):
+    # rename from: get_and_plot_df_movement_category_counted
+    # splitted
     df = pd.DataFrame()
     df['idx_file'] = None
     df['inTERcage'] = None
@@ -383,6 +385,10 @@ def get_and_plot_df_movement_category_counted(df_movement):
         df.at[i, 'intratriad'] = counter_intratriad
         df.at[i, 'staying'] = counter_staying
 
+    return df
+
+
+def plot_movement_category_counted(df):
     wide_df = pd.DataFrame(df)
 
     # Convert wide format to long format
@@ -394,4 +400,3 @@ def get_and_plot_df_movement_category_counted(df_movement):
     fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx of movement vs Category")
     fig.show()
 
-    return df

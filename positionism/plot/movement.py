@@ -85,7 +85,8 @@ def plot_distance(df_distance, max_mapping_radius, activate_shifting_x, activate
 
 
 # class Occupancy:
-def plot_occupancy(dataframe, category_labels = None):
+def get_df_occupancy(dataframe):
+    # rename from: plot_occupancy
     col_occupancy = "occupancy"
 
     df = pd.DataFrame()
@@ -108,6 +109,9 @@ def plot_occupancy(dataframe, category_labels = None):
         df.at[idx, '48htype1'] = occupancy['48htype1']
         df.at[idx, 'weirdo'] = occupancy['weirdo']
 
+    return df
+
+def plot_occupancy(df, category_labels = None):
     wide_df = pd.DataFrame(df)
 
     # Convert wide format to long format
@@ -121,7 +125,6 @@ def plot_occupancy(dataframe, category_labels = None):
     fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx of file vs Occupancy")
     fig.show()
 
-    return df
 
 
 # class TupleCage:
@@ -416,9 +419,9 @@ def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, max_mapping_radius
                         text = ax.text(text_x, text_y, str(int(idx_tuple_val))+"i", color=text_color, fontsize=18)
                     elif type_val == 'weirdos':
                         # idx_tuple_val = 'x'
-                        print(idx_tuple_val)
+                        # # print(idx_tuple_val)
                         text = ax.text(text_x, text_y, idx_tuple_val, color=text_color, fontsize=18)
-                        print(text)
+                        # # print(text)
                 else:
                     if idx_tuple_val == 'x':
                         text = ax.text(text_x, text_y, idx_tuple_val, color=text_color, fontsize=18)

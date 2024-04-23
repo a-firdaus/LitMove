@@ -20,6 +20,7 @@ import re
 import mplcursors
 import mpldatacursor
 import warnings
+import time
 
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn.cluster import KMeans
@@ -40,6 +41,8 @@ from positionism.read import coordinate_and_el, metainfo
 from positionism.mapping import flag_and_map, atom_indexing, labelling, output_CIF, output_weirdos
 from positionism.plot import mapping_labelling, movement, structure_analysis
 from positionism.movement import move_by_occupancy, move_by_tuple_cage, move_by_distance
+
+t = time.time()
 
 direc = os.getcwd() # get current working directory
 
@@ -294,7 +297,9 @@ category_labels_occupancy = {
 }
 
 move_by_occupancy.get_occupancy(file_loc_important_cols, coor_ref_structure_48n24_expanded, tuple_cage_metainfo, el = "Li")
-# # # df_occupancy = movement.plot_occupancy(file_loc_important_cols, category_labels_occupancy) # commented out
+df_occupancy = movement.get_df_occupancy(file_loc_important_cols)
+# # # movement.plot_occupancy(df_occupancy, category_labels_occupancy)  # commented out
+df_occupancy.to_pickle(f'df_occupancy.pkl') 
 
 move_by_tuple_cage.get_complete_closest_tuple_cage(file_loc_important_cols, tuple_cage_metainfo, coor_48htype1_metainfo)
 
@@ -309,39 +314,45 @@ category_labels = {
     # ... add more as needed
 }
 
-# # # if proceed_NEB == "True": # commented out
-# # #     df_type = move_by_tuple_cage.get_df_movement(file_loc_important_cols, to_plot = 'type', activate_closest_tuple = False)
-# # #     df_idx_tuple = move_by_tuple_cage.get_df_movement(file_loc_important_cols, to_plot = 'idx_tuple', activate_closest_tuple = False)
-# # #     df_idx_cage = move_by_tuple_cage.get_df_movement(file_loc_important_cols, to_plot = 'idx_cage', activate_closest_tuple = False)
+if proceed_NEB == "True": # commented out
+    df_type = move_by_tuple_cage.get_df_movement(file_loc_important_cols, to_plot = 'type', activate_closest_tuple = False)
+    df_idx_tuple = move_by_tuple_cage.get_df_movement(file_loc_important_cols, to_plot = 'idx_tuple', activate_closest_tuple = False)
+    df_idx_cage = move_by_tuple_cage.get_df_movement(file_loc_important_cols, to_plot = 'idx_cage', activate_closest_tuple = False)
+    df_type.to_pickle(f'df_type.pkl') 
+    df_idx_tuple.to_pickle(f'df_idx_tuple.pkl') 
+    df_idx_cage.to_pickle(f'df_idx_cage.pkl') 
 
-# # #     # category_labels_activate_s_i = {
-# # #     #     '48htype1': '48htype2',
-# # #     #     '48htype2': '48htype1',
-# # #     #     '48htype3': '48htype3',
-# # #     #     '48htype4': '48htype4',
-# # #     #     '24g': '24g',
-# # #     #     'weirdo': 'weirdo'
-# # #     #     # ... add more as needed
-# # #     # }
+    # category_labels_activate_s_i = {
+    #     '48htype1': '48htype2',
+    #     '48htype2': '48htype1',
+    #     '48htype3': '48htype3',
+    #     '48htype4': '48htype4',
+    #     '24g': '24g',
+    #     'weirdo': 'weirdo'
+    #     # ... add more as needed
+    # }
 
-# # #     # # Plot.Movement.Distance.plot_distance(df_idx_cage, max_mapping_radius, Li_idxs="all")
-# # #     movement.plot_cage_tuple_label(df_idx_cage, df_type, df_idx_tuple, max_mapping_radius, litype, category_labels, activate_diameter_line=False, activate_relabel_s_i = True, Li_idxs="all") 
+    # # # # # Plot.Movement.Distance.plot_distance(df_idx_cage, max_mapping_radius, Li_idxs="all")
+    # # # movement.plot_cage_tuple_label(df_idx_cage, df_type, df_idx_tuple, max_mapping_radius, litype, category_labels, activate_diameter_line=False, activate_relabel_s_i = True, Li_idxs="all")   # commented out
 
 
-# # # if proceed_NEB == "True":
-# # #     df_movement = move_by_tuple_cage.get_df_movement_category(file_loc_important_cols, activate_closest_tuple=False)
-# # #     movement.plot_distance(df_movement, max_mapping_radius, activate_shifting_x = True, activate_diameter_line = False, Li_idxs = 'all')
-
+if proceed_NEB == "True":
+    df_movement = move_by_tuple_cage.get_df_movement_category(file_loc_important_cols, activate_closest_tuple=False)
+    # # # movement.plot_distance(df_movement, max_mapping_radius, activate_shifting_x = True, activate_diameter_line = False, Li_idxs = 'all')  # commented out
+    df_movement.to_pickle(f'df_movement.pkl') 
 
 labelling.get_amount_type(file_loc_important_cols, litype, el = "Li")
 
-# # # el = "Li"
-# # # style = "bar"
-# # # df_amount_type = mapping_labelling.plot_amount_type(file_loc_important_cols, litype, el, style, category_labels) # commented out
+el = "Li"
+style = "bar"
+df_amount_type = mapping_labelling.get_df_amount_type(file_loc_important_cols, litype, el)
+# # # mapping_labelling.plot_amount_type(df_amount_type, style, category_labels) # commented out
+df_amount_type.to_pickle(f'df_amount_type.pkl') 
 
-# # # if proceed_NEB == "True": # commented out
-# # #     df = move_by_tuple_cage.get_and_plot_df_movement_category_counted(df_movement)
-# # #     print(df.sum())
+if proceed_NEB == "True": # commented out
+    df_amount_movement = move_by_tuple_cage.get_df_movement_category_counted(df_movement)
+    # # # move_by_tuple_cage.plot_movement_category_counted(df_amount_movement)  # commented out
+    df_amount_movement.to_pickle(f'df_amount_movement.pkl') 
 
 # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_weirdos_48htype2_Li","dist_weirdos_atom"dist_weirdos_48htype2_atom72_Li","idx1_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
 # file_loc_important_cols_sorted_toten = file_loc_important_cols[["geometry","path","sum_weirdos_Li","sum_weirdos_48htype2_Li","dist_weirdos_atom"dist_weirdos_48htype2_atom72_Li","idx1_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
@@ -415,3 +426,21 @@ elif activate_radius == 2:
     file_loc_important_cols.to_pickle(f'file_loc_important_cols_{max_mapping_radius}_{max_mapping_radius_48htype2}_{file_perfect_poscar_48n24_wo_cif}.pkl')
 elif activate_radius == 3:
     file_loc_important_cols.to_pickle(f'file_loc_important_cols_{max_mapping_radius}_{max_mapping_radius_48htype2}_{max_mapping_radius_48htype1_48htype2}_{file_perfect_poscar_48n24_wo_cif}.pkl')
+
+print("Amount occupancy:")
+print(df_occupancy.sum())
+print()
+print()
+
+print("Amount type:")
+print(df_amount_type.sum())
+print()
+print()
+
+print("Amount movement:")
+print(df_amount_movement.sum())
+print()
+print()
+
+elapsed_time = time.time() - t
+print(f"elapsed_time: {elapsed_time}")

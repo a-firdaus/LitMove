@@ -4,7 +4,7 @@ import plotly.express as px
 from positionism.functional import func_string
 
 
-def plot_amount_type(dataframe, litype, el, style, category_labels = None):
+def get_df_amount_type(dataframe, litype, el):
     # rename from: plot_amount_type
     """
         style: scatter, bar
@@ -57,6 +57,10 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
         elif litype == 8:
             df.at[idx, '48htype1'] = amount_type['48htype1']; df.at[idx, '48htype2'] = amount_type['48htype2']; df.at[idx, '48htype3'] = amount_type['48htype3']; df.at[idx, '48htype4'] = amount_type['48htype4']; df.at[idx, '48htype5'] = amount_type['48htype5']; df.at[idx, '48htype6'] = amount_type['48htype6']; df.at[idx, '48htype7'] = amount_type['48htype7']; df.at[idx, '48htype8'] = amount_type['48htype8']; df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
 
+    return df
+
+
+def plot_amount_type(df, style, category_labels = None):
     wide_df = pd.DataFrame(df)
 
     long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
@@ -70,8 +74,6 @@ def plot_amount_type(dataframe, litype, el, style, category_labels = None):
     elif style == "scatter":
         fig = px.scatter(long_df, x="idx_file", y="count", color="category", title="Idx file vs Li type")
     fig.show()
-
-    return df
 
 
 def plot_mapped_label_vs_dist_and_histogram(dataframe, litype, category_data, el):
