@@ -4905,7 +4905,8 @@ class Movement:
                 amount_weirdo = dataframe[col_sum_of_weirdos_Li][idx]
                 occupancy_2 = len_occupancy.count(2)
                 occupancy_1 = len_occupancy.count(1)
-                occupancy_0 = len_occupancy.count(0) - amount_48htype1 - amount_weirdo
+                # occupancy_0 = len_occupancy.count(0) - amount_48htype1 - amount_weirdo
+                occupancy_0 = len_occupancy.count(0)
 
                 sanity_check_occupancy = occupancy_2 * 2 + occupancy_1 + amount_48htype1 + amount_weirdo + occupancy_0
 
@@ -7319,10 +7320,24 @@ class Optimizer:
 
 
 class Plot:
+    # Enable LaTeX and set the font to Computer Modern
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['font.family'] = 'serif'
+    plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
+
+    plt.rcParams['axes.titlesize'] = 12  # Set the font size for the plot title
+    plt.rcParams['axes.labelsize'] = 12  # Set the font size for the x and y labels
+    plt.rcParams['xtick.labelsize'] = 12  # Set the font size for the x tick labels
+    plt.rcParams['ytick.labelsize'] = 12  # Set the font size for the y tick labels
+    plt.rcParams['legend.fontsize'] = 12  # Set the font size for legend
+
     class StructureAnalysis:
         def energy_vs_latticeconstant(dataframe, var_filename):
             col_latticeconstant_structure_dict = f"latticeconstant_structure_dict_{var_filename}"
             col_toten = "toten [eV]"
+
+            lattice_constants = []
+            total_energies = []
 
             for idx in range(dataframe["geometry"].size):
                 latticeconstant_structure_dict = dataframe.at[idx, col_latticeconstant_structure_dict]
@@ -7330,11 +7345,38 @@ class Plot:
                 
                 a = latticeconstant_structure_dict["a"]
 
-                plt.scatter(a, toten)
+                lattice_constants.append(a)
+                total_energies.append(toten)
+
+            lattice_constants = np.array(lattice_constants)
+            total_energies = np.array(total_energies)        
+
+            # # Linear interpolation
+            # interp_func = interp1d(lattice_constants, total_energies, kind='linear')
+
+            # Perform linear regression to find the slope (m) and intercept (c)
+            m, c = np.polyfit(lattice_constants, total_energies, 1)
+
+            # Set the figure size to 5x3
+            plt.figure(figsize=(5, 3))
+
+            # Plot scatter plot
+            plt.scatter(lattice_constants, total_energies, label='Data points')
+
+            # # Plot linear interpolation line
+            # x_values = np.linspace(min(lattice_constants), max(lattice_constants), 100)
+            # plt.plot(x_values, interp_func(x_values), color='red', label='Linear interpolation')
+
+            # Plot linear regression line
+            plt.plot(lattice_constants, m*lattice_constants + c, color='red', label=f'Linear fit: y = {m:.2f}x + {c:.2f}')
             
-            plt.title("Lattice constant vs Total energy")
-            plt.xlabel("Lattice constant [Å]")
-            plt.ylabel("Total energy [eV]")
+            # plt.title(r"Lattice constant vs Total energy")
+            plt.xlabel(r"Lattice constant [\AA]")
+            plt.ylabel(r"Energy [eV]")
+
+            # Save the plot to a PDF file
+            plt.savefig("_images/energy_vs_latticeconstant.pdf", format='pdf')
+
             plt.show()
 
 
