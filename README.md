@@ -1,4 +1,4 @@
-# Atomic Positionism
+# LitMove
 
 ## Description
 > Too long don't dive into: **Stability is a mess, be chaotic!**

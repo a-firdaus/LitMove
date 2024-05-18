@@ -1,0 +1,31 @@
+Amount occupancy:
+idx_file    199990000
+2                  39
+1               26301
+0                  39
+48htype1        11496
+weirdo         442125
+dtype: object
+
+
+Amount type:
+idx_file    199990000
+48htype1        11496
+48htype2         5045
+48htype3         7572
+48htype4         8056
+24g              5706
+weirdo         442125
+dtype: object
+
+
+Amount movement:
+idx_file      199970001
+inTERcage         18306
+intracage         16046
+intratriad       419143
+staying           26481
+dtype: object
+
+
+elapsed_time: 38047.686049222946
