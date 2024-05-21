@@ -2,13 +2,13 @@ import pandas as pd
 import numpy as np
 import os
 
-from functional import func_directory
-from preprocessing import create_dataframe, CONTCARorPOSCAR
-from read import parameter, coordinate_and_el
-from orientation import orient_propagate
-from optimizer import opti_position
-from mapping import flag_and_map, atom_indexing, labelling, output_CIF, output_weirdos
-from plot import structure_analysis
+from positionism.functional import func_directory
+from positionism.preprocessing import create_dataframe, CONTCARorPOSCAR
+from positionism.read import parameter, coordinate_and_el
+from positionism.orientation import orient_propagate
+from positionism.optimizer import opti_position
+from positionism.mapping import flag_and_map, atom_indexing, labelling, output_CIF, output_weirdos
+from positionism.plot import structure_analysis
 
 from pymatgen.core.structure import Structure
 from pymatgen.io.cif import CifWriter
@@ -537,7 +537,7 @@ def get_sum_weirdos_Li_var_not_complete(max_mapping_radius, max_mapping_radius_4
     return sum_weirdos_Li
 
 
-def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, dataframe_init, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype, iter_type):
+def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, dataframe_init, activate_radius, file_ori_ref_48n24_wo_cif, litype, iter_type):
     # renamed from get_sum_weirdos_Li_var_wo_weirdo_litype
     """
     
@@ -548,10 +548,10 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
     + max_mapping_radius_48htype2
     - dataframe_init
     + activate_radius
-    - file_perfect_poscar_24
+    # - file_perfect_poscar_24
     - file_ori_ref_48n24
     + litype
-    + var_optitype
+    # + var_optitype
     + iter_type: "varying_dx_dz", "varying_radius", none
 
     Returns:
@@ -571,6 +571,7 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
     results_folder = "_results"
     reference_folder = "_reference_cif"
 
+    file_ori_ref_48n24 = f"{file_ori_ref_48n24}.cif"
     file_path_ori_ref_48n24 = f"./{reference_folder}/{file_ori_ref_48n24}"
     # # max_mapping_radius_48htype1_48htype2 = (max_mapping_radius + max_mapping_radius_48htype2) / 2
 
@@ -580,7 +581,7 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
     col_excel_geo = "geometry"
     col_excel_path = "path"
 
-    folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_ori_ref_48n24}/"
+    folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_ori_ref_48n24_wo_cif}/"
     path_folder_name_iter_type = direc+str(folder_name_iter_type)
     func_directory.check_folder_existance(path_folder_name_iter_type, empty_folder=False)
 
@@ -606,7 +607,7 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
 
     direc_restructure_destination = direc+str(folder_name_destination_restructure)
     direc_perfect_poscar = direc+str(folder_name_perfect_poscar)
-    path_perfect_poscar_24 = os.path.join(direc_perfect_poscar, file_perfect_poscar_24)
+    # path_perfect_poscar_24 = os.path.join(direc_perfect_poscar, file_perfect_poscar_24)
     # direc_init_system = direc+str(folder_name_init_system)
 
     dtype = {col_excel_geo: float, col_excel_path: float}
@@ -620,7 +621,7 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
 
     # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
     # path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
-    path_perfect_poscar_48n24 = opti_position.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array, litype, var_optitype, modif_all_litype = False)
+    path_perfect_poscar_48n24 = opti_position.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array, litype, iter_type, modif_all_litype = False)
 
     # just copy file
     # directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
@@ -665,10 +666,10 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
     atom_indexing.weirdos_el(dataframe, "Li", activate_radius)
 
     # atom_indexing.correcting_idx_and_order_mapped_el(dataframe, el="Li")
-    atom_indexing.correcting_idx_and_order_mapped_el(dataframe, "Li", activate_radius)
+    atom_indexing.correct_idx_and_order_mapped_el(dataframe, "Li", activate_radius)
     # # output_CIF.create_combine_structure(dataframe, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
     
-    labelling.get_distance_weirdos_label_el(dataframe, coor_structure_init_dict, "Li", litype)
+    labelling.weirdos_to_top_n_closestcoorref_el(dataframe, coor_structure_init_dict, "Li", litype)
 
     # dataframe_sorted_toten = dataframe[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
     # dataframe_sorted_toten = dataframe[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
@@ -709,7 +710,7 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
     elif activate_radius == 1:
         var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}"
 
-    path_excel_file = os.path.join(direc_perfect_poscar, f'04_outputs_{var_excel_file}_{var_optitype}.xlsx')
+    path_excel_file = os.path.join(direc_perfect_poscar, f'04_outputs_{var_excel_file}.xlsx')
     dataframe_sorted_toten.to_excel(path_excel_file, index=False)
 
     return sum_weirdos_Li

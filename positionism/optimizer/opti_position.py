@@ -1,4 +1,4 @@
-from optimizer import opti_output
+from positionism.optimizer import opti_output
 
 
 def change_dx_dz_alllitype(file_path, file_path_new, ref_positions_array, litype):

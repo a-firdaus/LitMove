@@ -7367,6 +7367,10 @@ class Plot:
             # x_values = np.linspace(min(lattice_constants), max(lattice_constants), 100)
             # plt.plot(x_values, interp_func(x_values), color='red', label='Linear interpolation')
 
+            # Set x and y ticks at every 0.5 interval
+            # plt.xticks(np.arange(round(min(lattice_constants),2), round(max(lattice_constants),2) + 0.5, 0.5))
+            plt.yticks(np.arange(round(min(total_energies),2), round(max(total_energies),2) + 0.5, 1.0))
+
             # Plot linear regression line
             plt.plot(lattice_constants, m*lattice_constants + c, color='red', label=f'Linear fit: y = {m:.2f}x + {c:.2f}')
             
@@ -7375,6 +7379,7 @@ class Plot:
             plt.ylabel(r"Energy [eV]")
 
             # Save the plot to a PDF file
+            plt.tight_layout()
             plt.savefig("_images/energy_vs_latticeconstant.pdf", format='pdf')
 
             plt.show()
