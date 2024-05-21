@@ -30,7 +30,7 @@ def heatmap_x_y(dataframe, folder_results_iter_type):
     plt.tight_layout()
 
     # Save the plot to a PDF file
-    plt.savefig(f"{folder_results_iter_type}/heatmap.pdf", format='pdf')
+    plt.savefig(f".{folder_results_iter_type}heatmap.pdf", format='pdf')
 
     # Show the plot
     plt.show()

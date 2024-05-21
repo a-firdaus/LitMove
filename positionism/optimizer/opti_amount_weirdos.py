@@ -571,7 +571,7 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
     results_folder = "_results"
     reference_folder = "_reference_cif"
 
-    file_ori_ref_48n24 = f"{file_ori_ref_48n24}.cif"
+    file_ori_ref_48n24 = f"{file_ori_ref_48n24_wo_cif}.cif"
     file_path_ori_ref_48n24 = f"./{reference_folder}/{file_ori_ref_48n24}"
     # # max_mapping_radius_48htype1_48htype2 = (max_mapping_radius + max_mapping_radius_48htype2) / 2
 
