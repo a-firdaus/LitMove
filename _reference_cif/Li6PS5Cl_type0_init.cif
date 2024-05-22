@@ -124,7 +124,7 @@ _atom_site_fract_y
 _atom_site_fract_z
 _atom_site_occupancy
 _atom_site_fract_symmform
-Li1 Li  24 g -0.02889 0.25 0.25 1.00000 Dx,0,0
+Li1 Li  24 g 0.02311 0.25 0.25 1.00000 Dx,0,0
 P1  P    4 b 0.50000 0.50000 0.50000 1.00000 0,0,0    
 S1  S   16 e 0.12067 -0.12067 0.62067 1.00000 Dx,Dx,Dx 
 S2  S    4 d 0.75000 0.75000 0.75000 1.00000 0,0,0    

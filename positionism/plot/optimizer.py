@@ -1,7 +1,6 @@
-import numpy as np
-import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import plotly.io as pio
 
 plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
@@ -13,7 +12,7 @@ plt.rcParams['xtick.labelsize'] = 12  # Set the font size for the x tick labels
 plt.rcParams['ytick.labelsize'] = 12  # Set the font size for the y tick labels
 plt.rcParams['legend.fontsize'] = 12  # Set the font size for legend
 
-def heatmap_x_y(dataframe, folder_results_iter_type):
+def heatmap_x_y(dataframe, folder_results_iter_type, litype):
     decimals = 5
     dataframe['x'] = dataframe['x'].apply(lambda x: round(x, decimals))
     dataframe['y'] = dataframe['y'].apply(lambda x: round(x, decimals))
@@ -30,13 +29,13 @@ def heatmap_x_y(dataframe, folder_results_iter_type):
     plt.tight_layout()
 
     # Save the plot to a PDF file
-    plt.savefig(f".{folder_results_iter_type}heatmap.pdf", format='pdf')
+    plt.savefig(f".{folder_results_iter_type}heatmap_litype{litype}.pdf", format='pdf')
 
     # Show the plot
     plt.show()
 
 
-def radius_plot(dataframe, folder_results_iter_type):
+def radius_plot(dataframe, folder_results_iter_type, litype):
     # Create the heatmap
     plt.figure(figsize=(5, 3))
     plt.plot(dataframe["radius_type1"], dataframe["sumweirdosLi"], marker='o', linestyle='-')
@@ -48,7 +47,35 @@ def radius_plot(dataframe, folder_results_iter_type):
     plt.tight_layout()
 
     # Save the plot to a PDF file
-    plt.savefig(f".{folder_results_iter_type}radius_unassigned.pdf", format='pdf')
+    plt.savefig(f".{folder_results_iter_type}radius_unassigned_litype{litype}.pdf", format='pdf')
 
     # Show the plot
     plt.show()
+
+
+def plot_bar_with_latex_font(dataframe, folder_results_iter_type, litype):
+    # Create the bar plot
+    fig = px.bar(dataframe, x="radius_type1", y="amount_empty")
+
+    # Update layout to use a font that resembles LaTeX's Computer Modern and adjust margins
+    fig.update_layout(
+        font=dict(
+            family="Serif",
+            size=12
+        ),
+        # title={
+        #     'text': r'$\text{Amount of folder w/o weirdo}$',
+        #     'x': 0.5,
+        #     'xanchor': 'center',
+        #     'yanchor': 'top'
+        # },
+        xaxis_title=r'Radius',
+        yaxis_title=r'Empty folder',
+        margin=dict(l=20, r=20, t=50, b=50)  # Adjust margins for a tighter layout
+    )
+
+    # Save the plot to a PDF file using Kaleido with a tight layout
+    pio.write_image(fig, f".{folder_results_iter_type}bar_plot_empty_df_litype{litype}.pdf", format='pdf', scale=1, width=800, height=600)
+
+    # Show the plot
+    fig.show()
