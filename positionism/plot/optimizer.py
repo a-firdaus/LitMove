@@ -1,6 +1,7 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.io as pio
+import plotly.express as px
 
 plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
@@ -36,12 +37,15 @@ def heatmap_x_y(dataframe, folder_results_iter_type, litype):
 
 
 def radius_plot(dataframe, folder_results_iter_type, litype):
+    dataframe = dataframe[0:36]
+
     # Create the heatmap
     plt.figure(figsize=(5, 3))
-    plt.plot(dataframe["radius_type1"], dataframe["sumweirdosLi"], marker='o', linestyle='-')
+    plt.plot(dataframe["radius_type1"], dataframe["sumweirdosLi"], marker='s', linestyle='-')
 
-    plt.xlabel(r'$\text{Radius}$')
-    plt.ylabel(r'$\text{Unassigned Li-ions}$')
+    plt.xlabel(r'$r_{\text{mapping}}$')
+    # plt.ylabel(r'$n_{\text{unassigned Li-ions}}$')
+    plt.ylabel(r'Unassigned Li-ions')
 
     # Adjust layout to fit labels
     plt.tight_layout()
