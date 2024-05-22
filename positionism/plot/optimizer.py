@@ -34,3 +34,21 @@ def heatmap_x_y(dataframe, folder_results_iter_type):
 
     # Show the plot
     plt.show()
+
+
+def radius_plot(dataframe, folder_results_iter_type):
+    # Create the heatmap
+    plt.figure(figsize=(5, 3))
+    plt.plot(dataframe["radius_type1"], dataframe["sumweirdosLi"], marker='o', linestyle='-')
+
+    plt.xlabel(r'$\text{Radius}$')
+    plt.ylabel(r'$\text{Unassigned Li-ions}$')
+
+    # Adjust layout to fit labels
+    plt.tight_layout()
+
+    # Save the plot to a PDF file
+    plt.savefig(f".{folder_results_iter_type}radius_unassigned.pdf", format='pdf')
+
+    # Show the plot
+    plt.show()

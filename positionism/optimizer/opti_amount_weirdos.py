@@ -15,7 +15,7 @@ from pymatgen.io.cif import CifWriter
 
 
 # # not yet changed from 3665 - 4444 (???)
-def get_sum_weirdos_Li_var_not_complete(max_mapping_radius, max_mapping_radius_48htype2, activate_radius, 
+def get_sum_weirdos_Li_var_not_complete_x(max_mapping_radius, max_mapping_radius_48htype2, activate_radius, 
                                         file_perfect_poscar_24_wo_cif, file_perfect_poscar_48n24_wo_cif, 
                                         litype, var_optitype, iter_type, foldermapping_namestyle_all, 
                                         cif_namestyle_all, modif_all_litype, full_calculation):
@@ -537,8 +537,10 @@ def get_sum_weirdos_Li_var_not_complete(max_mapping_radius, max_mapping_radius_4
     return sum_weirdos_Li
 
 
-def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, dataframe_init, activate_radius, file_ori_ref_48n24_wo_cif, litype, iter_type):
+def get_sum_weirdos_Li_x(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, 
+                       dataframe_init, activate_radius, file_ori_ref_48n24_wo_cif, litype, iter_type):
     # renamed from get_sum_weirdos_Li_var_wo_weirdo_litype
+    # used in optimizer position
     """
     
 
@@ -546,7 +548,7 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
     - ref_positions_array
     + max_mapping_radius
     + max_mapping_radius_48htype2
-    - dataframe_init
+    - dataframe_init: don't have to create new df each time
     + activate_radius
     # - file_perfect_poscar_24
     - file_ori_ref_48n24
@@ -577,7 +579,7 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
 
     # # folder_name_init_system = "/Init_System"
     # # file_new_system = "CONTCAR"
-    file_name_toten = "toten_final.ods"
+    # file_name_toten = "toten_final.ods"
     col_excel_geo = "geometry"
     col_excel_path = "path"
 
@@ -612,9 +614,9 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
 
     dtype = {col_excel_geo: float, col_excel_path: float}
 
-    data_toten = pd.read_excel(file_name_toten, dtype=dtype, engine="odf")
-    data_toten_ori = data_toten
-    data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
+    # data_toten = pd.read_excel(file_name_toten, dtype=dtype, engine="odf")
+    # data_toten_ori = data_toten
+    # data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
 
     # just refreshing folder
     func_directory.check_folder_existance(direc_restructure_destination, empty_folder=True)
@@ -716,7 +718,8 @@ def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radi
     return sum_weirdos_Li
 
 
-def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype):
+def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, 
+                                  activate_radius, file_perfect_poscar_24, file_ori_ref_48n24, litype, var_optitype):
     """
     
 
@@ -921,3 +924,578 @@ def get_sum_weirdos_Li_var_litype(ref_positions_array, max_mapping_radius, max_m
 
     return sum_weirdos_Li
 
+
+def mapping_process(dataframe, path_perfect_poscar_48n24, direc_restructure_destination, 
+                    poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, 
+                    lattice_constant, amount_Li, amount_P, amount_S, amount_Cl, 
+                    full_calculation, activate_radius, max_mapping_radius,
+                    max_mapping_radius_48htype2, litype, file_perfect_poscar_48n24_wo_cif):
+
+    ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
+
+    coor_structure_init_dict = coordinate_and_el.single_structure(ref_structure_48n24)
+    CONTCARorPOSCAR.positive_lessthan1(dataframe, direc_restructure_destination, poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, file_type = "CONTCAR", var_name_in = None, var_name_out = "positive", n_decimal=16)
+    coordinate_and_el.structures(dataframe, mapping = "False")
+
+    if activate_radius == 2:
+        flag_and_map.all_atoms_of_el(dataframe, coor_structure_init_dict, "Li", max_mapping_radius)
+        flag_and_map.li_48htype2(dataframe, coor_structure_init_dict, "Li", max_mapping_radius_48htype2, activate_radius)
+        flag_and_map.li_48htypesmerged(dataframe, "Li", activate_radius)
+    elif activate_radius == 1:
+        flag_and_map.all_atoms_of_el(dataframe, coor_structure_init_dict, "Li", max_mapping_radius)
+
+    # flag_and_map.all_atoms_of_el(dataframe, coor_structure_init_dict, "P", max_mapping_radius)
+    # flag_and_map.all_atoms_of_el(dataframe, coor_structure_init_dict, "S", max_mapping_radius)
+    # flag_and_map.all_atoms_of_el(dataframe, coor_structure_init_dict, "Cl", max_mapping_radius)
+
+    atom_indexing.weirdos_el(dataframe, "Li", activate_radius)
+
+    # atom_indexing.correcting_idx_and_order_mapped_el(dataframe, el="Li")
+    atom_indexing.correct_idx_and_order_mapped_el(dataframe, "Li", activate_radius)
+    # # output_CIF.create_combine_structure(dataframe, direc_restructure_destination, amount_Li, amount_P, amount_S, var_savefilename = "mapLi")
+    
+    labelling.weirdos_to_top_n_closestcoorref_el(dataframe, coor_structure_init_dict, "Li", litype)
+
+
+    if full_calculation == False:
+        pass
+    elif full_calculation == True:
+        cif_structure = Structure(ref_structure_48n24.lattice, ref_structure_48n24.species, ref_structure_48n24.frac_coords)
+        cif = CifWriter(cif_structure)
+        cif.write_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif")    
+        coor_structure_init_dict_expanded = coordinate_and_el.single_structure(Structure.from_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif"))
+
+        output_CIF.create_combine_structure(dataframe, direc_restructure_destination, amount_Li, amount_P, amount_S, activate_radius, var_savefilename = "mapLi")
+        output_CIF.rewrite_cif_w_correct_Li_idx(dataframe, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed")
+        output_CIF.Edit.format_spacing_cif(dataframe, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed", var_savefilename_new = "mapLi_reindexed")
+        # # # # Operation.File.delete_files(dataframe, direc_restructure_destination, file_name_w_format = "mapLi_reindexed.cif")
+
+        output_CIF.rewrite_cif_w_correct_Li_idx_weirdos_appended(dataframe, direc_restructure_destination, amount_Li, amount_P, amount_S, amount_Cl, activate_radius,var_savefilename_init = "mapLi", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
+        output_CIF.Edit.format_spacing_cif(dataframe, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended")
+        # # # Operation.File.delete_files(dataframe, direc_restructure_destination, file_name_w_format = "mapLi_reindexed_weirdos_appended.cif")
+
+        CONTCARorPOSCAR.convert_to_cif_pymatgen(dataframe, direc_restructure_destination, file_restructure = "CONTCAR_positive", var_name = "CONTCAR_positive_pymatgen")
+
+        # # # output_CIF.ascending_Li(dataframe, direc_restructure_destination, var_filename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
+        # # # output_CIF.format_spacing_cif(dataframe, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended_reordered", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
+
+        atom_indexing.get_idx_coor_limapped_weirdos_dict_litype(dataframe, coor_structure_init_dict, activate_radius, litype, el="Li")
+
+        CONTCARorPOSCAR.get_latticeconstant_dict(dataframe, direc_restructure_destination, var_filename = "CONTCAR")
+        # Plot.StructureAnalysis.energy_vs_latticeconstant(dataframe, var_filename = "CONTCAR")
+        structure_analysis.weirdos_directcoor(dataframe, activate_radius)
+
+        coor_weirdos_Li = output_weirdos.get_coor_weirdos_array(dataframe, activate_radius)
+        output_weirdos.create_POSCAR_weirdos(coor_weirdos_Li, direc_restructure_destination, lattice_constant, filename = "POSCAR_weirdos")
+
+        labelling.get_label_mapping(dataframe, coor_structure_init_dict, "Li", activate_radius, litype)
+
+
+def get_sum_weirdos_Li(ref_positions_array, max_mapping_radius, max_mapping_radius_48htype2, 
+                       dataframe_init, activate_radius, file_ori_ref_48n24_wo_cif, litype, iter_type, 
+                       foldermapping_namestyle_all, modif_all_litype, cif_namestyle_all, full_calculation):
+    # renamed from get_sum_weirdos_Li_var_wo_weirdo_litype
+    # used in optimizer position
+    # used in optimizer radius
+    """
+    
+
+    Parameters:
+    - ref_positions_array
+    + max_mapping_radius
+    + max_mapping_radius_48htype2
+    - dataframe_init: don't have to create new df each time
+    + activate_radius
+    # - file_perfect_poscar_24
+    - file_ori_ref_48n24
+    + litype
+    # + var_optitype
+    + iter_type: "varying_dx_dz", "varying_radius", none
+
+    foldermapping_namestyle_all: True, False, else
+
+    Returns:
+    - 
+
+    Notes:
+    - Only tested for activate_radius max 2
+    """
+    dataframe = dataframe_init
+    direc = os.getcwd() # get current working directory
+    
+    results_folder = "_results"
+    reference_folder = "_reference_cif"
+
+    file_ori_ref_48n24 = f"{file_ori_ref_48n24_wo_cif}.cif"
+    file_path_ori_ref_48n24 = f"./{reference_folder}/{file_ori_ref_48n24}"
+
+    folder_name_iter_type = f"/{results_folder}/_{iter_type}/{file_ori_ref_48n24_wo_cif}/"
+    direc_perfect_poscar = direc+str(folder_name_iter_type)
+    func_directory.check_folder_existance(direc_perfect_poscar, empty_folder=False)
+
+    # copy ref.cif inside _results/../.. 
+    func_directory.copy_rename_single_file(direc_perfect_poscar, reference_folder, file_ori_ref_48n24, prefix=None)
+
+    folder_name_perfect_poscar = folder_name_iter_type
+    cif_line_nr_start = 26  # index from 0
+    poscar_line_nr_start = 8
+    poscar_line_nr_end = 60
+    contcar_columns_type2 = ['coord_x', 'coord_y', 'coord_z']
+    amount_Li = 24
+    col_excel_toten = "toten [eV]" 
+    amount_P = 4 
+    amount_S = 20 
+    amount_Cl = 4
+    lattice_constant = 10.2794980000
+    file_restructure = "CONTCAR" 
+    cif_columns = ['species', 'idx_species', 'unkownvar_1', 'coord_x', 'coord_y', 'coord_z', 'unkownvar_2'] 
+
+
+    if iter_type == "varying_radius":
+        ref_positions_array_all = np.array(parameter.x_y_z(file_path_ori_ref_48n24, litype))
+
+        if litype == 0:
+            dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+            
+            ref_positions_array_singlelitype = ref_positions_array_all[0:3]
+            ref_positions_array_all_compactform = [dx_24g, dz1_24g]
+
+        elif litype == 1:
+            dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+            dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+
+            ref_positions_array_singlelitype = ref_positions_array_all[3:6]
+            ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1]
+
+        elif litype == 2:
+            dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+            dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+            dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+
+            ref_positions_array_singlelitype = ref_positions_array_all[6:9]
+            ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2]
+
+        elif litype == 3:
+            dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+            dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+            dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+            dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+
+            ref_positions_array_singlelitype = ref_positions_array_all[9:12]
+            ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3]
+
+        elif litype == 4:
+            dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+            dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+            dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+            dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+            dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
+
+            ref_positions_array_singlelitype = ref_positions_array_all[12:15]
+            ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4]
+
+        elif litype == 5:
+            dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+            dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+            dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+            dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+            dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
+            dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
+
+            ref_positions_array_singlelitype = ref_positions_array_all[15:18]
+            ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4, dx1_48h_type5, dx2_48h_type5]
+        
+        elif litype == 6:
+            dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+            dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+            dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+            dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+            dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
+            dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
+            dx1_48h_type6, dx2_48h_type6, dz_48h_type6 = ref_positions_array_all[18:21]
+
+            ref_positions_array_singlelitype = ref_positions_array_all[18:21]
+            ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4, dx1_48h_type5, dx2_48h_type5, dx1_48h_type6, dx2_48h_type6]
+        
+        elif litype == 7:
+            dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+            dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+            dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+            dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+            dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
+            dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
+            dx1_48h_type6, dx2_48h_type6, dz_48h_type6 = ref_positions_array_all[18:21]
+            dx1_48h_type7, dx2_48h_type7, dz_48h_type7 = ref_positions_array_all[21:24]
+
+            ref_positions_array_singlelitype = ref_positions_array_all[21:24]
+            ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4, dx1_48h_type5, dx2_48h_type5, dx1_48h_type6, dx2_48h_type6, dx1_48h_type7, dx2_48h_type7]
+
+        elif litype == 8:
+            dx_24g, dz1_24g, dz2_24g = ref_positions_array_all[0:3]
+            dx1_48h_type1, dx2_48h_type1, dz_48h_type1 = ref_positions_array_all[3:6]
+            dx1_48h_type2, dx2_48h_type2, dz_48h_type2 = ref_positions_array_all[6:9]
+            dx1_48h_type3, dx2_48h_type3, dz_48h_type3 = ref_positions_array_all[9:12]
+            dx1_48h_type4, dx2_48h_type4, dz_48h_type4 = ref_positions_array_all[12:15]
+            dx1_48h_type5, dx2_48h_type5, dz_48h_type5 = ref_positions_array_all[15:18]
+            dx1_48h_type6, dx2_48h_type6, dz_48h_type6 = ref_positions_array_all[18:21]
+            dx1_48h_type7, dx2_48h_type7, dz_48h_type7 = ref_positions_array_all[21:24]
+            dx1_48h_type8, dx2_48h_type8, dz_48h_type8 = ref_positions_array_all[24:27]
+
+            ref_positions_array_singlelitype = ref_positions_array_all[24:27]
+            ref_positions_array_all_compactform = [dx_24g, dz1_24g, dx1_48h_type1, dx2_48h_type1, dx1_48h_type2, dx2_48h_type2, dx1_48h_type3, dx2_48h_type3, dx1_48h_type4, dx2_48h_type4, dx1_48h_type5, dx2_48h_type5, dx1_48h_type6, dx2_48h_type6, dx1_48h_type7, dx2_48h_type7, dx1_48h_type8, dx2_48h_type8]
+
+
+        if foldermapping_namestyle_all == True:
+            if activate_radius == 2:
+                if litype == 0:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 1:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 2:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 3:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 4:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 5:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 6:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"            
+                elif litype == 7:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"            
+                elif litype == 8:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+            
+            elif activate_radius == 1:
+                if litype == 0:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{max_mapping_radius}/"
+                elif litype == 1:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}/"
+                elif litype == 2:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}/"
+                elif litype == 3:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}/"
+                elif litype == 4:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}/"
+                elif litype == 5:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}/"
+                elif litype == 6:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}/"            
+                elif litype == 7:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}/"            
+                elif litype == 8:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}/"
+            
+        else:
+            if activate_radius == 2:
+                if litype == 0:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 1:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 2:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 3:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 4:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 5:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 6:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 7:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                elif litype == 8:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}_{max_mapping_radius_48htype2}/"
+                    
+            elif activate_radius == 1:
+                if litype == 0:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx_24g}_{dz1_24g}_{max_mapping_radius}/"
+                elif litype == 1:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}/"
+                elif litype == 2:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}/"
+                elif litype == 3:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}/"
+                elif litype == 4:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}/"
+                elif litype == 5:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}/"
+                elif litype == 6:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}/"
+                elif litype == 7:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}/"
+                elif litype == 8:
+                    folder_name_destination_restructure = f"{folder_name_iter_type}{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}/"
+
+        direc_restructure_destination = direc+str(folder_name_destination_restructure)
+
+        # just refreshing folder
+        func_directory.check_folder_existance(direc_restructure_destination, empty_folder=True)
+
+        # # copy ref.cif inside _results/../.. 
+        # func_directory.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_ori_ref_48n24, prefix=None)
+        # func_directory.copy_rename_single_file(path_folder_name_iter_type, reference_folder, file_ori_ref_48n24_wo_cif, prefix=None)
+
+        func_directory.copy_rename_files(dataframe, direc_restructure_destination, file_restructure, prefix=None, savedir = False)
+
+        if modif_all_litype == True:
+            ref_positions_array = ref_positions_array_all
+        elif modif_all_litype == False:
+            ref_positions_array = ref_positions_array_singlelitype
+        elif modif_all_litype == None:
+            ref_positions_array = ref_positions_array_all
+
+        if cif_namestyle_all == True:
+            ref_positions_array_filename = ref_positions_array_all_compactform
+        elif cif_namestyle_all == False:
+            ref_positions_array_filename = ref_positions_array_singlelitype
+        # # DUNNO WHAT TO DO HERE
+        elif cif_namestyle_all == None:
+            ref_positions_array_filename = ref_positions_array_all_compactform
+        
+        func_directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
+
+        path_perfect_poscar_48n24 = opti_position.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array_filename, litype, iter_type, modif_all_litype)
+
+        mapping_process(dataframe, path_perfect_poscar_48n24, direc_restructure_destination, 
+                            poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, 
+                            lattice_constant, amount_Li, amount_P, amount_S, amount_Cl, 
+                            full_calculation, activate_radius, max_mapping_radius,
+                            max_mapping_radius_48htype2, litype, file_ori_ref_48n24_wo_cif)
+
+        if litype == 0:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]]
+        elif litype == 1:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","toten [eV]"]]
+        elif litype == 2:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","toten [eV]"]]
+        elif litype == 3:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_24g_Li","toten [eV]"]]
+        elif litype == 4:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_24g_Li","toten [eV]"]]
+        elif litype == 5:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","toten [eV]"]]   
+        elif litype == 6:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]] 
+        elif litype == 7:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]] 
+        elif litype == 8:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]]   
+
+            # var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type1}_{dx2_48h_type1}_{formatted_dz_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{formatted_dz_48h_type2}_{dx_24g}_{dz1_24g}_{formatted_dz2_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+        
+        sum_weirdos_Li = float(dataframe_sorted_toten["#weirdos_Li"].sum())
+
+
+        if foldermapping_namestyle_all == True:
+            if activate_radius == 2:
+                if litype == 0:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 1:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 2:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 3:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 4:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 5:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 6:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 7:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 8:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+            
+            elif activate_radius == 1:
+                if litype == 0:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{max_mapping_radius}"
+                elif litype == 1:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}"
+                elif litype == 2:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}"
+                elif litype == 3:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}"
+                elif litype == 4:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}"
+                elif litype == 5:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}"
+                elif litype == 6:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}"
+                elif litype == 7:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}"
+                elif litype == 8:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{dx1_48h_type1}_{dx2_48h_type1}_{dx1_48h_type2}_{dx2_48h_type2}_{dx1_48h_type3}_{dx2_48h_type3}_{dx1_48h_type4}_{dx2_48h_type4}_{dx1_48h_type5}_{dx2_48h_type5}_{dx1_48h_type6}_{dx2_48h_type6}_{dx1_48h_type7}_{dx2_48h_type7}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}"
+            
+        
+        else:
+            if activate_radius == 2:
+                if litype == 0:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 1:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 2:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 3:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 4:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 5:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 6:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 7:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+                elif litype == 8:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+
+            elif activate_radius == 1:
+                if litype == 0:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx_24g}_{dz1_24g}_{max_mapping_radius}"
+                elif litype == 1:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type1}_{dx2_48h_type1}_{max_mapping_radius}"
+                elif litype == 2:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type2}_{dx2_48h_type2}_{max_mapping_radius}"
+                elif litype == 3:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type3}_{dx2_48h_type3}_{max_mapping_radius}"
+                elif litype == 4:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type4}_{dx2_48h_type4}_{max_mapping_radius}"
+                elif litype == 5:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type5}_{dx2_48h_type5}_{max_mapping_radius}"
+                elif litype == 6:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type6}_{dx2_48h_type6}_{max_mapping_radius}"
+                elif litype == 7:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type7}_{dx2_48h_type7}_{max_mapping_radius}"
+                elif litype == 8:
+                    var_excel_file = f"{int(sum_weirdos_Li)}_{dx1_48h_type8}_{dx2_48h_type8}_{max_mapping_radius}"
+
+        # path_excel_file = os.path.join(direc_perfect_poscar, f'04_outputs_{var_excel_file}_{var_optitype}.xlsx')
+        path_excel_file = os.path.join(direc_perfect_poscar, f'04_outputs_{var_excel_file}.xlsx')
+        dataframe_sorted_toten.to_excel(path_excel_file, index=False)
+
+        if activate_radius == 1:
+            dataframe.to_pickle(f'{direc_perfect_poscar}dataframe_{max_mapping_radius}_{file_ori_ref_48n24_wo_cif}.pkl') 
+        elif activate_radius == 2:
+            dataframe.to_pickle(f'{direc_perfect_poscar}dataframe_{max_mapping_radius}_{max_mapping_radius_48htype2}_{file_ori_ref_48n24_wo_cif}.pkl')
+        # elif activate_radius == 3:
+        #     dataframe.to_pickle(f'{path_folder_name_iter_type}dataframe_{max_mapping_radius}_{max_mapping_radius_48htype2}_{max_mapping_radius_48htype1_48htype2}_{file_perfect_poscar_48n24_wo_cif}.pkl')
+
+
+    elif iter_type == "varying_position":
+        # formatted_positions = [Operation.Float.format_float(pos) for pos in ref_positions_array]
+        formatted_positions = [pos for pos in ref_positions_array]
+        new_dx1_type, new_dx2_type, new_dz_type = formatted_positions
+
+        # # max_mapping_radius_48htype1_48htype2 = (max_mapping_radius + max_mapping_radius_48htype2) / 2
+
+        # # folder_name_init_system = "/Init_System"
+        # # file_new_system = "CONTCAR"
+        # file_name_toten = "toten_final.ods"
+        # col_excel_geo = "geometry"
+        # col_excel_path = "path"
+
+        if activate_radius == 2:
+            folder_name_destination_restructure = f"{direc_perfect_poscar}restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}_optimizer/"
+        elif activate_radius == 1:
+            folder_name_destination_restructure = f"{direc_perfect_poscar}restructure_{new_dx1_type}_{new_dx2_type}_{max_mapping_radius}_optimizer/"
+
+        direc_restructure_destination = direc+str(folder_name_destination_restructure)
+        # path_perfect_poscar_24 = os.path.join(direc_perfect_poscar, file_perfect_poscar_24)
+        # direc_init_system = direc+str(folder_name_init_system)
+
+        # dtype = {col_excel_geo: float, col_excel_path: float}
+
+        # data_toten = pd.read_excel(file_name_toten, dtype=dtype, engine="odf")
+        # data_toten_ori = data_toten
+        # data_toten = data_toten.sort_values(by=["geometry","path"],ignore_index=True,ascending=False)
+
+        # just refreshing folder
+        func_directory.check_folder_existance(direc_restructure_destination, empty_folder=True)
+
+        # path_perfect_poscar_48n24 = modif_dx_dz_cif(direc_perfect_poscar, file_path_ori_ref_48n24, dx1_48h_type, dx2_48h_type, dz_48h_type, dx1_48h_type2, dx2_48h_type2, dz_48h_type2, dx_24g, dz1_24g, dz2_24g, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
+        # path_perfect_poscar_48n24 = modif_dx_dz_cif_specificlitype(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, var_optitype) # os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
+        path_perfect_poscar_48n24 = opti_position.modif_dx_dz_get_filepath(direc_perfect_poscar, file_path_ori_ref_48n24, ref_positions_array, ref_positions_array, litype, iter_type, modif_all_litype = False)
+
+        # just copy file
+        # directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_perfect_poscar_24, prefix=None)
+        # !!! had to copy file_ori_ref_48n24 into Li1
+        func_directory.copy_rename_single_file(direc_restructure_destination, direc_perfect_poscar, file_ori_ref_48n24, prefix=None)
+
+        # file_loc_mask_1, dataframe = CONTCAR.positive_lessthan1(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation="False")
+
+        func_directory.copy_rename_files(dataframe, direc_restructure_destination, file_restructure, prefix=None, savedir = True)
+
+
+        # # var_c = "trf_w_linalg_orientated"
+        # # Orientation.get_structure_with_linalg_orientated(dataframe, direc_restructure_destination, file_restructure, var_c)
+
+
+        # # var_name_in = "trf_w_linalg_orientated"
+        # # var_name_out = "trf_w_linalg_orientated_positive"
+        # # n_decimal = 8
+        # # get_orientated_positive_lessthan1_cif(dataframe, direc_restructure_destination, cif_line_nr_start, cif_columns, var_name_in, var_name_out, n_decimal)
+
+        # max_mapping_radius = 0.05282658993283027
+        # max_mapping_radius = 0.045
+        # max_mapping_radius = 0.055
+        # max_mapping_radius = 0.04197083906
+
+        mapping_process(dataframe, path_perfect_poscar_48n24, direc_restructure_destination, 
+                            poscar_line_nr_start, poscar_line_nr_end, contcar_columns_type2, 
+                            lattice_constant, amount_Li, amount_P, amount_S, amount_Cl, 
+                            full_calculation, activate_radius, max_mapping_radius,
+                            max_mapping_radius_48htype2, litype, file_ori_ref_48n24_wo_cif)
+        
+        # dataframe_sorted_toten = dataframe[["geometry","path","coor_weirdos_48htypesmerged_Li","top3_dist_weirdos_dict_Li","idx0_weirdos_Li","#weirdos_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+        # dataframe_sorted_toten = dataframe[["geometry","path","sum_weirdos_Li","sum_mapped_48htype2_Li_new","#weirdos_Li","sum_mapped_48htypesmerged_Li_new","sum_sanitycheck_48htypesmerged_Li_new","idx0_weirdos_Li","top3_sorted_coorweirdo_dist_label_coorreference_idxweirdo_idxreference_Li","duplicate_closest24_w_data_Li","duplicate_closest24_w_data_48htype2_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+
+        if litype == 0:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_24g_Li","toten [eV]"]]
+        elif litype == 1:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_24g_Li","toten [eV]"]]
+        elif litype == 2:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_24g_Li","toten [eV]"]]
+        elif litype == 3:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_24g_Li","toten [eV]"]]
+        elif litype == 4:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_24g_Li","toten [eV]"]]
+        elif litype == 5:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_24g_Li","toten [eV]"]]
+        elif litype == 6:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_24g_Li","toten [eV]"]] 
+        elif litype == 7:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_24g_Li","toten [eV]"]] 
+        elif litype == 8:
+            dataframe_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]].sort_values("toten [eV]", ascending=True)
+            dataframe_not_sorted_toten = dataframe[["geometry","path","sum_mapped_Li_closestduplicate","#weirdos_Li","idx0_weirdos_Li","top3_sorted_idxweirdo_dist_Li","top3_sorted_idxweirdo_label_Li","#closest_48htype1_Li","#closest_48htype2_Li","#closest_48htype3_Li","#closest_48htype4_Li","#closest_48htype5_Li","#closest_48htype6_Li","#closest_48htype7_Li","#closest_48htype8_Li","#closest_24g_Li","toten [eV]"]]   
+
+        sum_weirdos_Li = float(dataframe_sorted_toten["#weirdos_Li"].sum())
+                
+        if activate_radius == 2:
+            var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}_{max_mapping_radius_48htype2}"
+
+        elif activate_radius == 1:
+            var_excel_file = f"{int(sum_weirdos_Li)}_{new_dx1_type}_{new_dx2_type}_{new_dz_type}_{max_mapping_radius}"
+
+        path_excel_file = os.path.join(direc_perfect_poscar, f'04_outputs_{var_excel_file}.xlsx')
+        dataframe_sorted_toten.to_excel(path_excel_file, index=False)
+
+    return sum_weirdos_Li
