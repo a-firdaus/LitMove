@@ -4,9 +4,21 @@ import mplcursors
 import mpldatacursor
 import plotly.express as px
 from adjustText import adjust_text
+import plotly.io as pio
 
 from positionism.functional import func_string
 
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
+
+plt.rcParams['axes.titlesize'] = 12  # Set the font size for the plot title
+plt.rcParams['axes.labelsize'] = 12  # Set the font size for the x and y labels
+plt.rcParams['xtick.labelsize'] = 12  # Set the font size for the x tick labels
+plt.rcParams['ytick.labelsize'] = 12  # Set the font size for the y tick labels
+plt.rcParams['legend.fontsize'] = 12  # Set the font size for legend
+
+pio.templates.default = "plotly_white"
 
 # class Distance:
 def plot_distance(df_distance, max_mapping_radius, activate_shifting_x, activate_diameter_line, Li_idxs):
@@ -85,9 +97,15 @@ def plot_distance(df_distance, max_mapping_radius, activate_shifting_x, activate
 
 
 # class Occupancy:
-def get_df_occupancy(dataframe):
+def get_df_occupancy(dataframe, strict_count):
     # rename from: plot_occupancy
-    col_occupancy = "occupancy"
+    """
+    strict_count: True, False
+    """
+    if strict_count == True:
+        col_occupancy = "occupancy_strict"
+    else:
+        col_occupancy = "occupancy_notstrict"
 
     df = pd.DataFrame()
     df['idx_file'] = None
@@ -111,7 +129,32 @@ def get_df_occupancy(dataframe):
 
     return df
 
-def plot_occupancy(df, category_labels = None):
+def plot_occupancy(dataframe, category_labels, direc_restructure_destination, litype, strict_count):
+    if strict_count == True:
+        col_occupancy = "occupancy_strict"
+    else:
+        col_occupancy = "occupancy_notstrict"
+
+    df = pd.DataFrame()
+    df['idx_file'] = None
+    df['2'] = None
+    df['1'] = None
+    df['0'] = None
+    df['48htype1'] = None
+    df['weirdo'] = None
+
+    for idx in range(dataframe["geometry"].size):
+        
+        occupancy = dataframe.at[idx, col_occupancy]
+
+        # for key, val in occupancy.items():
+        df.at[idx, 'idx_file'] = idx + 1    # Shift file index by 1
+        df.at[idx, '2'] = occupancy['2']
+        df.at[idx, '1'] = occupancy['1']
+        df.at[idx, '0'] = occupancy['0']
+        df.at[idx, '48htype1'] = occupancy['48htype1']
+        df.at[idx, 'weirdo'] = occupancy['weirdo']
+
     wide_df = pd.DataFrame(df)
 
     # Convert wide format to long format
@@ -122,9 +165,96 @@ def plot_occupancy(df, category_labels = None):
         # # long_df['category'] = long_df['category'].replace(category_labels)
         long_df['category'] = func_string.replace_values_in_series(long_df['category'], category_labels)
 
-    fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx of file vs Occupancy")
-    fig.show()
+    fig1 = px.bar(long_df, x="idx_file", y="count", color="category")
 
+    # Update layout for LaTeX-like font settings
+    fig1.update_layout(
+        font=dict(
+            family="serif",
+            size=12
+        ),
+        # title={
+        #     'text': r'Idx of file vs Occupancy',
+        #     'x': 0.5,
+        #     'xanchor': 'center',
+        #     'yanchor': 'top'
+        # },
+        xaxis_title=r'$\text{File index}$',
+        yaxis_title=r'$\text{Amount of Li occupancy}$',
+        margin=dict(l=20, r=20, t=50, b=50)  # Adjust margins for a tighter layout
+    )
+
+    # Create a bar plot using Matplotlib
+    fig2, ax2 = plt.subplots(figsize=(8, 3))
+
+    # for category in long_df['category'].unique():
+    #     category_data = long_df[long_df['category'] == category]
+    #     ax.bar(category_data['idx_file'], category_data['count'], label=category)
+
+    # Create a list of the categories
+    categories = ['2', '1', '0', '48htype1', 'weirdo']
+
+    # Prepare the bottom positions for stacking
+    bottom_positions = [0] * len(df)
+
+    for category in categories:
+        ax2.bar(df['idx_file'], df[category], bottom=bottom_positions, label=category_labels.get(category, category))
+        bottom_positions = [i + j for i, j in zip(bottom_positions, df[category])]
+
+    # ax.set_title(r'$\text{Idx of file vs Occupancy}$')
+    ax2.set_xlabel(r'$\text{File index}$')
+    ax2.set_ylabel(r'$\text{Amount of Li occupancy}$')
+
+    # Position the legend to the right side, outside the box
+    # ax.legend(title=r'$\text{Category}$', loc='center left', bbox_to_anchor=(1, 0.5))
+    # ax.legend(title=r'$\text{Category}$', loc='upper center', bbox_to_anchor=(0.5, -0.3), ncol=len(categories))
+
+
+    # Adjust layout to fit labels
+    plt.subplots_adjust(right=0.8)  # Adjust the right side to make space for the legend
+    plt.tight_layout()
+
+    # Save the plot to a PDF file using Kaleido
+    if strict_count == True:
+        plt.savefig(f"{direc_restructure_destination}/occupancy_plot_strict_litype{litype}.pdf", format='pdf')
+    else:
+        plt.savefig(f"{direc_restructure_destination}/occupancy_plot_litype{litype}.pdf", format='pdf')
+
+    # Create a bar plot using Matplotlib
+    fig3, ax3 = plt.subplots(figsize=(9.37, 3.9))
+
+    # Create a list of the categories
+    categories = ['2', '1', '0', '48htype1', 'weirdo']
+
+    # Prepare the bottom positions for stacking
+    bottom_positions = [0] * len(df)
+
+    for category in categories:
+        ax3.bar(df['idx_file'], df[category], bottom=bottom_positions, label=category_labels.get(category, category))
+        bottom_positions = [i + j for i, j in zip(bottom_positions, df[category])]
+
+    # ax.set_title(r'$\text{Idx of file vs Occupancy}$')
+    ax3.set_xlabel(r'$\text{File index}$')
+    ax3.set_ylabel(r'$\text{Amount of Li occupancy}$')
+
+    # Position the legend to the right side, outside the box
+    # ax.legend(title=r'$\text{Category}$', loc='center left', bbox_to_anchor=(1, 0.5))
+    ax3.legend(title=r'$\text{Category}$', loc='upper center', bbox_to_anchor=(0.5, -0.3), ncol=len(categories))
+
+
+    # Adjust layout to fit labels
+    plt.subplots_adjust(right=0.8)  # Adjust the right side to make space for the legend
+    plt.tight_layout()
+
+    # Save the plot to a PDF file using Kaleido
+    if strict_count == True:
+        plt.savefig(f"{direc_restructure_destination}/occupancy_plot_legend_strict_litype{litype}.pdf", format='pdf')
+    else:
+        plt.savefig(f"{direc_restructure_destination}/occupancy_plot_legend_litype{litype}.pdf", format='pdf')
+
+    # Show the plot
+    fig1.show()
+    plt.show()
 
 
 # class TupleCage:

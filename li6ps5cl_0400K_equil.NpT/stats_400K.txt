@@ -29,3 +29,30 @@ dtype: object
 
 
 elapsed_time: 33667.48064613342
+
+
+occupancy and occupancy strict columns are same: False
+idx_coor_limapped_weirdos_dict columns are same: True
+#weirdos_Li columns are same: True
+
+
+Amount occupancy strict:
+idx_file    199990000
+2                  29
+1               26906
+0              453065
+48htype1        12835
+weirdo         440201
+dtype: object
+
+
+Amount occupancy not strict:
+idx_file    199990000
+2                  29
+1               26906
+0                  29
+48htype1        12835
+weirdo         440201
+dtype: object
+
+

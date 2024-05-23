@@ -1,5 +1,25 @@
+import pandas as pd
 from collections import defaultdict
+from positionism.read import coordinate_and_el, metainfo
+from pymatgen.core.structure import Structure
+from pymatgen.io.cif import CifWriter
+import os, sys
+import numpy as np
+from positionism.functional import func_kmeans
+from positionism.plot import movement
 
+direc = os.getcwd() # get current working directory
+
+# Check if the number of command-line arguments is correct
+if len(sys.argv) != 2:
+    print("Usage: python script.py pkl_name_wo_pkl")
+    sys.exit(1)
+
+pkl_name_wo_pkl = sys.argv[1]  # Get the pkl_name_wo_pkl from command-line arguments
+
+
+dataframe = pd.read_pickle(f"{pkl_name_wo_pkl}.pkl")
+dataframe_new = dataframe.copy()
 
 def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, el):
     """
@@ -124,3 +144,60 @@ def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, 
         dataframe.at[idx, col_occupancy_strict] = occupancy_strict
         dataframe.at[idx, col_occupancy_notstrict] = occupancy_notstrict
         dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_empty] = idx_coor24li_tuple_cage_belongin_empty
+
+max_mapping_radius = 0.051
+litype = 4
+
+file_perfect_poscar_48n24_wo_cif = "Li6PS5Cl_type4"
+file_perfect_poscar_48n24 = f"{file_perfect_poscar_48n24_wo_cif}.cif"
+
+folder_name_perfect_poscar = "/_reference_cif/"
+folder_name_destination_restructure = f"/"
+
+
+direc_perfect_poscar = direc+str(folder_name_perfect_poscar)
+direc_restructure_destination = direc+str(folder_name_destination_restructure)
+path_perfect_poscar_48n24 = os.path.join(direc_perfect_poscar, file_perfect_poscar_48n24)
+
+ref_structure_48n24 = Structure.from_file(path_perfect_poscar_48n24)
+cif_structure = Structure(ref_structure_48n24.lattice, ref_structure_48n24.species, ref_structure_48n24.frac_coords)
+cif = CifWriter(cif_structure)
+cif.write_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif")
+coor_ref_structure_48n24_expanded = coordinate_and_el.single_structure(Structure.from_file(f"{direc_restructure_destination}{file_perfect_poscar_48n24_wo_cif}_expanded.cif"))
+
+tuple_metainfo = metainfo.tuple(coor_ref_structure_48n24_expanded, litype, el = "Li")
+# coor_48htype1_metainfo = metainfo.coor_48htype2(coor_ref_structure_48n24_expanded, el = 'Li')
+
+# file_loc_important_cols_sorted = file_loc_important_cols.sort_values("toten [eV]", ascending=True).reset_index()
+
+idx_coor_cage_order = {0: np.array([0.97111, 0.25   , 0.25   ]), 3: np.array([0.02889, 0.75   , 0.25   ]),
+                       1: np.array([0.02889, 0.25   , 0.75   ]), 2: np.array([0.97111, 0.75   , 0.75   ])}
+
+coor_24g_array = np.array([item['coor'] for sublist in tuple_metainfo.values() for item in sublist if item['type'] == '24g'])
+centroids, labels = func_kmeans.kmeans_cluster_atoms(coor_24g_array, amount_clusters = 4)
+# func_kmeans.create_POSCAR_atoms_centroids_appended(coor_24g_array, centroids, direc_restructure_destination, lattice_constant, filename = "POSCAR_24g_centroids4")
+
+idx_cage_coor_24g = metainfo.idx_cage_coor_24g(coor_24g_array, labels, idx_coor_cage_order, amount_clusters = 4)
+tuple_cage_metainfo = metainfo.tuple_cage(tuple_metainfo, idx_cage_coor_24g)
+
+get_occupancy(dataframe_new, coor_ref_structure_48n24_expanded, tuple_cage_metainfo, el = "Li")
+df_occupancy_strict = movement.get_df_occupancy(dataframe_new, strict_count=True)
+df_occupancy_notstrict = movement.get_df_occupancy(dataframe_new, strict_count=False)
+df_occupancy_strict.to_pickle(f'df_occupancy_strict.pkl') 
+df_occupancy_notstrict.to_pickle(f'df_occupancy_notstrict.pkl') 
+
+dataframe_new.to_pickle(f'{pkl_name_wo_pkl}_strict_notstrict.pkl') 
+
+print(f"occupancy and occupancy strict columns are same: {(dataframe['occupancy'] == dataframe_new['occupancy_strict']).all()}")
+print(f"idx_coor_limapped_weirdos_dict columns are same: {(dataframe['idx_coor_limapped_weirdos_dict'] == dataframe_new['idx_coor_limapped_weirdos_dict']).all()}")
+print(f"#weirdos_Li columns are same: {(dataframe['#weirdos_Li'] == dataframe_new['#weirdos_Li']).all()}")
+
+print("Amount occupancy strict:")
+print(df_occupancy_strict.sum())
+print()
+print()
+
+print("Amount occupancy not strict:")
+print(df_occupancy_notstrict.sum())
+print()
+print()

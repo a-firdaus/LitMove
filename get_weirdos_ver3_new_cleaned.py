@@ -4812,6 +4812,10 @@ class Movement:
 
 
         def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, el):
+            """
+            
+            """
+
             col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
             col_sum_of_weirdos_Li = f"#weirdos_Li"
 
@@ -4907,7 +4911,6 @@ class Movement:
                 amount_weirdo = dataframe[col_sum_of_weirdos_Li][idx]
                 occupancy_2 = len_occupancy.count(2)
                 occupancy_1 = len_occupancy.count(1)
-                # occupancy_0 = len_occupancy.count(0) - amount_48htype1 - amount_weirdo
                 occupancy_0 = len_occupancy.count(0)
 
                 sanity_check_occupancy = occupancy_2 * 2 + occupancy_1 + amount_48htype1 + amount_weirdo + occupancy_0

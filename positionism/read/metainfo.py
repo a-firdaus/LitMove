@@ -7,15 +7,6 @@ from positionism.functional import func_distance
 # class Metainfo:
 def tuple(coor_structure_init_dict_expanded, litype, el):
     # rename from: get_tuple_metainfo
-import numpy as np
-from collections import defaultdict
-
-from positionism.functional import func_distance
-
-
-# class Metainfo:
-def tuple(coor_structure_init_dict_expanded, litype, el):
-    # rename from: get_tuple_metainfo
     coor_structure_init_dict_expanded_el = coor_structure_init_dict_expanded[el]
     
     if litype == 0:
