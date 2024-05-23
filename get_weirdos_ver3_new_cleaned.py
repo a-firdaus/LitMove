@@ -1450,7 +1450,9 @@ class ReadStructure:
         def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
             coor_structure_init_dict_expanded_el = coor_structure_init_dict_expanded[el]
             
-            if litype == 1:
+            if litype == 0:
+                n = 1
+            elif litype == 1:
                 n = 3
             else:
                 n = ((litype * 2) - 1)
