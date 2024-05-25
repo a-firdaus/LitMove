@@ -151,6 +151,15 @@ def plot_occupancy(dataframe, sorted, direc_restructure_destination, litype, str
         # ... add more as needed
     }
 
+     # Define the colors for each category
+    category_colors = {
+        '2': '#1f77b4',  # Blue
+        '1': '#ff7f0e',  # Orange
+        '0': '#313131',  # Dar grey
+        '48htype1': '#d62728',  # Red  
+        'weirdo':   '#17becf'     # Cyan
+    }       
+
     # Define variable name for file saving based on "sorted" or not
     nameof_dataframe = nameof(dataframe)
     sorted = "True" if "sorted" in "df_mapping_metainfo_sorted" else "False"
@@ -190,11 +199,12 @@ def plot_occupancy(dataframe, sorted, direc_restructure_destination, litype, str
         bottom_positions = [0] * len(df)
 
         for category in categories:
-            ax.bar(df['idx_file'], df[category], bottom=bottom_positions, label=category_labels.get(category, category))
+            ax.bar(df['idx_file'], df[category], bottom=bottom_positions, 
+                color=category_colors[category], label=category_labels.get(category, category))
             bottom_positions = [i + j for i, j in zip(bottom_positions, df[category])]
 
         ax.set_xlabel(r'$\text{File index}$', fontsize=font_size)
-        ax.set_ylabel(r'$\text{Amount of Li occupancy}$', fontsize=font_size)
+        ax.set_ylabel(r'$\text{Amount of Li-types}$', fontsize=font_size)
 
         return fig, ax
 

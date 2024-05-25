@@ -76,10 +76,28 @@ def plot_amount_type(df, sorted, direc_restructure_destination, litype, style):
         '48htype1': '48h type 2',
         '48htype3': '48h type 3',
         '48htype4': '48h type 4',
+        '48htype5': '48h type 5',
+        '48htype6': '48h type 6',
+        '48htype7': '48h type 7',
+        '48htype8': '48h type 8',
         '24g': '24g',
         'weirdo': 'Unassigned'
         # ... add more as needed
     }
+
+    # Define the colors for each category
+    category_colors = {
+        '48htype2': '#1f77b4',  # Blue
+        '48htype1': '#d62728',  # Red  
+        '48htype3': '#2ca02c',  # Green #
+        '48htype4': '#bcbd22',  # Yellow-green
+        '48htype5': '#9467bd',  # Purple
+        '48htype6': '#8c564b',  # Brown
+        '48htype7': '#e377c2',  # Pink
+        '48htype8': '#7f7f7f',  # Gray
+        '24g':      '#ff7f0e',  # Orange    #
+        'weirdo':   '#17becf'     # Cyan
+    }    
 
     # shift 'idx_file' by 1
     df['idx_file'] = df['idx_file'] + 1
@@ -134,12 +152,34 @@ def plot_amount_type(df, sorted, direc_restructure_destination, litype, style):
         bottom_positions = [0] * len(df)
 
         for category in categories:
-            ax.bar(df['idx_file'], df[category], bottom=bottom_positions, label=category_labels.get(category, category))
+            ax.bar(df['idx_file'], df[category], bottom=bottom_positions, 
+                color=category_colors[category], label=category_labels.get(category, category))
             bottom_positions = [i + j for i, j in zip(bottom_positions, df[category])]
 
         ax.set_xlabel(r'$\text{File index}$', fontsize=font_size)
         ax.set_ylabel(r'$\text{Amount of Li-types}$', fontsize=font_size)
 
+        return fig, ax
+
+    def adjust_legend_and_figsize(fig, ax, categories, font_size):
+        legend = ax.legend(title=r'$\text{Category}$', loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(categories))
+        plt.setp(legend.get_title(), fontsize=font_size)      
+        
+        # Check if the legend fits
+        fig.canvas.draw()
+        legend_width = legend.get_window_extent().width / fig.dpi
+        fig_width = fig.get_figwidth()
+        
+        if legend_width > fig_width:
+            # Split legend into two rows
+            legend = ax.legend(title=r'$\text{Category}$', loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=int(len(categories) / 2))
+            plt.setp(legend.get_title(), fontsize=font_size)
+            
+            # Adjust figure size
+            fig_height = fig.get_figheight()
+            fig.set_size_inches(fig_width, fig_height + 0.5)  # Increase height to accommodate legend
+
+        plt.tight_layout()
         return fig, ax
 
     # Create and save multiple plots with different sizes
@@ -153,10 +193,11 @@ def plot_amount_type(df, sorted, direc_restructure_destination, litype, style):
         plt.savefig(f"{direc_restructure_destination}/licategory_plot_litype{litype}.pdf", format='pdf')
 
     fig3, ax3 = create_bar_plot(ax=None, figsize=(9.37, 3.9), font_size=12)
-    legend = ax3.legend(title=r'$\text{Category}$', loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(categories))
-    # Set the font size for the legend title
-    plt.setp(legend.get_title(), fontsize=12)      
-    plt.tight_layout()
+    # legend = ax3.legend(title=r'$\text{Category}$', loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(categories))
+    # # Set the font size for the legend title
+    fig3, ax3 = adjust_legend_and_figsize(fig3, ax3, categories, font_size=12)
+    # plt.setp(legend.get_title(), fontsize=12)      
+    # plt.tight_layout()
     if sorted == "True":
         plt.savefig(f"{direc_restructure_destination}/licategory_plot_sorted_legend_litype{litype}.pdf", format='pdf')
     else:
