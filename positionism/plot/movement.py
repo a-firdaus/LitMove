@@ -22,7 +22,14 @@ plt.rcParams['legend.fontsize'] = 12  # Set the font size for legend
 pio.templates.default = "plotly_white"
 
 # class Distance:
-def plot_distance(df_distance, max_mapping_radius, activate_shifting_x, activate_diameter_line, Li_idxs):
+def plot_distance(df_distance, direc_restructure_destination, max_mapping_radius, litype, activate_shifting_x, activate_diameter_line, Li_idxs):
+    # # category_labels = {
+    # #     'staying': 'Staying',
+    # #     'intratriad': 'Intratriad',
+    # #     'intracage': 'Intracage',
+    # #     'inTERcage': 'InTERcage'
+    # #     # ... add more as needed
+    # # }    
 
     diameter_24g48h = max_mapping_radius * 2
 
@@ -36,11 +43,18 @@ def plot_distance(df_distance, max_mapping_radius, activate_shifting_x, activate
     # fig = plt.figure(figsize=(800/96, 600/96))  # 800x600 pixels, assuming 96 DPI
     # ax = plt.subplot(111)
 
-    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure size in inches
-
+    if Li_idxs == "all":
+        fig, ax = plt.subplots(figsize=(8.5, 6.5))  # Set the figure size in inches
+    else:
+        fig, ax = plt.subplots(figsize=(7.5, 5.3))  # Set the figure size in inches
+    
     lines = []
 
     colors = ['b', 'g', 'r', 'c', 'm', 'y'] #, 'k']
+
+    # Set global font size
+    font_size = 18
+    plt.rcParams.update({'font.size': font_size})
 
     # for i in df_distance.index:
     for i in range(len(df_distance.columns)):
@@ -48,6 +62,8 @@ def plot_distance(df_distance, max_mapping_radius, activate_shifting_x, activate
         line_color = colors[i % len(colors)]  # Cycle through colors list
 
         if Li_idxs == "all" or i in Li_idxs:
+            # # label = df_distance.columns[i]
+            # # mapped_label = category_labels.get(label, label)  # Use mapped label if it exists, else use the original          
             # # i = i
             # # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
             line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", color=line_color, linewidth=2)  # Set line width to 2 pixels
@@ -85,8 +101,15 @@ def plot_distance(df_distance, max_mapping_radius, activate_shifting_x, activate
 
     handles, labels = ax.get_legend_handles_labels()
 
-    ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
-            fancybox=True, shadow=True, ncol=5)
+    ax.set_xlabel('Image index', fontsize=font_size)
+    ax.set_ylabel('Movement type', fontsize=font_size)
+    legend = ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.15),
+            fancybox=True, shadow=True, ncol=5, title="Li index")
+    plt.setp(legend.get_title(), fontsize=font_size)
+    plt.setp(legend.get_texts(), fontsize=font_size)
+
+    # Adjust the font size of the x and y ticks
+    ax.tick_params(axis='both', which='major', labelsize=font_size)
 
     # Enable cursor information
     mplcursors.cursor(hover=True)
@@ -94,6 +117,12 @@ def plot_distance(df_distance, max_mapping_radius, activate_shifting_x, activate
     # Enable zooming with cursor
     mpldatacursor.datacursor(display='multiple', draggable=True)
 
+    plt.tight_layout()
+    if Li_idxs == "all":
+        plt.savefig(f"{direc_restructure_destination}/movement_plot_litype{litype}_all.pdf", format='pdf', bbox_inches='tight')
+    else:
+        plt.savefig(f"{direc_restructure_destination}/movement_plot_litype{litype}_{Li_idxs[0]}.pdf", format='pdf', bbox_inches='tight')
+        
     plt.show()
 
 
@@ -189,8 +218,8 @@ def plot_occupancy(dataframe, sorted, direc_restructure_destination, litype, str
             family="serif",
             size=12
         ),
-        xaxis_title=r'$\text{File index}$',
-        yaxis_title=r'$\text{Amount of Li occupancy}$',
+        xaxis_title=r'$\text{Structure index}$',
+        yaxis_title=r'$\text{Amount of occupancy}$',
         margin=dict(l=20, r=20, t=50, b=50)  # Adjust margins for a tighter layout
     )
 
@@ -203,8 +232,8 @@ def plot_occupancy(dataframe, sorted, direc_restructure_destination, litype, str
                 color=category_colors[category], label=category_labels.get(category, category))
             bottom_positions = [i + j for i, j in zip(bottom_positions, df[category])]
 
-        ax.set_xlabel(r'$\text{File index}$', fontsize=font_size)
-        ax.set_ylabel(r'$\text{Amount of Li-types}$', fontsize=font_size)
+        ax.set_xlabel(r'$\text{Structure index}$', fontsize=font_size)
+        ax.set_ylabel(r'$\text{Amount of occupancy}$', fontsize=font_size)
 
         return fig, ax
 
@@ -704,7 +733,12 @@ def plot_cage_tuple_label_edited(df_distance, df_type, df_idx_tuple, direc_restr
     # #     '24g': ('v', 'y')        # Triangle_down marker with yellow color
     # # }
 
-    fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure size in inches
+    if Li_idxs == "all":
+        fig, ax = plt.subplots(figsize=(8.5, 6.5))  # Set the figure size in inches
+    else:
+        fig, ax = plt.subplots(figsize=(7.5, 5.3))  # Set the figure size in inches
+    
+    # fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure size in inches
 
     lines = []
     texts = []
@@ -730,6 +764,10 @@ def plot_cage_tuple_label_edited(df_distance, df_type, df_idx_tuple, direc_restr
 
     # Track which labels have been added
     added_labels = set()
+
+    # Set global font size
+    font_size = 18
+    plt.rcParams.update({'font.size': font_size})
 
     # for i in range(24):
     for i in range(len(df_distance.columns)):
@@ -777,19 +815,19 @@ def plot_cage_tuple_label_edited(df_distance, df_type, df_idx_tuple, direc_restr
                 if activate_relabel_s_i:        
                     # print(idx_tuple_val)
                     if type_val in ['48htype2', '48htype3', '48htype4', '24g']:
-                        text = ax.text(text_x, text_y, str(int(idx_tuple_val))+"s", color=text_color, fontsize=18)
+                        text = ax.text(text_x, text_y, str(int(idx_tuple_val))+"s", color=text_color, fontsize=font_size)
                     elif type_val in ['48htype1']:
-                        text = ax.text(text_x, text_y, str(int(idx_tuple_val))+"i", color=text_color, fontsize=18)
+                        text = ax.text(text_x, text_y, str(int(idx_tuple_val))+"i", color=text_color, fontsize=font_size)
                     elif type_val == 'weirdos':
                         # idx_tuple_val = 'x'
                         # # print(idx_tuple_val)
-                        text = ax.text(text_x, text_y, idx_tuple_val, color=text_color, fontsize=18)
+                        text = ax.text(text_x, text_y, idx_tuple_val, color=text_color, fontsize=font_size)
                         # # print(text)
                 else:
                     if idx_tuple_val == 'x':
-                        text = ax.text(text_x, text_y, idx_tuple_val, color=text_color, fontsize=18)
+                        text = ax.text(text_x, text_y, idx_tuple_val, color=text_color, fontsize=font_size)
                     else:
-                        text = ax.text(text_x, text_y, str(int(idx_tuple_val)), color=text_color, fontsize=18)
+                        text = ax.text(text_x, text_y, str(int(idx_tuple_val)), color=text_color, fontsize=font_size)
                 texts.append(text)
 
                 # # # # # # # # # # # # # # text = ax.text(j+x_offset, y_val+y_offset, str(int(idx_tuple_val)), color=line_color, fontsize=15)
@@ -826,7 +864,10 @@ def plot_cage_tuple_label_edited(df_distance, df_type, df_idx_tuple, direc_restr
     # ax.set_ylim(-0.5, 3.5)
 
     # Set the y-axis to only show ticks at 0, 1, 2, 3
-    plt.yticks([0, 1, 2, 3])
+    plt.yticks([0, 1, 2, 3], fontsize=font_size)
+    plt.xticks(fontsize=font_size)
+    ax.set_xlabel('Image index', fontsize=font_size)
+    ax.set_ylabel('Cage index', fontsize=font_size)
 
     # plt.title(f"Geometry {geo} with d={diameter_24g48h}")
 
@@ -842,8 +883,11 @@ def plot_cage_tuple_label_edited(df_distance, df_type, df_idx_tuple, direc_restr
     # # legend_handles = [(h[0], h[1], {'color': 'black'}) for h in handles]
     legend_handles = [(h, {'color': 'black'}) for h in handles]
 
-    ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
-            fancybox=True, shadow=True, ncol=5)
+    legend = ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.15),
+            fancybox=True, shadow=False, ncol=5, title="Li index and type")
+    # legend = ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(1, 0.5),
+    plt.setp(legend.get_title(), fontsize=font_size)
+    plt.setp(legend.get_texts(), fontsize=font_size)
     
     # # # ax.legend(handles=legend_handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.05),
     # # #         fancybox=True, shadow=True, ncol=5, handlelength=2, handler_map={tuple: HandlerTuple(ndivide=None)})
@@ -858,8 +902,8 @@ def plot_cage_tuple_label_edited(df_distance, df_type, df_idx_tuple, direc_restr
 
     plt.tight_layout()
     if Li_idxs == "all":
-        plt.savefig(f"{direc_restructure_destination}/cage_tuple_label_plot_litype{litype}_all.pdf", format='pdf')
+        plt.savefig(f"{direc_restructure_destination}/cage_tuple_label_plot_litype{litype}_all.pdf", format='pdf', bbox_inches='tight')
     else:
-        plt.savefig(f"{direc_restructure_destination}/cage_tuple_label_plot_litype{litype}_{Li_idxs[0]}.pdf", format='pdf')
+        plt.savefig(f"{direc_restructure_destination}/cage_tuple_label_plot_litype{litype}_{Li_idxs[0]}.pdf", format='pdf', bbox_inches='tight')
         
     plt.show()

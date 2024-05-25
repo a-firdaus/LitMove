@@ -142,7 +142,7 @@ def plot_amount_type(df, sorted, direc_restructure_destination, litype, style):
             family="serif",
             size=12
         ),
-        xaxis_title=r'$\text{File index}$',
+        xaxis_title=r'$\text{Structure index}$',
         yaxis_title=r'$\text{Amount of Li-types}$',
         margin=dict(l=20, r=20, t=50, b=50)  # Adjust margins for a tighter layout
     )
@@ -156,7 +156,7 @@ def plot_amount_type(df, sorted, direc_restructure_destination, litype, style):
                 color=category_colors[category], label=category_labels.get(category, category))
             bottom_positions = [i + j for i, j in zip(bottom_positions, df[category])]
 
-        ax.set_xlabel(r'$\text{File index}$', fontsize=font_size)
+        ax.set_xlabel(r'$\text{Structure index}$', fontsize=font_size)
         ax.set_ylabel(r'$\text{Amount of Li-types}$', fontsize=font_size)
 
         return fig, ax

@@ -15,7 +15,7 @@ plt.rcParams['xtick.labelsize'] = 12  # Set the font size for the x tick labels
 plt.rcParams['ytick.labelsize'] = 12  # Set the font size for the y tick labels
 plt.rcParams['legend.fontsize'] = 12  # Set the font size for legend
 
-def energy_vs_latticeconstant(dataframe, var_filename, interpolate):
+def energy_vs_latticeconstant(dataframe, direc_restructure_destination, litype, var_filename, interpolate):
     col_latticeconstant_structure_dict = f"latticeconstant_structure_dict_{var_filename}"
     col_toten = "toten [eV]"
 
@@ -65,7 +65,7 @@ def energy_vs_latticeconstant(dataframe, var_filename, interpolate):
 
         # Save the plot to a PDF file
         plt.tight_layout()
-        plt.savefig("_images/energy_vs_latticeconstant.pdf", format='pdf')
+        plt.savefig(f"{direc_restructure_destination}/energy_vs_latticeconstant_litype{litype}.pdf", format='pdf')
 
         plt.show()
 
