@@ -1,6 +1,25 @@
 from collections import defaultdict
 
 
+def relabel_48htype1(dataframe, litype):
+    if litype == 1:
+        col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
+
+        label_new = "48htype2"
+
+        for idx in range(dataframe["geometry"].size):
+            idx_coor_limapped_weirdos_dict = dataframe[col_idx_coor_limapped_weirdos_dict][idx]
+
+            for key, val in idx_coor_limapped_weirdos_dict.items():
+                label = val['label']
+                if label == "48htype1":
+                    val['label'] = label_new
+            
+            dataframe.at[idx, col_idx_coor_limapped_weirdos_dict] = idx_coor_limapped_weirdos_dict
+    else:
+        pass
+
+
 def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, el):
     """
     strict_count: True or False

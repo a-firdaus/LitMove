@@ -5,6 +5,20 @@ from positionism.functional import func_distance
 
 
 # class Metainfo:
+def relabel_48htype1(tuple_metainfo, litype):
+    new_label = "48htype2"
+
+    if litype == 1:
+        for key, value_list in tuple_metainfo.items():
+            for entry in value_list:
+                label = entry['type']
+                if label == '48htype1':
+                    entry['type'] = new_label
+
+    else:
+        pass
+
+
 def tuple(coor_structure_init_dict_expanded, litype, el):
     # rename from: get_tuple_metainfo
     coor_structure_init_dict_expanded_el = coor_structure_init_dict_expanded[el]
@@ -343,9 +357,12 @@ def tuple(coor_structure_init_dict_expanded, litype, el):
     return tuple_metainfo   
 
 
-def coor_48htype2(coor_structure_init_dict_expanded, el):
+def coor_48htype2(coor_structure_init_dict_expanded, litype, el):
     # rename from: get_coor_48htype1_metainfo
-    all_coor_48htype1 = coor_structure_init_dict_expanded[el][24:72]
+    if litype == 1:
+        all_coor_48htype1 = coor_structure_init_dict_expanded[el][72:120]
+    else:
+        all_coor_48htype1 = coor_structure_init_dict_expanded[el][24:72]
 
     coor_48htype1_metainfo = defaultdict(list)
 

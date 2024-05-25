@@ -1,6 +1,8 @@
 from positionism.functional import func_distance
 
 
+
+
 def weirdos_to_top_n_closestcoorref_el(dataframe, coor_structure_init_dict, el, litype):
     # rename from: get_distance_weirdos_label_el
     """
@@ -534,6 +536,25 @@ def get_label_mapping(dataframe, coor_structure_init_dict, el, activate_radius, 
         dataframe.at[idx, col_atom_mapping_el_w_dist_label] = atom_mapping_el_w_dist_label
 
 
+def relabel_48htype1(dataframe, litype, el):
+    if litype == 1:
+        col_atom_mapping_el_w_dist_label = f"atom_mapping_{el}_w_dist_label"
+
+        label_new = "48htype2"
+
+        for idx in range(dataframe["geometry"].size):
+            idx_coor_limapped_weirdos_dict = dataframe[col_atom_mapping_el_w_dist_label][idx]
+
+            for key, val in idx_coor_limapped_weirdos_dict.items():
+                label = val['label']
+                if label == "48htype1":
+                    val['label'] = label_new
+            
+            dataframe.at[idx, col_atom_mapping_el_w_dist_label] = idx_coor_limapped_weirdos_dict
+    else:
+        pass
+
+
 def get_amount_type(dataframe, litype, el):
     col_atom_mapping_el_w_dist_label = f"atom_mapping_{el}_w_dist_label"
     col_amount_weirdos_el = f'#weirdos_{el}'
@@ -552,7 +573,7 @@ def get_amount_type(dataframe, litype, el):
         if litype == 0:
             labels = ["24g", "weirdo"]
         elif litype == 1: 
-            labels = ["48htype1", "24g", "weirdo"]
+            labels = ["48htype2", "24g", "weirdo"]      # "48htype2" instead of 1 because 48htype1 is holy grail for interstitial
         elif litype == 2:
             labels = ["48htype1", "48htype2", "24g", "weirdo"]
         elif litype == 3:

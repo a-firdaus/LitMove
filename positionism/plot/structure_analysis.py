@@ -84,14 +84,15 @@ def energy_vs_latticeconstant(dataframe, var_filename, interpolate):
         plt.show()
 
 
-def weirdos_directcoor(dataframe, activate_radius):
+def weirdos_directcoor(dataframe, direc_restructure_destination, activate_radius, litype):
     if activate_radius == 2 or activate_radius == 3:
         col_coor_weirdos_el = f"coor_weirdos_48htype2_Li"
     elif activate_radius == 1:
         col_coor_weirdos_el = f"coor_weirdos_Li"
 
     # Create a figure and a 3D axis
-    fig = plt.figure()
+    fig, ax = plt.subplots(figsize=(6.7, 5.9))
+    # fig, ax = plt.subplots(figsize=(3.3, 3))
     ax = fig.add_subplot(111, projection='3d')
 
     for idx in range(dataframe["geometry"].size):
@@ -102,10 +103,13 @@ def weirdos_directcoor(dataframe, activate_radius):
             ax.scatter(*coordinates, marker='o')
 
     # Set labels
-    ax.set_xlabel('X-axis')
-    ax.set_ylabel('Y-axis')
-    ax.set_zlabel('Z-axis')
-    ax.set_title('Weirdos direct coordinate')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+    # ax.set_title('Weirdos direct coordinate')
+
+    plt.tight_layout()
+    plt.savefig(f"{direc_restructure_destination}/weirdos_coor_litype{litype}.pdf", format='pdf')
 
     # Show the plot
     plt.show()

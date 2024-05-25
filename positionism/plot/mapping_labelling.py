@@ -1,8 +1,18 @@
 import pandas as pd
 import plotly.express as px
+from matplotlib import pyplot as plt
 
 from positionism.functional import func_string
 
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
+
+plt.rcParams['axes.titlesize'] = 12  # Set the font size for the plot title
+plt.rcParams['axes.labelsize'] = 12  # Set the font size for the x and y labels
+plt.rcParams['xtick.labelsize'] = 12  # Set the font size for the x tick labels
+plt.rcParams['ytick.labelsize'] = 12  # Set the font size for the y tick labels
+plt.rcParams['legend.fontsize'] = 12  # Set the font size for legend
 
 def get_df_amount_type(dataframe, litype, el):
     # rename from: plot_amount_type
@@ -17,7 +27,7 @@ def get_df_amount_type(dataframe, litype, el):
     if litype == 0:
         df['24g'] = None; df['weirdo'] = None
     elif litype == 1:
-        df['48htype1'] = None; df['24g'] = None; df['weirdo'] = None
+        df['48htype2'] = None; df['24g'] = None; df['weirdo'] = None    # "48htype2" instead of 1 because 48htype1 is holy grail for interstitial
     elif litype == 2:
         df['48htype1'] = None; df['48htype2'] = None; df['24g'] = None; df['weirdo'] = None
     elif litype == 3:
@@ -41,7 +51,7 @@ def get_df_amount_type(dataframe, litype, el):
         if litype == 0:
             df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
         elif litype == 1:
-            df.at[idx, '48htype1'] = amount_type['48htype1']; df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
+            df.at[idx, '48htype2'] = amount_type['48htype2']; df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']      # "48htype2" instead of 1 because 48htype1 is holy grail for interstitial
         elif litype == 2:
             df.at[idx, '48htype1'] = amount_type['48htype1']; df.at[idx, '48htype2'] = amount_type['48htype2']; df.at[idx, '24g'] = amount_type['24g']; df.at[idx, 'weirdo'] = amount_type['weirdo']
         elif litype == 3:
@@ -60,7 +70,40 @@ def get_df_amount_type(dataframe, litype, el):
     return df
 
 
-def plot_amount_type(df, style, category_labels = None):
+def plot_amount_type(df, sorted, direc_restructure_destination, litype, style):
+    category_labels = {
+        '48htype2': '48h type 1',
+        '48htype1': '48h type 2',
+        '48htype3': '48h type 3',
+        '48htype4': '48h type 4',
+        '24g': '24g',
+        'weirdo': 'Unassigned'
+        # ... add more as needed
+    }
+
+    # shift 'idx_file' by 1
+    df['idx_file'] = df['idx_file'] + 1
+    
+    # Define categories
+    if litype == 0:
+        categories = ["24g", "weirdo"]
+    elif litype == 1:
+        categories = ["24g", "48htype2", "weirdo"]
+    elif litype == 2:
+        categories = ["24g", "48htype1", "48htype2", "weirdo"]
+    elif litype == 3:
+        categories = ["24g", "48htype1", "48htype2", "48htype3", "weirdo"]
+    elif litype == 4:
+        categories = ["24g", "48htype1", "48htype2", "48htype3", "48htype4", "weirdo"]
+    elif litype == 5:
+        categories = ["24g", "48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "weirdo"]
+    elif litype == 6:
+        categories = ["24g", "48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "48htype6", "weirdo"]
+    elif litype == 7:
+        categories = ["24g", "48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "48htype6", "48htype7", "weirdo"]
+    elif litype == 8:
+        categories = ["24g", "48htype1", "48htype2", "48htype3", "48htype4", "48htype5", "48htype6", "48htype7", "48htype8", "weirdo"]
+
     wide_df = pd.DataFrame(df)
 
     long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
@@ -70,11 +113,68 @@ def plot_amount_type(df, style, category_labels = None):
         long_df['category'] = func_string.replace_values_in_series(long_df['category'], category_labels)
 
     if style == "bar":
-        fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx file vs Li type")
+        fig1 = px.bar(long_df, x="idx_file", y="count", color="category")
     elif style == "scatter":
-        fig = px.scatter(long_df, x="idx_file", y="count", color="category", title="Idx file vs Li type")
-    fig.show()
+        fig1 = px.scatter(long_df, x="idx_file", y="count", color="category")
+    fig1.show()
 
+    # Update layout for LaTeX-like font settings
+    fig1.update_layout(
+        font=dict(
+            family="serif",
+            size=12
+        ),
+        xaxis_title=r'$\text{File index}$',
+        yaxis_title=r'$\text{Amount of Li-types}$',
+        margin=dict(l=20, r=20, t=50, b=50)  # Adjust margins for a tighter layout
+    )
+
+    def create_bar_plot(ax, figsize, font_size):
+        fig, ax = plt.subplots(figsize=figsize)
+        bottom_positions = [0] * len(df)
+
+        for category in categories:
+            ax.bar(df['idx_file'], df[category], bottom=bottom_positions, label=category_labels.get(category, category))
+            bottom_positions = [i + j for i, j in zip(bottom_positions, df[category])]
+
+        ax.set_xlabel(r'$\text{File index}$', fontsize=font_size)
+        ax.set_ylabel(r'$\text{Amount of Li-types}$', fontsize=font_size)
+
+        return fig, ax
+
+    # Create and save multiple plots with different sizes
+    fig2, ax2 = create_bar_plot(ax=None, figsize=(8, 3), font_size=12)
+    # ax2.legend(title=r'$\text{Category}$', loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(categories))
+    plt.subplots_adjust(right=0.8)  # Adjust the right side to make space for the legend  
+    plt.tight_layout()
+    if sorted == "True":
+        plt.savefig(f"{direc_restructure_destination}/licategory_plot_sorted_litype{litype}.pdf", format='pdf')
+    else:
+        plt.savefig(f"{direc_restructure_destination}/licategory_plot_litype{litype}.pdf", format='pdf')
+
+    fig3, ax3 = create_bar_plot(ax=None, figsize=(9.37, 3.9), font_size=12)
+    legend = ax3.legend(title=r'$\text{Category}$', loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(categories))
+    # Set the font size for the legend title
+    plt.setp(legend.get_title(), fontsize=12)      
+    plt.tight_layout()
+    if sorted == "True":
+        plt.savefig(f"{direc_restructure_destination}/licategory_plot_sorted_legend_litype{litype}.pdf", format='pdf')
+    else:
+        plt.savefig(f"{direc_restructure_destination}/licategory_plot_legend_litype{litype}.pdf", format='pdf')
+
+    fig4, ax4 = create_bar_plot(ax=None, figsize=(3.3, 2.1), font_size=10)
+    # No legend for this plot
+    plt.tight_layout()
+    if sorted == "True":
+        plt.savefig(f"{direc_restructure_destination}/licategory_plot_sorted_small_litype{litype}.pdf", format='pdf')
+    else:
+        plt.savefig(f"{direc_restructure_destination}/licategory_plot_small_litype{litype}.pdf", format='pdf')
+
+    # Show the plotly figure
+    fig1.show()
+
+    # Show the last matplotlib figure (for illustration purposes)
+    plt.show()
 
 def plot_mapped_label_vs_dist_and_histogram(dataframe, litype, category_data, el):
     # rename from: plot_mapped_label_vs_dist_and_histogram

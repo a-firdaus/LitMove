@@ -5,6 +5,7 @@ import mpldatacursor
 import plotly.express as px
 from adjustText import adjust_text
 import plotly.io as pio
+from varname import nameof
 
 from positionism.functional import func_string
 
@@ -129,13 +130,30 @@ def get_df_occupancy(dataframe, strict_count):
 
     return df
 
-def plot_occupancy(dataframe, category_labels, direc_restructure_destination, litype, strict_count):
+def plot_occupancy(dataframe, sorted, direc_restructure_destination, litype, strict_count):
     if strict_count:
         col_occupancy = "occupancy_strict"
     else:
         col_occupancy = "occupancy_notstrict"
 
-    df = pd.DataFrame(columns=['idx_file', '2', '1', '0', '48htype1', 'weirdo'])
+    # Define categories
+    categories = ['2', '1', '0', '48htype1', 'weirdo']
+
+    # Initialize DataFrame with the necessary columns
+    df = pd.DataFrame(columns=['idx_file'] + categories)
+
+    category_labels = {
+        '2': 'Doubly occupied',
+        '1': 'Singly occupied',
+        '0': 'Empty',
+        '48htype1': '48h type 2',
+        'weirdo': 'Unassigned'
+        # ... add more as needed
+    }
+
+    # Define variable name for file saving based on "sorted" or not
+    nameof_dataframe = nameof(dataframe)
+    sorted = "True" if "sorted" in "df_mapping_metainfo_sorted" else "False"
 
     for idx in range(dataframe["geometry"].size):
         occupancy = dataframe.at[idx, col_occupancy]
@@ -166,7 +184,6 @@ def plot_occupancy(dataframe, category_labels, direc_restructure_destination, li
         yaxis_title=r'$\text{Amount of Li occupancy}$',
         margin=dict(l=20, r=20, t=50, b=50)  # Adjust margins for a tighter layout
     )
-    categories = ['2', '1', '0', '48htype1', 'weirdo']
 
     def create_bar_plot(ax, figsize, font_size):
         fig, ax = plt.subplots(figsize=figsize)
@@ -184,28 +201,50 @@ def plot_occupancy(dataframe, category_labels, direc_restructure_destination, li
     # Create and save multiple plots with different sizes
     fig2, ax2 = create_bar_plot(ax=None, figsize=(8, 3), font_size=12)
     # ax2.legend(title=r'$\text{Category}$', loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(categories))
-    plt.subplots_adjust(right=0.8)  # Adjust the right side to make space for the legend
+    plt.subplots_adjust(right=0.8)  # Adjust the right side to make space for the legend  
     plt.tight_layout()
-    if strict_count:
-        plt.savefig(f"{direc_restructure_destination}/occupancy_plot_strict_litype{litype}.pdf", format='pdf')
+    if sorted == "True":
+        if strict_count:
+            plt.savefig(f"{direc_restructure_destination}/occupancy_plot_sorted_strict_litype{litype}.pdf", format='pdf')
+        else:
+            plt.savefig(f"{direc_restructure_destination}/occupancy_plot_sorted_litype{litype}.pdf", format='pdf')
     else:
-        plt.savefig(f"{direc_restructure_destination}/occupancy_plot_litype{litype}.pdf", format='pdf')
+        if strict_count:
+            plt.savefig(f"{direc_restructure_destination}/occupancy_plot_strict_litype{litype}.pdf", format='pdf')
+        else:
+            plt.savefig(f"{direc_restructure_destination}/occupancy_plot_litype{litype}.pdf", format='pdf')
 
     fig3, ax3 = create_bar_plot(ax=None, figsize=(9.37, 3.9), font_size=12)
-    ax3.legend(title=r'$\text{Category}$', loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(categories))
+    legend = ax3.legend(title=r'$\text{Category}$', loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(categories))
+    # Set the font size for the legend title
+    plt.setp(legend.get_title(), fontsize=12)      
     plt.tight_layout()
-    if strict_count:
-        plt.savefig(f"{direc_restructure_destination}/occupancy_plot_legend_strict_litype{litype}.pdf", format='pdf')
+    if sorted == "True":
+        if strict_count:
+            plt.savefig(f"{direc_restructure_destination}/occupancy_plot_sorted_legend_strict_litype{litype}.pdf", format='pdf')
+        else:
+            plt.savefig(f"{direc_restructure_destination}/occupancy_plot_sorted_legend_litype{litype}.pdf", format='pdf')
     else:
-        plt.savefig(f"{direc_restructure_destination}/occupancy_plot_legend_litype{litype}.pdf", format='pdf')
+        if strict_count:
+            plt.savefig(f"{direc_restructure_destination}/occupancy_plot_legend_strict_litype{litype}.pdf", format='pdf')
+        else:
+            plt.savefig(f"{direc_restructure_destination}/occupancy_plot_legend_litype{litype}.pdf", format='pdf')
+
 
     fig4, ax4 = create_bar_plot(ax=None, figsize=(3.3, 2.1), font_size=10)
     # No legend for this plot
     plt.tight_layout()
-    if strict_count:
-        plt.savefig(f"{direc_restructure_destination}/occupancy_plot_strict_small_litype{litype}.pdf", format='pdf')
+    if sorted == "True":
+        if strict_count:
+            plt.savefig(f"{direc_restructure_destination}/occupancy_plot_sorted_strict_small_litype{litype}.pdf", format='pdf')
+        else:
+            plt.savefig(f"{direc_restructure_destination}/occupancy_plot_sorted_small_litype{litype}.pdf", format='pdf')
     else:
-        plt.savefig(f"{direc_restructure_destination}/occupancy_plot_small_litype{litype}.pdf", format='pdf')
+        if strict_count:
+            plt.savefig(f"{direc_restructure_destination}/occupancy_plot_strict_small_litype{litype}.pdf", format='pdf')
+        else:
+            plt.savefig(f"{direc_restructure_destination}/occupancy_plot_small_litype{litype}.pdf", format='pdf')
+
 
     # fig5, ax5 = create_bar_plot(ax=None, figsize=(6.55, 3.33))
     # ax5.legend(title=r'$\text{Category}$', loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(categories))
@@ -404,7 +443,16 @@ def plot_occupancy(dataframe, category_labels, direc_restructure_destination, li
 # # # #     plt.show()
 
 
-def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, max_mapping_radius, litype, category_labels, activate_diameter_line, activate_relabel_s_i, Li_idxs):
+def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, max_mapping_radius, activate_diameter_line, activate_relabel_s_i, Li_idxs):
+    category_labels = {
+        '48htype2': '48h type 1',
+        '48htype1': '48h type 2',
+        '48htype3': '48h type 3',
+        '48htype4': '48h type 4',
+        '24g': '24g',
+        'weirdo': 'Unassigned'
+        # ... add more as needed
+    }    
 
     # df_distance = df_distance.iloc[:,:amount_Li]
     # df_type = df_type.iloc[:,:amount_Li]
