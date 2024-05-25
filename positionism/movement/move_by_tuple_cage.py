@@ -3,6 +3,7 @@ import plotly.express as px
 from collections import defaultdict
 
 from positionism.functional import func_distance
+from positionism.functional import func_string
 
 
     # class TupleCage:
@@ -386,17 +387,3 @@ def get_df_movement_category_counted(df_movement):
         df.at[i, 'staying'] = counter_staying
 
     return df
-
-
-def plot_movement_category_counted(df):
-    wide_df = pd.DataFrame(df)
-
-    # Convert wide format to long format
-    # long_df = pd.melt(wide_df, var_name='Category', value_name='Count')
-    long_df = pd.melt(wide_df, id_vars=['idx_file'], var_name='category', value_name='count')
-
-    long_df['idx_file'] += 0.5
-
-    fig = px.bar(long_df, x="idx_file", y="count", color="category", title="Idx of movement vs Category")
-    fig.show()
-
