@@ -482,7 +482,9 @@ def plot_occupancy(dataframe, sorted, direc_restructure_destination, litype, str
 # # # #     plt.show()
 
 
-def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, direc_restructure_destination, max_mapping_radius, litype, activate_diameter_line, activate_relabel_s_i, Li_idxs):
+def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, direc_restructure_destination, 
+                          max_mapping_radius, litype, activate_diameter_line, 
+                          activate_relabel_s_i, Li_idxs):
     category_labels = {
         '48htype2': '48h type 1',
         '48htype1': '48h type 2',
@@ -577,6 +579,10 @@ def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, direc_restructure_
 
             # # # for j in x:
             for j, (y_val, type_val, idx_tuple_val) in enumerate(zip(column_data, column_val, column_idx_tuple)):
+                # shift by 1
+                y_val = y_val + 1
+                if idx_tuple_val != 'x':
+                    idx_tuple_val = int(idx_tuple_val) + 1
                 # type = column_val[j]
                 # idx_tuple = column_idx_tuple[j]
 
@@ -635,7 +641,8 @@ def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, direc_restructure_
             # # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}")
             # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", linewidth=2, marker=marker_style, markersize=10)  # Set line width to 2 pixels
 
-            line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", color=line_color, linewidth=2)  # Set line width to 2 pixels
+            ## shift by 1
+            line, = ax.plot(x, df_distance[f"{i}"]+1, label=f"{i}", color=line_color, linewidth=2)  # Set line width to 2 pixels
             # ax.text(i, value, str(int(idx_value)), color=line_color, fontsize=8)
 
             lines.append(line)
@@ -658,7 +665,7 @@ def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, direc_restructure_
     # ax.set_ylim(-0.5, 3.5)
 
     # Set the y-axis to only show ticks at 0, 1, 2, 3
-    plt.yticks([0, 1, 2, 3], fontsize=font_size)
+    plt.yticks([1, 2, 3, 4], fontsize=font_size)
     plt.xticks(fontsize=font_size)
     ax.set_xlabel('Image index', fontsize=font_size)
     ax.set_ylabel('Cage index', fontsize=font_size)
