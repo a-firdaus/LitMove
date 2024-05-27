@@ -20,7 +20,7 @@ def relabel_48htype1(dataframe, litype):
         pass
 
 
-def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, el):
+def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, litype, el):
     """
     strict_count: True or False
     """
@@ -125,6 +125,11 @@ def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, 
 
         occupancy_0_strict = len_occupancy.count(0)
         occupancy_0_notstrict = len_occupancy.count(0) - amount_48htype1 - amount_weirdo
+
+        for number in len_occupancy:
+            if number > 2:
+                print("Occupancy greater than 2 detected, breaking the loop.")
+                break
 
         # sanity_check_occupancy = occupancy_2 * 2 + occupancy_1 + amount_48htype1 + amount_weirdo + occupancy_0
 
