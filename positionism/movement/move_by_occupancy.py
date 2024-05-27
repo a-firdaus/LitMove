@@ -20,7 +20,7 @@ def relabel_48htype1(dataframe, litype):
         pass
 
 
-def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, litype, el):
+def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, el):
     """
     strict_count: True or False
     """
