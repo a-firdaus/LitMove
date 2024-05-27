@@ -70,7 +70,7 @@ def get_df_amount_type(dataframe, litype, el):
     return df
 
 
-def plot_amount_type(df, sorted, direc_restructure_destination, litype, style):
+def plot_amount_type(df, sorted, direc_restructure_destination, litype, activate_shiftby1_idxfile, style):
     category_labels = {
         '48htype2': '48h type 1',
         '48htype1': '48h type 2',
@@ -99,8 +99,11 @@ def plot_amount_type(df, sorted, direc_restructure_destination, litype, style):
         'weirdo':   '#17becf'     # Cyan
     }    
 
-    # shift 'idx_file' by 1
-    df['idx_file'] = df['idx_file'] + 1
+    if activate_shiftby1_idxfile == True:
+        # shift 'idx_file' by 1
+        df['idx_file'] = df['idx_file'] + 1
+    else:
+        df['idx_file'] = df['idx_file']
     
     # Define categories
     if litype == 0:

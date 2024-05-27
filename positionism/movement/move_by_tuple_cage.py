@@ -387,3 +387,16 @@ def get_df_movement_category_counted(df_movement):
         df.at[i, 'staying'] = counter_staying
 
     return df
+
+
+def count_occupancy_cage(dataframe, direc_restructure_destination):
+    value_counts_df = pd.DataFrame()
+
+    # Iterate over each row and count the values
+    for index, row in dataframe.iterrows():
+        value_counts = row.value_counts().sort_index()
+        value_counts_df = value_counts_df.append(value_counts, ignore_index=True)
+
+    # Fill NaN values with 0 (in case some values do not appear in some rows)
+    value_counts_df = value_counts_df.fillna(0).astype(int)
+    value_counts_df.transpose().to_excel(f'{direc_restructure_destination}07_cage_occupancy_.xlsx', index=True)

@@ -63,3 +63,14 @@ def replace_values_in_series(series, replacements):
         The modified Series with replaced values.
     """
     return series.replace(replacements)
+
+
+def is_number(s):
+    """
+    Function to check if a string is a number
+    """
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False

@@ -22,7 +22,9 @@ plt.rcParams['legend.fontsize'] = 12  # Set the font size for legend
 pio.templates.default = "plotly_white"
 
 # class Distance:
-def plot_distance(df_distance, direc_restructure_destination, max_mapping_radius, litype, activate_shifting_x, activate_diameter_line, Li_idxs):
+def plot_distance(df_distance, direc_restructure_destination, max_mapping_radius, litype, 
+                  activate_shiftby1_labelatom, activate_shifting_x, 
+                  activate_diameter_line, Li_idxs, counted_object):
     # # category_labels = {
     # #     'staying': 'Staying',
     # #     'intratriad': 'Intratriad',
@@ -100,6 +102,9 @@ def plot_distance(df_distance, direc_restructure_destination, max_mapping_radius
                     box.width, box.height * 0.9])
 
     handles, labels = ax.get_legend_handles_labels()
+    if activate_shiftby1_labelatom == True:
+        labels = [str(int(x) + 1) if func_string.is_number(x) else x for x in labels]
+
 
     ax.set_xlabel('Image index', fontsize=font_size)
     ax.set_ylabel('Movement type', fontsize=font_size)
@@ -119,9 +124,9 @@ def plot_distance(df_distance, direc_restructure_destination, max_mapping_radius
 
     plt.tight_layout()
     if Li_idxs == "all":
-        plt.savefig(f"{direc_restructure_destination}/movement_plot_litype{litype}_all.pdf", format='pdf', bbox_inches='tight')
+        plt.savefig(f"{direc_restructure_destination}/{counted_object}_plot_litype{litype}_all.pdf", format='pdf', bbox_inches='tight')
     else:
-        plt.savefig(f"{direc_restructure_destination}/movement_plot_litype{litype}_{Li_idxs[0]}.pdf", format='pdf', bbox_inches='tight')
+        plt.savefig(f"{direc_restructure_destination}/{counted_object}_plot_litype{litype}_{Li_idxs[0]}.pdf", format='pdf', bbox_inches='tight')
         
     plt.show()
 
@@ -159,7 +164,8 @@ def get_df_occupancy(dataframe, strict_count):
 
     return df
 
-def plot_occupancy(dataframe, sorted, direc_restructure_destination, litype, strict_count):
+def plot_occupancy(dataframe, sorted, direc_restructure_destination, 
+                   litype, activate_shiftby1_idxfile, strict_count):
     if strict_count:
         col_occupancy = "occupancy_strict"
     else:
@@ -195,7 +201,10 @@ def plot_occupancy(dataframe, sorted, direc_restructure_destination, litype, str
 
     for idx in range(dataframe["geometry"].size):
         occupancy = dataframe.at[idx, col_occupancy]
-        df.at[idx, 'idx_file'] = idx + 1  # Shift file index by 1
+        if activate_shiftby1_idxfile == True:   
+            df.at[idx, 'idx_file'] = idx + 1  # Shift file index by 1
+        else:
+            df.at[idx, 'idx_file'] = idx      # Shift file index by 1
         df.at[idx, '2'] = occupancy['2']
         df.at[idx, '1'] = occupancy['1']
         df.at[idx, '0'] = occupancy['0']
@@ -483,7 +492,8 @@ def plot_occupancy(dataframe, sorted, direc_restructure_destination, litype, str
 
 
 def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, direc_restructure_destination, 
-                          max_mapping_radius, litype, activate_diameter_line, 
+                          max_mapping_radius, litype, 
+                          activate_shiftby1, activate_diameter_line, 
                           activate_relabel_s_i, Li_idxs):
     category_labels = {
         '48htype2': '48h type 1',
@@ -579,10 +589,11 @@ def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, direc_restructure_
 
             # # # for j in x:
             for j, (y_val, type_val, idx_tuple_val) in enumerate(zip(column_data, column_val, column_idx_tuple)):
-                # shift by 1
-                y_val = y_val + 1
-                if idx_tuple_val != 'x':
-                    idx_tuple_val = int(idx_tuple_val) + 1
+                if activate_shiftby1 == True:
+                    # shift by 1
+                    y_val = y_val + 1
+                    if idx_tuple_val != 'x':
+                        idx_tuple_val = int(idx_tuple_val) + 1
                 # type = column_val[j]
                 # idx_tuple = column_idx_tuple[j]
 
@@ -642,7 +653,10 @@ def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, direc_restructure_
             # line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", linewidth=2, marker=marker_style, markersize=10)  # Set line width to 2 pixels
 
             ## shift by 1
-            line, = ax.plot(x, df_distance[f"{i}"]+1, label=f"{i}", color=line_color, linewidth=2)  # Set line width to 2 pixels
+            if activate_shiftby1 == True:
+                line, = ax.plot(x, df_distance[f"{i}"] + 1, label=f"{i}", color=line_color, linewidth=2)  # Set line width to 2 pixels
+            else:
+                line, = ax.plot(x, df_distance[f"{i}"], label=f"{i}", color=line_color, linewidth=2)  # Set line width to 2 pixels
             # ax.text(i, value, str(int(idx_value)), color=line_color, fontsize=8)
 
             lines.append(line)
@@ -679,6 +693,8 @@ def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, direc_restructure_
                     box.width, box.height * 0.9])
 
     handles, labels = ax.get_legend_handles_labels()
+    if activate_shiftby1 == True:
+        labels = [str(int(x) + 1) if func_string.is_number(x) else x for x in labels]
 
     # Set marker color in legend box to black
     # # legend_handles = [(h[0], h[1], {'color': 'black'}) for h in handles]
