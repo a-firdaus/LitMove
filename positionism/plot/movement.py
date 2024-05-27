@@ -190,7 +190,7 @@ def plot_occupancy(dataframe, sorted, direc_restructure_destination,
     category_colors = {
         '2': '#1f77b4',  # Blue
         '1': '#ff7f0e',  # Orange
-        '0': '#313131',  # Dar grey
+        '0': '#313131',  # Dark grey
         '48htype1': '#d62728',  # Red  
         'weirdo':   '#17becf'     # Cyan
     }       
