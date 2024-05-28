@@ -816,7 +816,8 @@ def plot_movement_category_counted(df, direc_restructure_destination, litype):
     plt.show()
 
 
-def get_and_plot_transition_matrix_relabeled(df_type, direc_restructure_destination, litype):
+def get_and_plot_transition_matrix_relabeled(df_type, direc_restructure_destination, litype,
+                                             normalize_amount):
     # Get unique types
     unique_types = pd.unique(df_type.values.ravel('K'))
 
@@ -855,7 +856,13 @@ def get_and_plot_transition_matrix_relabeled(df_type, direc_restructure_destinat
         transition_matrix_relabeled = transition_matrix_relabeled.reindex(index=new_order, columns=new_order)
         # transition_matrix_relabeled = transition_matrix_relabeled.reindex(index=new_order)
 
-    print(transition_matrix_relabeled)
+    # Replace NaN values with 0
+    transition_matrix_relabeled.fillna(0, inplace=True)
+
+    # Convert values to strings
+    transition_matrix_relabeled = transition_matrix_relabeled.astype(int)
+
+    # print(transition_matrix_relabeled)
 
     # Create a heatmap of the transition matrix with annotations
     plt.figure(figsize=(5, 4))
