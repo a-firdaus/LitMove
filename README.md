@@ -1,7 +1,7 @@
-# LitMove
+# LitMove: looking at how Li-ions diffuse - one at a time!
 
 ## Description
-> Too long don't dive into: **Stability is a mess, be chaotic!**
+> TLDR: **Stability is a mess, be chaotic!**
 
 A work in progress as a part of master's thesis identifying atoms' behavior in interacting between themselves – how an atom prefers to stay within/ join a group instead of the others.
 
