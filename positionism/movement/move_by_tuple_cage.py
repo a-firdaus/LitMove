@@ -322,15 +322,15 @@ def get_df_movement_category(dataframe, activate_closest_tuple):
             idx_cage_next = idx_coor24li_tuple_cage_belongin_complete_closest_next[j]['idx_cage']
 
             if idx_cage != idx_cage_next:
-                type_movement = 'inTERcage'
+                type_movement = 'InTERcage'
             elif idx_cage == idx_cage_next and idx_tuple != idx_tuple_next:
-                type_movement = 'intracage'
+                type_movement = 'Intracage'
             elif idx_cage == idx_cage_next and idx_tuple == idx_tuple_next and type != type_next:
-                type_movement = 'intratriad'
+                type_movement = 'Intratriad'
             elif idx_cage == idx_cage_next and idx_tuple == idx_tuple_next and type == type_next and coor_rounded != coor_next_rounded:
-                type_movement = 'intratriad'
+                type_movement = 'Intratriad'
             elif idx_cage == idx_cage_next and idx_tuple == idx_tuple_next and type == type_next and coor_rounded == coor_next_rounded:
-                type_movement = 'staying'
+                type_movement = 'Staying'
 
             df_to_plot.at[idx, f"{j}"] = type_movement
 
@@ -358,10 +358,10 @@ def get_df_movement_category_counted(df_movement):
     # splitted
     df = pd.DataFrame()
     df['idx_file'] = None
-    df['inTERcage'] = None
-    df['intracage'] = None
-    df['intratriad'] = None
-    df['staying'] = None
+    df['InTERcage'] = None
+    df['Intracage'] = None
+    df['Intratriad'] = None
+    df['Staying'] = None
 
     for i in range(len(df_movement)):
         counter_inTERcage = 0
@@ -371,20 +371,20 @@ def get_df_movement_category_counted(df_movement):
 
         for j in df_movement.iloc[i]:
             # print(j)
-            if j == 'inTERcage':
+            if j == 'InTERcage':
                 counter_inTERcage = counter_inTERcage + 1
-            elif j == 'intracage':
+            elif j == 'Intracage':
                 counter_intracage = counter_intracage + 1
-            elif j == 'intratriad':
+            elif j == 'Intratriad':
                 counter_intratriad = counter_intratriad + 1
-            elif j == 'staying':
+            elif j == 'Staying':
                 counter_staying = counter_staying + 1
 
         df.at[i, 'idx_file'] = i
-        df.at[i, 'inTERcage'] = counter_inTERcage
-        df.at[i, 'intracage'] = counter_intracage
-        df.at[i, 'intratriad'] = counter_intratriad
-        df.at[i, 'staying'] = counter_staying
+        df.at[i, 'InTERcage'] = counter_inTERcage
+        df.at[i, 'Intracage'] = counter_intracage
+        df.at[i, 'Intratriad'] = counter_intratriad
+        df.at[i, 'Staying'] = counter_staying
 
     return df
 
