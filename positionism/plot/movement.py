@@ -5,6 +5,7 @@ import mpldatacursor
 import plotly.express as px
 from adjustText import adjust_text
 import plotly.io as pio
+import seaborn as sns
 # from varname import nameof
 
 from positionism.functional import func_string
@@ -25,6 +26,9 @@ pio.templates.default = "plotly_white"
 def plot_distance(df_distance, direc_restructure_destination, max_mapping_radius, litype, 
                   activate_shiftby1_labelatom, activate_shifting_x, 
                   activate_diameter_line, Li_idxs, counted_object):
+    """
+    activate_shifting_x by 0.5. have to be activated if counted_object is "movement"
+    """
     # # category_labels = {
     # #     'staying': 'Staying',
     # #     'intratriad': 'Intratriad',
@@ -727,15 +731,16 @@ def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, direc_restructure_
 
 
 def plot_movement_category_counted(df, direc_restructure_destination, litype):
+    # this category labels is redundant but yeah no time to remove it
     category_labels = {
-        'staying': 'Staying',
-        'intratriad': 'Intratriad',
-        'intracage': 'Intracage',
-        'inTERcage': 'InTERcage'
+        'Staying': 'Staying',
+        'Intratriad': 'Intratriad',
+        'Intracage': 'Intracage',
+        'InTERcage': 'InTERcage'
         # ... add more as needed
     }   
 
-    categories = ['staying', 'intratriad', 'intracage', 'inTERcage']
+    categories = ['Staying', 'Intratriad', 'Intracage', 'InTERcage']
 
     wide_df = pd.DataFrame(df)
 
@@ -809,3 +814,59 @@ def plot_movement_category_counted(df, direc_restructure_destination, litype):
 
     # Show the last matplotlib figure (for illustration purposes)
     plt.show()
+
+
+def get_and_plot_transition_matrix_relabeled(df_type, direc_restructure_destination, litype):
+    # Get unique types
+    unique_types = pd.unique(df_type.values.ravel('K'))
+
+    # Create transition matrix
+    transition_matrix = pd.DataFrame(0, index=unique_types, columns=unique_types)
+
+    # Count transitions
+    for row in df_type.itertuples(index=False):
+        for i in range(len(row) - 1):
+            from_type = row[i]
+            to_type = row[i + 1]
+            transition_matrix.loc[from_type, to_type] += 1
+
+    # print(transition_matrix)
+
+    rename_dict = {
+        '48htype2': '48h type 1',
+        '48htype1': '48h type 2',
+        '48htype3': '48h type 3',
+        '48htype4': '48h type 4',
+        '48htype5': '48h type 5',
+        '48htype6': '48h type 6',
+        '48htype7': '48h type 7',
+        '48htype8': '48h type 8',
+        '24g': '24g',
+        'weirdos': 'Unassigned'
+        # ... add more as needed
+    }
+    transition_matrix_relabeled = transition_matrix.rename(index=rename_dict, columns=rename_dict)
+
+    # print(transition_matrix_relabeled)
+
+    # Define the desired order of the index and columns
+    if litype <= 4:
+        new_order = ['Unassigned', '48h type 2', '48h type 3', '48h type 1', '48h type 4', '24g']
+        transition_matrix_relabeled = transition_matrix_relabeled.reindex(index=new_order, columns=new_order)
+        # transition_matrix_relabeled = transition_matrix_relabeled.reindex(index=new_order)
+
+    print(transition_matrix_relabeled)
+
+    # Create a heatmap of the transition matrix with annotations
+    plt.figure(figsize=(5, 4))
+    # sns.heatmap(transition_matrix_relabeled, annot=True, cmap='viridis', fmt='d', linewidths=.5)
+    sns.heatmap(transition_matrix_relabeled, cmap = 'viridis', annot=transition_matrix_relabeled.values,
+                fmt="d", linewidths=.5, annot_kws={"size": 12})
+    # plt.title('Type Transition Heatmap')
+    plt.xlabel('To Site')
+    plt.ylabel('From Site')
+    plt.tight_layout()
+    plt.savefig(f"{direc_restructure_destination}/transition_matrix.pdf", format='pdf')
+    plt.show()
+
+    # return transition_matrix_relabeled
