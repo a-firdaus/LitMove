@@ -867,8 +867,12 @@ def get_and_plot_transition_matrix_relabeled(df_type, direc_restructure_destinat
     # Create a heatmap of the transition matrix with annotations
     plt.figure(figsize=(5, 4))
     # sns.heatmap(transition_matrix_relabeled, annot=True, cmap='viridis', fmt='d', linewidths=.5)
-    sns.heatmap(transition_matrix_relabeled, cmap = 'viridis', annot=transition_matrix_relabeled.values,
-                fmt="d", linewidths=.5, annot_kws={"size": 12})
+    if normalize_amount == "True":
+        sns.heatmap(transition_matrix_relabeled, cmap = 'viridis', annot=transition_matrix_relabeled.values,
+                    fmt="d", linewidths=.5, annot_kws={"size": 12}, vmin = -1, vmax = 1, center = 0)
+    else:
+        sns.heatmap(transition_matrix_relabeled, cmap = 'viridis', annot=transition_matrix_relabeled.values,
+                    fmt="d", linewidths=.5, annot_kws={"size": 12})
     # plt.title('Type Transition Heatmap')
     plt.xlabel('To Site')
     plt.ylabel('From Site')
