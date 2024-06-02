@@ -771,7 +771,7 @@ def plot_movement_category_counted(df, direc_restructure_destination, litype):
         bottom_positions = [0] * len(df)
 
         for category in categories:
-            ax.bar(df['idx_file'], df[category], bottom=bottom_positions, 
+            ax.bar(df['idx_file']+0.5, df[category], bottom=bottom_positions, 
                 label=category_labels.get(category, category))
             bottom_positions = [i + j for i, j in zip(bottom_positions, df[category])]
 
