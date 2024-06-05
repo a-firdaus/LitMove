@@ -399,4 +399,4 @@ def count_occupancy_cage(dataframe, direc_restructure_destination):
 
     # Fill NaN values with 0 (in case some values do not appear in some rows)
     value_counts_df = value_counts_df.fillna(0).astype(int)
-    value_counts_df.transpose().to_excel(f'{direc_restructure_destination}07_cage_occupancy_.xlsx', index=True)
+    value_counts_df.to_excel(f'{direc_restructure_destination}07_cage_occupancy_.xlsx', index=True)

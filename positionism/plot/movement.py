@@ -284,6 +284,8 @@ def plot_occupancy(dataframe, sorted, direc_restructure_destination,
 
 
     fig4, ax4 = create_bar_plot(ax=None, figsize=(3.3, 2.1), font_size=10)
+    xticks = [0, 2, 4, 6, 8]  # Example x-tick values
+    ax4.set_xticks(xticks)
     # No legend for this plot
     plt.tight_layout()
     if sorted == "True":
@@ -545,8 +547,10 @@ def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, direc_restructure_
 
     if Li_idxs == "all":
         fig, ax = plt.subplots(figsize=(8.5, 6.5))  # Set the figure size in inches
+        n_col = 5
     else:
         fig, ax = plt.subplots(figsize=(7.5, 5.3))  # Set the figure size in inches
+        n_col = 4
     
     # fig, ax = plt.subplots(figsize=(10, 6))  # Set the figure size in inches
 
@@ -705,7 +709,7 @@ def plot_cage_tuple_label(df_distance, df_type, df_idx_tuple, direc_restructure_
     legend_handles = [(h, {'color': 'black'}) for h in handles]
 
     legend = ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(0.5, -0.15),
-            fancybox=True, shadow=False, ncol=5, title="Li index and type")
+            fancybox=True, shadow=False, ncol=n_col, title="Li index and type")
     # legend = ax.legend(handles=handles, labels=labels, loc='upper center', bbox_to_anchor=(1, 0.5),
     plt.setp(legend.get_title(), fontsize=font_size)
     plt.setp(legend.get_texts(), fontsize=font_size)
@@ -776,7 +780,7 @@ def plot_movement_category_counted(df, direc_restructure_destination, litype):
             bottom_positions = [i + j for i, j in zip(bottom_positions, df[category])]
 
         ax.set_xlabel(r'$\text{Structure index}$', fontsize=font_size)
-        ax.set_ylabel(r'$\text{Amount of movement type}$', fontsize=font_size)
+        ax.set_ylabel(r'$\text{Amount of movement}$', fontsize=font_size)
 
         return fig, ax
 
@@ -796,6 +800,8 @@ def plot_movement_category_counted(df, direc_restructure_destination, litype):
 
 
     fig4, ax4 = create_bar_plot(ax=None, figsize=(3.3, 2.1), font_size=10)
+    xticks = [0, 2, 4, 6, 8]  # Example x-tick values
+    ax4.set_xticks(xticks)
     # No legend for this plot
     plt.tight_layout()
     plt.savefig(f"{direc_restructure_destination}/movement_count_small_litype{litype}.pdf", format='pdf')

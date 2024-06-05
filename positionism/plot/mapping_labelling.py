@@ -207,6 +207,8 @@ def plot_amount_type(df, sorted, direc_restructure_destination, litype, activate
         plt.savefig(f"{direc_restructure_destination}/licategory_plot_legend_litype{litype}.pdf", format='pdf')
 
     fig4, ax4 = create_bar_plot(ax=None, figsize=(3.3, 2.1), font_size=10)
+    xticks = [0, 2, 4, 6, 8]  # Example x-tick values
+    ax4.set_xticks(xticks)
     # No legend for this plot
     plt.tight_layout()
     if sorted == "True":
