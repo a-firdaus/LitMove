@@ -221,7 +221,7 @@ def all_atoms_of_el(dataframe, coor_structure_init_dict, el, max_mapping_radius)
         dataframe.at[idx, col_sum_sanitycheck_el_closestduplicate] = sum_sanitycheck_el_closestduplicate
 
 
-def li_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_radius_48htype2, activate_radius):
+def li_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_radius_48htype2, activate_radius, litype):
     """
     This function does:
     - Map all weirdos' results from flag_and_map.all_atoms_of_el() with the defined 'max_mapping_radius_48htype2',
@@ -284,7 +284,12 @@ def li_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_radius_48ht
     dataframe[col_sum_mapped_48htype2_el_closestduplicate] = [0 for _ in range(len(dataframe.index))]
     dataframe[col_sum_sanitycheck_48htype2_el_closestduplicate] = [0 for _ in range(len(dataframe.index))]
 
-    coor_li48htype2_ref = coor_reference_el_init[48:96]
+    if litype == 0:
+        print("Li-type is not suitable")
+    elif litype == 1:
+        print("If your 48h tpye 1 is placed in the Li2 in .cif file then it's not suitable.")
+    else:
+        coor_li48htype2_ref = coor_reference_el_init[24:72]
 
     for idx in range(dataframe["geometry"].size):
         atom_mapping_el_w_dist = {} 
@@ -398,7 +403,7 @@ def li_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_radius_48ht
         #     dataframe.at[idx, col_sum_weirdos_48htype2_el] = 0
 
 
-def li_48htype1_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_radius_48htype1_48htype2):
+def li_48htype1_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_radius_48htype1_48htype2, litype):
     # rename from: get_flag_map_weirdos_48htype1_48htype2_el
     coor_reference_el_init = coor_structure_init_dict[el]                       
     col_coor_structure_48htype1_48htype2_init_el = f"coor_weirdos_{el}"               # here is the difference
@@ -434,7 +439,13 @@ def li_48htype1_48htype2(dataframe, coor_structure_init_dict, el, max_mapping_ra
     dataframe[col_atom_mapping_48htype1_48htype2_el_closestduplicate] = [{} for _ in range(len(dataframe.index))] 
 
     coor_li48htype1_li48htype2_ref = coor_reference_el_init[0:96]
-    coor_li24g_ref = coor_reference_el_init[96:120]
+
+    if litype == 0:
+        print("Li-type is not suitable")
+    elif litype == 1:
+        print("If your 48h tpye 1 is placed in the Li2 in .cif file then it's not suitable.")
+    else:
+        coor_li48htype1_li48htype2_ref = coor_reference_el_init[24:120]
 
     for idx in range(dataframe["geometry"].size):
         atom_mapping_el_w_dist = {} 
