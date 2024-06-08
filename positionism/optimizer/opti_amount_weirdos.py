@@ -7,7 +7,7 @@ from positionism.preprocessing import create_dataframe, CONTCARorPOSCAR
 from positionism.read import parameter, coordinate_and_el
 from positionism.orientation import orient_propagate
 from positionism.optimizer import opti_position
-from positionism.mapping import flag_and_map, atom_indexing, labelling, output_CIF, output_weirdos
+from positionism.mapper import flag_and_map, atom_indexing, labelling, output_CIF, output_weirdos
 from positionism.plot import structure_analysis
 
 from pymatgen.core.structure import Structure

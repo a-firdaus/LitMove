@@ -38,9 +38,9 @@ from positionism.functional import func_cartesian, func_directory, func_distance
 from positionism.preprocessing import create_dataframe, CONTCARorPOSCAR
 from positionism.orientation import orient_propagate
 from positionism.read import coordinate_and_el, metainfo
-from positionism.mapping import flag_and_map, atom_indexing, labelling, output_CIF, output_weirdos
+from positionism.mapper import flag_and_map, atom_indexing, labelling, output_CIF, output_weirdos
 from positionism.plot import mapping_labelling, movement, structure_analysis
-from positionism.movement import move_by_occupancy, move_by_tuple_cage, move_by_distance
+from positionism.pathway_classifier import path_by_distance, path_by_occupancy, path_by_tuple_cage
 
 t = time.time()
 
@@ -296,12 +296,12 @@ category_labels_occupancy = {
     # ... add more as needed
 }
 
-move_by_occupancy.get_occupancy(file_loc_important_cols, coor_ref_structure_48n24_expanded, tuple_cage_metainfo, el = "Li")
+path_by_occupancy.get_occupancy(file_loc_important_cols, coor_ref_structure_48n24_expanded, tuple_cage_metainfo, el = "Li")
 df_occupancy = movement.get_df_occupancy(file_loc_important_cols)
 # # # movement.plot_occupancy(df_occupancy, category_labels_occupancy)  # commented out
 df_occupancy.to_pickle(f'df_occupancy.pkl') 
 
-move_by_tuple_cage.get_complete_closest_tuple_cage(file_loc_important_cols, tuple_cage_metainfo, coor_48htype1_metainfo)
+path_by_tuple_cage.get_complete_closest_tuple_cage(file_loc_important_cols, tuple_cage_metainfo, coor_48htype1_metainfo)
 
 
 category_labels = {
@@ -315,9 +315,9 @@ category_labels = {
 }
 
 if proceed_NEB == "True": # commented out
-    df_type = move_by_tuple_cage.get_df_movement(file_loc_important_cols, to_plot = 'type', activate_closest_tuple = False)
-    df_idx_tuple = move_by_tuple_cage.get_df_movement(file_loc_important_cols, to_plot = 'idx_tuple', activate_closest_tuple = False)
-    df_idx_cage = move_by_tuple_cage.get_df_movement(file_loc_important_cols, to_plot = 'idx_cage', activate_closest_tuple = False)
+    df_type = path_by_tuple_cage.get_df_movement(file_loc_important_cols, to_plot = 'type', activate_closest_tuple = False)
+    df_idx_tuple = path_by_tuple_cage.get_df_movement(file_loc_important_cols, to_plot = 'idx_tuple', activate_closest_tuple = False)
+    df_idx_cage = path_by_tuple_cage.get_df_movement(file_loc_important_cols, to_plot = 'idx_cage', activate_closest_tuple = False)
     df_type.to_pickle(f'df_type.pkl') 
     df_idx_tuple.to_pickle(f'df_idx_tuple.pkl') 
     df_idx_cage.to_pickle(f'df_idx_cage.pkl') 
@@ -337,7 +337,7 @@ if proceed_NEB == "True": # commented out
 
 
 if proceed_NEB == "True":
-    df_movement = move_by_tuple_cage.get_df_movement_category(file_loc_important_cols, activate_closest_tuple=False)
+    df_movement = path_by_tuple_cage.get_df_movement_category(file_loc_important_cols, activate_closest_tuple=False)
     # # # movement.plot_distance(df_movement, max_mapping_radius, activate_shifting_x = True, activate_diameter_line = False, Li_idxs = 'all')  # commented out
     df_movement.to_pickle(f'df_movement.pkl') 
 
@@ -350,7 +350,7 @@ df_amount_type = mapping_labelling.get_df_amount_type(file_loc_important_cols, l
 df_amount_type.to_pickle(f'df_amount_type.pkl') 
 
 if proceed_NEB == "True": # commented out
-    df_amount_movement = move_by_tuple_cage.get_df_movement_category_counted(df_movement)
+    df_amount_movement = path_by_tuple_cage.get_df_movement_category_counted(df_movement)
     # # # move_by_tuple_cage.plot_movement_category_counted(df_amount_movement)  # commented out
     df_amount_movement.to_pickle(f'df_amount_movement.pkl') 
 
