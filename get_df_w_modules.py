@@ -38,9 +38,9 @@ from positionism.functional import func_cartesian, func_directory, func_distance
 from positionism.preprocessing import create_dataframe, CONTCARorPOSCAR
 from positionism.orientation import orient_propagate
 from positionism.read import coordinate_and_el, metainfo
-from positionism.mapper import flag_and_map, atom_indexing, labelling, output_CIF, output_weirdos
+from positionism.mapper import analysis, flag_and_map, atom_indexing, labelling, output_CIF, output_weirdos
 from positionism.plot import mapping_labelling, movement, structure_analysis
-from positionism.pathway_classifier import path_by_distance, path_by_occupancy, path_by_tuple_cage
+from positionism.pathway_classifier import path_by_tuple_cage
 
 t = time.time()
 
@@ -296,7 +296,7 @@ category_labels_occupancy = {
     # ... add more as needed
 }
 
-path_by_occupancy.get_occupancy(file_loc_important_cols, coor_ref_structure_48n24_expanded, tuple_cage_metainfo, el = "Li")
+analysis.get_occupancy(file_loc_important_cols, coor_ref_structure_48n24_expanded, tuple_cage_metainfo, el = "Li")
 df_occupancy = movement.get_df_occupancy(file_loc_important_cols)
 # # # movement.plot_occupancy(df_occupancy, category_labels_occupancy)  # commented out
 df_occupancy.to_pickle(f'df_occupancy.pkl') 

@@ -239,9 +239,9 @@ def get_complete_closest_tuple_cage(dataframe, tuple_metainfo, coor_48htype2_met
         dataframe.at[idx, col_idx_coor24li_tuple_cage_belongin_complete_id48htype2] = idx_coor24li_tuple_cage_belongin_complete_id48htype2
 
 
-def get_df_movement(dataframe, to_plot, activate_closest_tuple):
+def get_df_movement(dataframe, to_attain, activate_closest_tuple):
     """
-    to_plot = idx_tuple, type, idx_cage
+    to_attain = idx_tuple, type, idx_cage
     """
     # col_idx_coor24li_tuple_cage_belongin_complete_closest_weight = "idx_coor24li_tuple_cage_belongin_complete_closest_weight"
     if activate_closest_tuple: # small adjustment here
@@ -249,7 +249,7 @@ def get_df_movement(dataframe, to_plot, activate_closest_tuple):
     else: # small adjustment here
         col_idx_coor24li_tuple_cage_belongin_complete = "idx_coor24li_tuple_cage_belongin_complete_id48htype2"
 
-    df_to_plot = pd.DataFrame()
+    df_to_attain = pd.DataFrame()
 
     for idx in range(dataframe["geometry"].size):
 
@@ -258,7 +258,7 @@ def get_df_movement(dataframe, to_plot, activate_closest_tuple):
 
         # for j in range(len(idx_coor24li_tuple_cage_belongin_complete_closest_weight)):
         for j in range(len(idx_coor24li_tuple_cage_belongin_complete)):
-            df_to_plot.at[idx, f"{j}"] = None  
+            df_to_attain.at[idx, f"{j}"] = None  
 
             # coor_Li_ref_mean = np.mean(coor_Li_ref, axis=0)
             # distance = calc_distance.mic_eucledian_distance(coor_Li_ref_mean, coor_Li[j])
@@ -269,16 +269,16 @@ def get_df_movement(dataframe, to_plot, activate_closest_tuple):
             for key_b, val_b in idx_coor24li_tuple_cage_belongin_complete.items():
                 # for entry_b in val_b: 
                 # if activate_closest_tuple:
-                #     df_to_plot.at[idx, f"{key_b}"] = val_b[f'{to_plot}_closest']
+                #     df_to_attain.at[idx, f"{key_b}"] = val_b[f'{to_attain}_closest']
                 # else:
-                df_to_plot.at[idx, f"{key_b}"] = val_b[f'{to_plot}']
+                df_to_attain.at[idx, f"{key_b}"] = val_b[f'{to_attain}']
 
             # diameter_24g48h = max_mapping_radius * 2
             # # if distance < diameter_24g48h and index != idx_ref:
             # if distance > diameter_24g48h and idx != idx_ref:
             #     print(f"path: {idx}, Li: {j}, distance: {distance}")
 
-    return df_to_plot
+    return df_to_attain
 
 
 def get_df_movement_category(dataframe, activate_closest_tuple):
