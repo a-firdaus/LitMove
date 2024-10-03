@@ -811,7 +811,8 @@ class Operation:
 
 
 class Orientation:
-    def get_orientation(file_loc, direc_restructure_destination, file_restructure, path_perfect_poscar_24, col_excel_toten, orientation):
+    def get_orientation(file_loc, direc_restructure_destination, file_restructure, 
+                        path_perfect_poscar_24, col_excel_toten, orientation):
         if orientation == "True":
             file_loc_ori_notdeleted = file_loc.copy()
 
@@ -1449,7 +1450,9 @@ class ReadStructure:
         def get_tuple_metainfo(coor_structure_init_dict_expanded, litype, el):
             coor_structure_init_dict_expanded_el = coor_structure_init_dict_expanded[el]
             
-            if litype == 1:
+            if litype == 0:
+                n = 1
+            elif litype == 1:
                 n = 3
             else:
                 n = ((litype * 2) - 1)
@@ -3092,7 +3095,8 @@ class Mapping:
                 dataframe.at[idx, col_coor_reducedreference_sorted_el] = sorted_coor
 
 
-        def get_idx_coor_limapped_weirdos_dict_litype(dataframe, coor_structure_init_dict, activate_radius, litype, el):
+        def get_idx_coor_limapped_weirdos_dict(dataframe, coor_structure_init_dict, activate_radius, litype, el):
+            # rename from: get_idx_coor_limapped_weirdos_dict_litype
             coor_reference_el_init = coor_structure_init_dict[el]
 
             col_idx_without_weirdos = "idx_without_weirdos"
@@ -4808,6 +4812,10 @@ class Movement:
 
 
         def get_occupancy(dataframe, coor_structure_init_dict_expanded, tuple_metainfo, el):
+            """
+            
+            """
+
             col_idx_coor_limapped_weirdos_dict = "idx_coor_limapped_weirdos_dict"
             col_sum_of_weirdos_Li = f"#weirdos_Li"
 
@@ -4903,7 +4911,7 @@ class Movement:
                 amount_weirdo = dataframe[col_sum_of_weirdos_Li][idx]
                 occupancy_2 = len_occupancy.count(2)
                 occupancy_1 = len_occupancy.count(1)
-                occupancy_0 = len_occupancy.count(0) - amount_48htype1 - amount_weirdo
+                occupancy_0 = len_occupancy.count(0)
 
                 sanity_check_occupancy = occupancy_2 * 2 + occupancy_1 + amount_48htype1 + amount_weirdo + occupancy_0
 
@@ -5672,7 +5680,7 @@ class Optimizer:
                 # # # Mapping.OutputCIF.ascending_Li(file_loc_important_cols, direc_restructure_destination, var_filename_init = "mapLi_reindexed_weirdos_appended", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
                 # # # Mapping.OutputCIF.format_spacing_cif(file_loc_important_cols, direc_restructure_destination, var_savefilename_init = "mapLi_reindexed_weirdos_appended_reordered", var_savefilename_new = "mapLi_reindexed_weirdos_appended_reordered")
 
-                Mapping.AtomIndexing.get_idx_coor_limapped_weirdos_dict_litype(file_loc_important_cols, coor_structure_init_dict, activate_radius, litype, el="Li")
+                Mapping.AtomIndexing.get_idx_coor_limapped_weirdos_dict(file_loc_important_cols, coor_structure_init_dict, activate_radius, litype, el="Li")
 
                 PreProcessingCONTCAR.get_latticeconstant_structure_dict_iterated(file_loc_important_cols, direc_restructure_destination, var_filename = "CONTCAR")
                 # Plot.StructureAnalysis.energy_vs_latticeconstant(file_loc_important_cols, var_filename = "CONTCAR")
@@ -7317,10 +7325,24 @@ class Optimizer:
 
 
 class Plot:
+    # Enable LaTeX and set the font to Computer Modern
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['font.family'] = 'serif'
+    plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
+
+    plt.rcParams['axes.titlesize'] = 12  # Set the font size for the plot title
+    plt.rcParams['axes.labelsize'] = 12  # Set the font size for the x and y labels
+    plt.rcParams['xtick.labelsize'] = 12  # Set the font size for the x tick labels
+    plt.rcParams['ytick.labelsize'] = 12  # Set the font size for the y tick labels
+    plt.rcParams['legend.fontsize'] = 12  # Set the font size for legend
+
     class StructureAnalysis:
         def energy_vs_latticeconstant(dataframe, var_filename):
             col_latticeconstant_structure_dict = f"latticeconstant_structure_dict_{var_filename}"
             col_toten = "toten [eV]"
+
+            lattice_constants = []
+            total_energies = []
 
             for idx in range(dataframe["geometry"].size):
                 latticeconstant_structure_dict = dataframe.at[idx, col_latticeconstant_structure_dict]
@@ -7328,11 +7350,43 @@ class Plot:
                 
                 a = latticeconstant_structure_dict["a"]
 
-                plt.scatter(a, toten)
+                lattice_constants.append(a)
+                total_energies.append(toten)
+
+            lattice_constants = np.array(lattice_constants)
+            total_energies = np.array(total_energies)        
+
+            # # Linear interpolation
+            # interp_func = interp1d(lattice_constants, total_energies, kind='linear')
+
+            # Perform linear regression to find the slope (m) and intercept (c)
+            m, c = np.polyfit(lattice_constants, total_energies, 1)
+
+            # Set the figure size to 5x3
+            plt.figure(figsize=(5, 3))
+
+            # Plot scatter plot
+            plt.scatter(lattice_constants, total_energies, label='Data points')
+
+            # # Plot linear interpolation line
+            # x_values = np.linspace(min(lattice_constants), max(lattice_constants), 100)
+            # plt.plot(x_values, interp_func(x_values), color='red', label='Linear interpolation')
+
+            # Set x and y ticks at every 0.5 interval
+            # plt.xticks(np.arange(round(min(lattice_constants),2), round(max(lattice_constants),2) + 0.5, 0.5))
+            plt.yticks(np.arange(round(min(total_energies),2), round(max(total_energies),2) + 0.5, 1.0))
+
+            # Plot linear regression line
+            plt.plot(lattice_constants, m*lattice_constants + c, color='red', label=f'Linear fit: y = {m:.2f}x + {c:.2f}')
             
-            plt.title("Lattice constant vs Total energy")
-            plt.xlabel("Lattice constant [Å]")
-            plt.ylabel("Total energy [eV]")
+            # plt.title(r"Lattice constant vs Total energy")
+            plt.xlabel(r"Lattice constant [\AA]")
+            plt.ylabel(r"Energy [eV]")
+
+            # Save the plot to a PDF file
+            plt.tight_layout()
+            plt.savefig("_images/energy_vs_latticeconstant.pdf", format='pdf')
+
             plt.show()
 
 
@@ -8217,81 +8271,44 @@ class Plot:
 
 class CreateDataFrame:
     def create_file_loc(direc_init_system, data_toten, file_new_system):
+        """
+        Generate a DataFrame with file geometries, paths, locations, and additional calculated columns.
+
+        This method walks through a directory structure starting from the current working
+        directory, looking for a specified file. For each file found, it generates a geometry
+        and path identifier based on the directory structure. It then combines this
+        information into a Pandas DataFrame, sorts it, and performs various operations to
+        calculate new columns. Finally, it checks for compatibility with an external DataFrame
+        and merges data if compatible.
+
+        Args:
+            direc_init_system (str): The base directory for the initial system files.
+            data_toten (pd.DataFrame): DataFrame containing total energy data to be merged.
+            file_new_system (str): The filename to search for in the directory walk.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the paths, geometries, directories of the new system
+            files, and calculated columns for further analysis.
+
+        Notes:
+            - The method assumes a specific directory naming convention to extract geometry and path
+              information.
+            - The compatibility check with `data_toten` relies on exact matches in 'geometry' and 'path'
+              columns between the newly created DataFrame and `data_toten`.
+        """
         direc = os.getcwd()
 
+        # Column names for the DataFrame
         col_excel_geo = "geometry"
         col_excel_path = "path"
         col_excel_toten = "toten [eV]"
 
+        # Initialize arrays for DataFrame construction
         geometry = np.array([])
         path = np.array([])
         subdir_col = np.array([])
-        subdir_col_init_system = np.array([])
-        subdir_col_perfect_poscar = np.array([])
-        for subdir, dirs, files in os.walk(direc,topdown=False):
-            # source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
-            for file in files:
-                filepath = subdir + os.sep
-                # get directory of CONTCAR
-                if os.path.basename(file) == file_new_system:
-                    geometry_nr = Operation.File.splitall(subdir)[-2]
-                    path_nr = Operation.File.splitall(subdir)[-1]
-                    geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
-                    geometry_ori = geometry
-                    # geometry = geometry.applymap(func=replace)
-                    geometry.dropna(axis=1)
-                    path = pd.DataFrame(np.append(path, int(path_nr)), columns=["path"])
-                    # path = path.applymap(func=replace)
-                    path.dropna(axis=1)
-                    path_sorted = path.sort_values(by="path",ascending=False)
-                    subdir_file = os.path.join(subdir,file_new_system)
-                    # # create directory of POSCAR of init system
-                    subdir_init_system = direc_init_system + os.sep + geometry_nr + os.sep + path_nr
-                    # # subdir_file_init_system = os.path.join(subdir_init_system,file_init_system)
-                    # subdir_file_perfect_poscar = os.path.join()
-                    subdir_col = pd.DataFrame(np.append(subdir_col, subdir_file), columns=["subdir_new_system"])
-                    # # subdir_col_init_system = pd.DataFrame(np.append(subdir_col_init_system, subdir_file_init_system), columns=["subdir_init_system"])
-                    # # subdir_col_perfect_poscar = pd.DataFrame(np.append(subdir_col_perfect_poscar, direc_perfect_system), columns=["subdir_perfect_poscar"])
-                    file_loc = geometry.join(path)
-                    file_loc["subdir_new_system"] = subdir_col
-                    # # file_loc["subdir_init_system"] = subdir_col_init_system
-                    # # file_loc["subdir_perfect_poscar"] = subdir_col_perfect_poscar
-                    path_ori = path
 
-        file_loc_ori_notsorted = file_loc.copy()
-        # file_loc_ori_notsorted = file_loc
-        file_loc = file_loc.sort_values(by=["geometry","path"],ignore_index=True,ascending=False) # sort descendingly based on path
-
-        file_loc["g+p"] = (file_loc["geometry"] + file_loc["path"]).fillna(0) # replace NaN with 0
-        # file_loc["g+p"] = file_loc["geometry"] + file_loc["path"]
-        file_loc["g+p+1"] = file_loc["g+p"].shift(1)
-        file_loc["g+p+1"][0] = 0 # replace 1st element with 0
-        file_loc["g+p-1"] = file_loc["g+p"].shift(-1)
-        file_loc["g+p-1"][(file_loc["g+p-1"]).size - 1] = 0.0 # replace last element with 0
-        file_loc["perfect_system"] = file_loc["g+p"][(file_loc["g+p+1"] > file_loc["g+p"]) & (file_loc["g+p-1"] > file_loc["g+p"])]
-        file_loc["perfect_system"][file_loc["geometry"].size-1] = 0.0 # hardcode the path 0/0
-        file_loc["p_s_mask"] = [0 if np.isnan(item) else 1 for item in file_loc["perfect_system"]]
-        # # subdir_filtered = file_loc["subdir"] * file_loc["p_s_mask"]
-
-
-        if data_toten[col_excel_geo].all() == file_loc["geometry"].all() & data_toten[col_excel_path].all() == file_loc["path"].all():
-            file_loc[col_excel_toten] = data_toten[col_excel_toten]
-        else:
-            print("check the compatibility of column geometry and path between data_toten file and file_loc")
-
-        return file_loc
-
-
-    def create_file_loc_compact_demo(direc_init_system, data_toten, file_new_system):
-        direc = os.getcwd()
-
-        col_excel_geo = "geometry"
-        col_excel_path = "path"
-        col_excel_toten = "toten [eV]"
-
-        geometry = np.array([])
-        path = np.array([])
-        subdir_col = np.array([])
+        # Walk through the directory structure
         for subdir, dirs, files in os.walk(direc,topdown=False):
             # source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
             for file in files:
@@ -8334,4 +8351,119 @@ class CreateDataFrame:
             print("check the compatibility of column geometry and path between data_toten file and file_loc")
 
         return file_loc
+
+
+    def columns_perfectsystem(df_file):
+        """
+        Calculate additional columns for the DataFrame generated in `CreateDataFrame.base`.
+
+        This method adds calculated columns to identify "perfect systems" based on the conditions
+        specified in the calculation.
+
+        Args
+        ====
+        df_file: pd.DataFrame
+            The DataFrame to which the calculations are applied.
+
+        Returns
+        =======
+        df_file: pd.DataFrame)
+            The DataFrame with additional calculated columns.
+        """
+        # Shift operations and perfect system identification
+        df_file["g+p+1"] = df_file["g+p"].shift(1)
+        df_file["g+p+1"][0] = 0 # replace 1st element with 0
+        df_file["g+p-1"] = df_file["g+p"].shift(-1)
+        df_file["g+p-1"][(df_file["g+p-1"]).size - 1] = 0.0 # replace last element with 0
+        df_file["perfect_system"] = df_file["g+p"][(df_file["g+p+1"] > df_file["g+p"]) & (df_file["g+p-1"] > df_file["g+p"])]
+        df_file["perfect_system"][df_file["geometry"].size-1] = 0.0 # hardcode the path 0/0
+        df_file["p_s_mask"] = [0 if np.isnan(item) else 1 for item in df_file["perfect_system"]]
+
+        return df_file
+
+
+    def base(data_toten, file_name):
+        # rename: 
+        # create_file_loc = base
+        # file_loc = df_file
+        """
+        Generate a DataFrame with columns information, such as: geometry, path (of the file CONTCARs/ POSCARs), 
+        total energy. Those are extracted from input parameters.
+
+        This method walks through a directory structure starting from the current working
+        directory, looking for the specified file. For each file found, it generates a geometry
+        and path identifier based on the directory structure. It then combines this
+        information into a Pandas DataFrame, sorts it, and performs various operations to
+        calculate new columns of perfect system.
+
+        Source: https://stackoverflow.com/questions/27805919/how-to-only-read-lines-in-a-text-file-after-a-certain-string
+
+        Args
+        ====
+        data_toten: pd.DataFrame
+            DataFrame containing total energy data to be merged.
+        file_name: str
+            "CONTCAR", "POSCAR". The filename to search for in the directory walk. 
+
+        Returns
+        =======
+        df_file: pd.DataFrame
+            A DataFrame with columns of: geometries, paths of CONTCARs/ POSCARs, path location of files, and total energy, and calculated columns for further analysis.
+            
+        Note
+        ====
+        - The compatibility check with `data_toten` relies on exact matches in 'geometry' and 'path' columns between the newly created DataFrame and `data_toten`.
+        """
+        direc = os.getcwd()
+
+        # Column names for the DataFrame
+        col_excel_geo = "geometry"
+        col_excel_path = "path"
+        col_excel_toten = "toten [eV]"
+
+        # Initialize arrays for DataFrame construction
+        geometry = np.array([])
+        path = np.array([])
+        subdir_col = np.array([])
+
+        # Walk through the directory structure
+        for subdir, dirs, files in os.walk(direc,topdown=False):
+            for file in files:
+                filepath = subdir + os.sep
+                # get directory of CONTCARs/ POSCARs
+                if os.path.basename(file) == file_name:
+                    # Extract geometry and path numbers from the directory structure
+                    geometry_nr = Operation.File.splitall(subdir)[-2]
+                    path_nr = Operation.File.splitall(subdir)[-1]
+
+                    # Construct geometry and path DataFrames
+                    geometry = pd.DataFrame(np.append(geometry, int(geometry_nr)), columns=["geometry"])
+                    path = pd.DataFrame(np.append(path, int(path_nr)), columns=["path"])
+
+                    # Drop NaNs
+                    geometry.dropna(axis=1)
+                    path.dropna(axis=1) 
+
+                    # Construct full file path location and initialize DataFrame for new system directories
+                    subdir_file = os.path.join(subdir,file_name)
+                    subdir_col = pd.DataFrame(np.append(subdir_col, subdir_file), columns=["subdir_new_system"])
+
+                    # Join geometry and path DataFrames, add new system directories
+                    df_file = geometry.join(path)
+                    df_file["subdir_new_system"] = subdir_col
+
+        # Perform DataFrame sorting based on columns of geometry and path
+        df_file = df_file.sort_values(by=["geometry","path"],ignore_index=True,ascending=False) # sort descendingly based on path
+
+        # Additional calculations and DataFrame modifications
+        df_file["g+p"] = (df_file["geometry"] + df_file["path"]).fillna(0) # replace NaN with 0
+        df_file = CreateDataFrame.columns_perfectsystem(df_file)
+
+        # Merge `data_toten` if compatible
+        if data_toten[col_excel_geo].all() == df_file["geometry"].all() & data_toten[col_excel_path].all() == df_file["path"].all():
+            df_file[col_excel_toten] = data_toten[col_excel_toten]
+        else:
+            print("check the compatibility of column geometry and path between data_toten file and df_file")
+
+        return df_file
 

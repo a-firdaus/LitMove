@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>functional.func_kmeans module &mdash; Atomic Positionism 00.00.01 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=d7bb8d4d"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="functional.func_string module" href="functional.func_string.html" />
+    <link rel="prev" title="functional.func_file module" href="functional.func_file.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Atomic Positionism
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">positionism</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="functional.html">functional package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="functional.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="functional.func_cartesian.html">functional.func_cartesian module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.func_dictionary.html">functional.func_dictionary module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.func_directory.html">functional.func_directory module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.func_distance.html">functional.func_distance module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.func_file.html">functional.func_file module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">functional.func_kmeans module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="functional.func_string.html">functional.func_string module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="functional.html#module-functional">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mapping.html">mapping package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="movement.html">movement package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimizer.html">optimizer package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orientation.html">orientation package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot.html">plot package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="preprocessing.html">preprocessing package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="read.html">read package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Atomic Positionism</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">positionism</a></li>
+          <li class="breadcrumb-item"><a href="functional.html">functional package</a></li>
+      <li class="breadcrumb-item active">functional.func_kmeans module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/functional.func_kmeans.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-functional.func_kmeans">
+<span id="functional-func-kmeans-module"></span><h1>functional.func_kmeans module<a class="headerlink" href="#module-functional.func_kmeans" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="functional.func_kmeans.create_POSCAR_atoms_centroids_appended">
+<span class="sig-prename descclassname"><span class="pre">functional.func_kmeans.</span></span><span class="sig-name descname"><span class="pre">create_POSCAR_atoms_centroids_appended</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coor_atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coor_centroids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice_constant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.func_kmeans.create_POSCAR_atoms_centroids_appended" title="Link to this definition"></a></dt>
+<dd><p>Create a POSCAR file with atomic coordinates and appended centroid coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coor_atoms</strong> (<em>array-like</em><em>)</em>) – The coordinates of atoms in the form of a 2D array-like object.
+Each row represents the coordinates of a single atom.</p></li>
+<li><p><strong>coor_centroids</strong> (<em>array-like</em><em>)</em>) – The coordinates of centroids in the form of a 2D array-like object.
+Each row represents the coordinates of a single centroid.</p></li>
+<li><p><strong>destination_directory</strong> (<em>str</em><em>)</em>) – The directory where the POSCAR file will be saved.</p></li>
+<li><p><strong>lattice_constant</strong> (<em>float</em><em>)</em>) – The lattice constant of the system.</p></li>
+<li><p><strong>filename</strong> (<em>str</em><em>)</em>) – The name of the POSCAR file.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>This function assumes a simple cubic lattice.</p></li>
+<li><p>The atomic species of centroids are marked with ‘K’ in the POSCAR file.</p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="functional.func_kmeans.kmeans_cluster_atoms">
+<span class="sig-prename descclassname"><span class="pre">functional.func_kmeans.</span></span><span class="sig-name descname"><span class="pre">kmeans_cluster_atoms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coor_atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_clusters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.func_kmeans.kmeans_cluster_atoms" title="Link to this definition"></a></dt>
+<dd><p>Perform K-means clustering on atomic coordinates using the specified
+number of clusters. It visualizes the clusters and centroids in a 3D scatter plot.</p>
+<p>Source: <a class="reference external" href="https://stackoverflow.com/questions/64987810/3d-plotting-of-a-dataset-that-uses-k-means">https://stackoverflow.com/questions/64987810/3d-plotting-of-a-dataset-that-uses-k-means</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coor_atoms</strong> (<em>array</em>) – The coordinates of atoms in the form of a 2D array-like object.
+Each row represents the coordinates of a single atom.</p></li>
+<li><p><strong>amount_clusters</strong> (<em>int</em>) – The number of clusters to form.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>centroids ndarray</em> – Coordinates of cluster centers.</p></li>
+<li><p><em>labels ndarray</em> – Labels of each point.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="functional.func_file.html" class="btn btn-neutral float-left" title="functional.func_file module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="functional.func_string.html" class="btn btn-neutral float-right" title="functional.func_string module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, A. Firdaus.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
