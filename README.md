@@ -1,5 +1,8 @@
 # LitMove: looking at how Li-ions diffuse - one dance at a time!
 
+## Documentation
+For code packages documentation check this: [Atomic Positionism](https://atomic-positionism.netlify.app/)
+
 ## Description
 > TLDR: **Stability is a mess, be chaotic!**
 
@@ -26,6 +29,3 @@ which then is read by the software and stored in the DataFrame as an additional 
 ## Output
 - Distribution of Li-ion position based on Wyckoff sites
 - Diffusion mechanism undergone by Li-ions: intratriad, intracage, and intercage
-
-## Documentation
-For documentation check this: [Atomic Positionism](https://atomic-positionism.netlify.app/)
