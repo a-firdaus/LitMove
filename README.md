@@ -1,9 +1,9 @@
-# LitMove: looking at how Li-ions diffuse - one at a time!
+# LitMove: looking at how Li-ions diffuse - one dance at a time!
 
 ## Description
 > TLDR: **Stability is a mess, be chaotic!**
 
-A work in progress as a part of master's thesis identifying atoms' behavior in interacting between themselves – how an atom prefers to stay within/ join a group instead of the others.
+A work in progress as a part of master's thesis identifying atoms' diffusion; behavior in interacting between themselves – how an atom prefers to stay within/ join a group instead of the others.
 
 ## Input
 ### 1. `CONTCARs/ POSCARs` file of VASP results
@@ -21,3 +21,11 @@ The collection of VASP and NEB results is stored in [a repository called "CONTCA
 
 ### 2. Excel file of total energy `toted_final.ods`
 which then is read by the software and stored in the DataFrame as an additional column `toten [eV]`.
+
+
+## Output
+- Distribution of Li-ion position based on Wyckoff sites
+- Diffusion mechanism undergone by Li-ions: intratriad, intracage, and intercage
+
+## Documentation
+For documentation check this: [Atomic Positionism](https://atomic-positionism.netlify.app/)
