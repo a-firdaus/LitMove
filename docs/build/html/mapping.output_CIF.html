@@ -57,7 +57,7 @@
 <li class="toctree-l4"><a class="reference internal" href="mapping.output_weirdos.html">mapping.output_weirdos module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="mapping.html#module-mapping">Module contents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mapping.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="movement.html">movement package</a></li>
@@ -96,133 +96,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-mapping.output_CIF">
-<span id="mapping-output-cif-module"></span><h1>mapping.output_CIF module<a class="headerlink" href="#module-mapping.output_CIF" title="Link to this heading"></a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="mapping.output_CIF.Edit">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mapping.output_CIF.</span></span><span class="sig-name descname"><span class="pre">Edit</span></span><a class="headerlink" href="#mapping.output_CIF.Edit" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="mapping.output_CIF.Edit.correct_P_S_Cl_idx">
-<span class="sig-name descname"><span class="pre">correct_P_S_Cl_idx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx_Li_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_without_weirdos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx_P_S_Cl_line_new_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_Li</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_S</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_Cl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.output_CIF.Edit.correct_P_S_Cl_idx" title="Link to this definition"></a></dt>
-<dd><p>This function modifies the CIF file lines for P, S, and Cl atoms to reflect updated indices. It ensures that after Li atoms index have been corrected and potentially filtered out, the subsequent atom types (P, S, Cl) receive new, sequentially increasing indices starting immediately after the last Li index.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lines</strong> (<em>list</em><em> of </em><em>str</em>) – The original lines of the CIF file, where each line corresponds to a string representing a line in the file.</p></li>
-<li><p><strong>idx_Li_start</strong> (<em>int</em>) – The starting index in <cite>lines</cite> where lithium (Li) atoms begin.</p></li>
-<li><p><strong>idx_without_weirdos</strong> (<em>list</em><em> of </em><em>int</em>) – The indices of Li atoms after removing specific “weirdo” atoms, used to calculate new starting positions for P, S, and Cl.</p></li>
-<li><p><strong>idx_P_S_Cl_line_new_start</strong> (<em>int</em>) – The new starting index for P, S, and Cl atom lines in the modified <cite>lines</cite> list.</p></li>
-<li><p><strong>amount_Li</strong> (<em>int</em>) – The total number of Li atoms considered for indexing, influencing the new indices of P, S, and Cl atoms.</p></li>
-<li><p><strong>amount_P</strong> (<em>int</em>) – The total number of phosphorus (P) atoms in the structure.</p></li>
-<li><p><strong>amount_S</strong> (<em>int</em>) – The total number of sulfur (S) atoms in the structure.</p></li>
-<li><p><strong>amount_Cl</strong> (<em>int</em>) – The total number of chlorine (Cl) atoms in the structure.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mapping.output_CIF.Edit.format_spacing_cif">
-<span class="sig-name descname"><span class="pre">format_spacing_cif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">destination_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_savefilename_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_savefilename_new</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.output_CIF.Edit.format_spacing_cif" title="Link to this definition"></a></dt>
-<dd><p>This function reads CIF files specified in a DataFrame and adjusts the spacing of lines starting with atom labels (‘Li’, ‘P’, ‘S’, ‘Cl’).
-The purpose is to ensure that these lines have a consistent formatting, which might be required for compatibility with certain software or for readability.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataframe</strong> (<em>pandas.DataFrame</em>) – A pandas DataFrame containing at least the columns ‘geometry’ and ‘path’, which are used to construct the filenames of the CIF files to be processed.</p></li>
-<li><p><strong>destination_directory</strong> (<em>str</em>) – The directory path where the CIF files are located and where the modified files will be saved.</p></li>
-<li><p><strong>var_savefilename_init</strong> (<em>str</em>) – The filename for source CIF files to be read.</p></li>
-<li><p><strong>var_savefilename_new</strong> (<em>str</em>) – The filename for new CIF files to be saved.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mapping.output_CIF.ascending_Li">
-<span class="sig-prename descclassname"><span class="pre">mapping.output_CIF.</span></span><span class="sig-name descname"><span class="pre">ascending_Li</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_filename_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_savefilename_new</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.output_CIF.ascending_Li" title="Link to this definition"></a></dt>
-<dd><p>Rewrite CIF files with ascending Li atom indices (weirdos included).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataframe</strong> (<em>pd.DataFrame</em>) – DataFrame containing the necessary data.</p></li>
-<li><p><strong>destination_directory</strong> (<em>str</em>) – Path to the directory where the rewritten CIF files will be saved.</p></li>
-<li><p><strong>var_filename_init</strong> (<em>str</em>) – Variable of the initial filename.</p></li>
-<li><p><strong>var_savefilename_new</strong> (<em>str</em>) – Variable to save the new filename.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mapping.output_CIF.correct_Li_idx">
-<span class="sig-prename descclassname"><span class="pre">mapping.output_CIF.</span></span><span class="sig-name descname"><span class="pre">correct_Li_idx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_Li</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_S</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_Cl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_savefilename_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_savefilename_new</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.output_CIF.correct_Li_idx" title="Link to this definition"></a></dt>
-<dd><p>Rewrite CIF files with correct Li atom indices.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataframe</strong> (<em>pd.DataFrame</em>) – DataFrame containing the necessary data.</p></li>
-<li><p><strong>destination_directory</strong> (<em>str</em>) – Path to the directory where the rewritten CIF files will be saved.</p></li>
-<li><p><strong>amount_Li</strong> (<em>int</em>) – Number of Li atoms.</p></li>
-<li><p><strong>amount_P</strong> (<em>int</em>) – Number of P atoms.</p></li>
-<li><p><strong>amount_S</strong> (<em>int</em>) – Number of S atoms.</p></li>
-<li><p><strong>amount_Cl</strong> (<em>int</em>) – Number of Cl atoms.</p></li>
-<li><p><strong>var_savefilename_init</strong> (<em>str</em>) – Variable to save the initial filename.</p></li>
-<li><p><strong>var_savefilename_new</strong> (<em>str</em>) – Variable to save the new filename.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mapping.output_CIF.correct_Li_idx_weirdos_appended">
-<span class="sig-prename descclassname"><span class="pre">mapping.output_CIF.</span></span><span class="sig-name descname"><span class="pre">correct_Li_idx_weirdos_appended</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_Li</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_S</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_Cl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_savefilename_init</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_savefilename_new</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.output_CIF.correct_Li_idx_weirdos_appended" title="Link to this definition"></a></dt>
-<dd><p>Rewrite CIF files with correct Li atom indices and weirdos appended</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataframe</strong> (<em>pd.DataFrame</em>) – DataFrame containing the necessary data.</p></li>
-<li><p><strong>destination_directory</strong> (<em>str</em>) – Path to the directory where the rewritten CIF files will be saved.</p></li>
-<li><p><strong>amount_Li</strong> (<em>int</em>) – Number of Li atoms.</p></li>
-<li><p><strong>amount_P</strong> (<em>int</em>) – Number of P atoms.</p></li>
-<li><p><strong>amount_S</strong> (<em>int</em>) – Number of S atoms.</p></li>
-<li><p><strong>amount_Cl</strong> (<em>int</em>) – Number of Cl atoms.</p></li>
-<li><p><strong>activate_radius</strong> (<em>int</em>) – Type of radius</p></li>
-<li><p><strong>var_savefilename_init</strong> (<em>str</em>) – Variable to save the initial filename.</p></li>
-<li><p><strong>var_savefilename_new</strong> (<em>str</em>) – Variable to save the new filename.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mapping.output_CIF.write_merged_structure">
-<span class="sig-prename descclassname"><span class="pre">mapping.output_CIF.</span></span><span class="sig-name descname"><span class="pre">write_merged_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_Li</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_S</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_savefilename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.output_CIF.write_merged_structure" title="Link to this definition"></a></dt>
-<dd><p>Write structure files by merging mapped Li atoms with original P, S, and Cl atoms.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataframe</strong> (<em>pandas.DataFrame</em>) – DataFrame containing coordinate information.</p></li>
-<li><p><strong>destination_directory</strong> (<em>str</em>) – The directory where the structure files will be saved.</p></li>
-<li><p><strong>amount_Li</strong> (<em>int</em>) – The amount of Lithium atoms in the structure.</p></li>
-<li><p><strong>amount_P</strong> (<em>int</em>) – The amount of Phosphorus atoms in the structure.</p></li>
-<li><p><strong>amount_S</strong> (<em>int</em>) – The amount of Sulfur atoms in the structure.</p></li>
-<li><p><strong>activate_radius</strong> (<em>int</em>) – The activation radius.</p></li>
-<li><p><strong>var_savefilename</strong> (<em>str</em>) – The variable save filename.</p></li>
-</ul>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<ul class="simple">
-<li><p>TO DO: under maintenance for disambled into el</p></li>
-</ul>
-</div>
-</dd></dl>
-
+  <section id="mapping-output-cif-module">
+<h1>mapping.output_CIF module<a class="headerlink" href="#mapping-output-cif-module" title="Link to this heading"></a></h1>
 </section>
 
 

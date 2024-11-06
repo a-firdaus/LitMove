@@ -57,7 +57,7 @@
 <li class="toctree-l4 current"><a class="current reference internal" href="#">mapping.output_weirdos module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="mapping.html#module-mapping">Module contents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mapping.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="movement.html">movement package</a></li>
@@ -96,63 +96,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-mapping.output_weirdos">
-<span id="mapping-output-weirdos-module"></span><h1>mapping.output_weirdos module<a class="headerlink" href="#module-mapping.output_weirdos" title="Link to this heading"></a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="mapping.output_weirdos.as_array">
-<span class="sig-prename descclassname"><span class="pre">mapping.output_weirdos.</span></span><span class="sig-name descname"><span class="pre">as_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_radius</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.output_weirdos.as_array" title="Link to this definition"></a></dt>
-<dd><p>Extracts and compiles coordinates of “weirdo” elements into a single numpy array based on the specified activation radius.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataframe</strong> (<em>pd.DataFrame</em>) – A pandas DataFrame containing the data from which coordinates of weirdos are to be extracted.</p></li>
-<li><p><strong>activate_radius</strong> (<em>int</em>) – An integer (1, 2, or 3) specifying the activation radius.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>coor_weirdos_el_appended</strong> – A numpy array containing all the coordinates of “weirdo” elements extracted from the specified column(s) in the DataFrame. Each element in this array is a coordinate set (typically x, y, z) of a “weirdo” element.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>numpy.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mapping.output_weirdos.create_POSCAR">
-<span class="sig-prename descclassname"><span class="pre">mapping.output_weirdos.</span></span><span class="sig-name descname"><span class="pre">create_POSCAR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coor_weirdos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice_constant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mapping.output_weirdos.create_POSCAR" title="Link to this definition"></a></dt>
-<dd><p>Generates a POSCAR file for visualization or computation in software that utilizes the VASP POSCAR format,
-using specified coordinates for “weirdo” atoms.</p>
-<p>This function writes a POSCAR file with a simple cubic lattice structure where the provided “weirdo” atom coordinates
-are used to position lithium (Li) atoms. The lattice constant is uniform across all dimensions. The file is saved
-with the given filename in the specified directory.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>coor_weirdos</strong> (<em>list</em><em> or </em><em>numpy.ndarray</em>) – A list or numpy array of coordinates (x, y, z) for the “weirdo” atoms. These coordinates should be in fractional coordinates relative to the lattice vectors.</p></li>
-<li><p><strong>destination_directory</strong> (<em>str</em>) – The directory path where the POSCAR file will be saved.</p></li>
-<li><p><strong>lattice_constant</strong> (<em>float</em>) – The lattice constant to use for the cubic lattice.</p></li>
-<li><p><strong>filename</strong> (<em>str</em>) – The filename for the saved POSCAR file.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>This function writes a file to a POSCAR file and does not return any value.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<ul class="simple">
-<li><p>The function is tailored for lithium atoms but can be modified for other elements by adjusting the element symbol
-written to the file.</p></li>
-<li><p>The POSCAR file generated is in the ‘Direct’ format, meaning the atomic coordinates are given in fractional coordinates
-relative to the lattice vectors.</p></li>
-</ul>
-</div>
-</dd></dl>
-
+  <section id="mapping-output-weirdos-module">
+<h1>mapping.output_weirdos module<a class="headerlink" href="#mapping-output-weirdos-module" title="Link to this heading"></a></h1>
 </section>
 
 

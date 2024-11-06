@@ -98,66 +98,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-functional.func_cartesian">
-<span id="functional-func-cartesian-module"></span><h1>functional.func_cartesian module<a class="headerlink" href="#module-functional.func_cartesian" title="Link to this heading"></a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="functional.func_cartesian.get_closest_neighbors_el_cartesian_coor">
-<span class="sig-prename descclassname"><span class="pre">functional.func_cartesian.</span></span><span class="sig-name descname"><span class="pre">get_closest_neighbors_el_cartesian_coor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_neighbors_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.func_cartesian.get_closest_neighbors_el_cartesian_coor" title="Link to this definition"></a></dt>
-<dd><p>This function calculates the closest neighbors of a specific element in Cartesian coordinates
-within a specified radius. It updates the DataFrame with distances to neighbors and their coordinates.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataframe</strong> (<em>DataFrame</em>) – The pandas DataFrame containing Cartesian coordinates.</p></li>
-<li><p><strong>max_neighbors_radius</strong> (<em>float</em>) – The maximum distance within which neighbors are considered.</p></li>
-<li><p><strong>el</strong> (<em>str</em>) – The element for which closest neighbors are to be found.</p></li>
-<li><p><strong>var_filename</strong> (<em>str</em>) – A variable used for naming dictionary columns in the DataFrame.</p></li>
-</ul>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<ul class="simple">
-<li><p>Don’t know if this of any use</p></li>
-</ul>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="functional.func_cartesian.get_fractional_to_cartesian_coor">
-<span class="sig-prename descclassname"><span class="pre">functional.func_cartesian.</span></span><span class="sig-name descname"><span class="pre">get_fractional_to_cartesian_coor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.func_cartesian.get_fractional_to_cartesian_coor" title="Link to this definition"></a></dt>
-<dd><p>This function calculates the Cartesian coordinates for atoms in each structure file listed in the DataFrame.
-It utilizes lattice information and fractional coordinates to derive the Cartesian coordinates.
-It updates the DataFrame with dictionary of cartesian coordinates with elements as the key of dictionary.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataframe</strong> (<em>DataFrame</em>) – The pandas DataFrame containing lattice constant and geometry information.</p></li>
-<li><p><strong>destination_directory</strong> (<em>str</em>) – The directory where the structure files are located.</p></li>
-<li><p><strong>var_filename</strong> (<em>str</em>) – The structure files (can be either in POSCAR or CIF format).
-The variable used also for naming dictionary columns in the DataFrame.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="functional.func_cartesian.get_fractional_to_cartesian_matrix">
-<span class="sig-prename descclassname"><span class="pre">functional.func_cartesian.</span></span><span class="sig-name descname"><span class="pre">get_fractional_to_cartesian_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_in_degrees</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functional.func_cartesian.get_fractional_to_cartesian_matrix" title="Link to this definition"></a></dt>
-<dd><p>This function calculates the fractional to cartesian matrix for each entry in the DataFrame based on
-lattice constants and angles provided. It updates the DataFrame with the calculated matrices.</p>
-<p>Source: <a class="reference external" href="https://gist.github.com/Bismarrck/a68da01f19b39320f78a">https://gist.github.com/Bismarrck/a68da01f19b39320f78a</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataframe</strong> (<em>DataFrame</em>) – The pandas DataFrame containing lattice constant information.</p></li>
-<li><p><strong>var_filename</strong> (<em>str</em>) – A variable used for naming dictionary columns in the DataFrame.</p></li>
-<li><p><strong>angle_in_degrees</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether the angles are given in degrees (default is True).</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
+  <section id="functional-func-cartesian-module">
+<h1>functional.func_cartesian module<a class="headerlink" href="#functional-func-cartesian-module" title="Link to this heading"></a></h1>
 </section>
 
 
